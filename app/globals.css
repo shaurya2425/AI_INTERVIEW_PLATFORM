@@ -34,3 +34,18 @@ body {
 
   }
 }
+
+/* Hide scrollbars inside the animated code component */
+[data-slot="code-block"] {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+[data-slot="code-block"]::-webkit-scrollbar {
+  display: none;
+}
+
+
+.cl-internal-b8hinb{
+  grid-template-columns: auto auto auto !important;
+}
