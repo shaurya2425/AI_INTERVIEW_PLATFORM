@@ -85,9 +85,9 @@ export default function RootLayout({ children }) {
                       Take your interview preparation to the next level.
                     </p>
 
-                    <span className="mt-6 inline-block text-[10px] font-semibold uppercase tracking-[0.3em] text-[#D6B46A]">
+                    {/* <span className="mt-6 inline-block text-[10px] font-semibold uppercase tracking-[0.3em] text-[#D6B46A]">
                       Dark Edition
-                    </span>
+                    </span> */}
 
                   </div>
 

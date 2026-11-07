@@ -342,13 +342,13 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link href="/onboarding" className="relative">
-              <Button variant="gold" size="lg">
+              <Button variant="gold" size="hero">
                 Get started
               </Button>
             </Link>
 
             <Link href="/explore" className="relative">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="hero">
                 Browse Interviewers →
               </Button>
             </Link>
