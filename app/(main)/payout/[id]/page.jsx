@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import PayoutReviewClient from "./_components/PayoutReviewClient";
+import PayoutReviewClient from "./components/PayoutReviewClient";
 import { GoldTitle, GrayTitle, SectionLabel } from "@/components/reusables";
 
 export default async function PayoutReviewPage({ params }) {
