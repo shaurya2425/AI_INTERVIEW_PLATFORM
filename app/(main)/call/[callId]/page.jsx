@@ -17,7 +17,9 @@ export default async function CallPage({ params }) {
     redirect("/");
   }
 
-  const { token, isInterviewer, currentUser, booking } = result;
+  const { token, currentUser, booking } = result;
+
+const isInterviewer = true; // TEMPORARY TESTING
 
   return (
     <CallRoom
