@@ -1,15 +1,28 @@
-"use server";
+
+import "server-only";
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { StreamClient } from "@stream-io/node-sdk";
 
 export const getCallData = async (callId) => {
-  const user = await currentUser();
-  if (!user) return { error: "Unauthorized" };
+  // 1. Validate input
+  if (!callId || typeof callId !== "string") {
+    return { error: "Call not found" };
+  }
 
+  // 2. Verify authentication
+  const user = await currentUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  // 3. Find the booking
   const booking = await db.booking.findUnique({
-    where: { streamCallId: callId },
+    where: {
+      streamCallId: callId,
+    },
     include: {
       interviewer: {
         select: {
@@ -31,15 +44,33 @@ export const getCallData = async (callId) => {
     },
   });
 
-  if (!booking) return { error: "Call not found" };
+  if (!booking) {
+    return { error: "Call not found" };
+  }
 
-  const isInterviewer = booking.interviewer.clerkUserId === user.id;
-  const isInterviewee = booking.interviewee.clerkUserId === user.id;
-  if (!isInterviewer && !isInterviewee) return { error: "Forbidden" };
+  // 4. Verify booking ownership
+  const isInterviewer =
+    booking.interviewer.clerkUserId === user.id;
 
+  const isInterviewee =
+    booking.interviewee.clerkUserId === user.id;
+
+  if (!isInterviewer && !isInterviewee) {
+    return { error: "Forbidden" };
+  }
+
+  // 5. Validate Stream credentials
+  const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+  const apiSecret = process.env.STREAM_SECRET_KEY;
+
+  if (!apiKey || !apiSecret) {
+    throw new Error("Stream credentials are not configured");
+  }
+
+  // 6. Generate token only for an authorized user
   const streamClient = new StreamClient(
-    process.env.NEXT_PUBLIC_STREAM_API_KEY,
-    process.env.STREAM_SECRET_KEY
+    apiKey,
+    apiSecret
   );
 
   const token = streamClient.generateUserToken({
@@ -47,14 +78,24 @@ export const getCallData = async (callId) => {
     validity_in_seconds: 60 * 60,
   });
 
+  // 7. Return only the required data
+  const fullName = [
+    user.firstName,
+    user.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return {
     token,
     isInterviewer,
+
     currentUser: {
       id: user.id,
-      name: `${user.firstName} ${user.lastName}`.trim(),
+      name: fullName || user.username || "User",
       imageUrl: user.imageUrl,
     },
+
     booking: {
       id: booking.id,
       interviewer: booking.interviewer,

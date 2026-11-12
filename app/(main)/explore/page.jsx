@@ -1,10 +1,11 @@
+
+import { Suspense } from "react";
+
 import { getInterviewers } from "@/actions/explore";
 import PageHeader from "@/components/reusables";
 import ExploreGrid from "./components/ExploreGrid";
 
-export default async function ExplorePage() {
-  const interviewers = await getInterviewers();
-
+export default function ExplorePage() {
   return (
     <main className="min-h-screen bg-black">
       {/* Page header */}
@@ -15,10 +16,28 @@ export default async function ExplorePage() {
         description="Browse senior engineers from top companies."
       />
 
-      {/* Content */}
+      {/* Dynamic content */}
       <div className="max-w-6xl mx-auto px-8 xl:px-0 py-10">
-        <ExploreGrid interviewers={interviewers} />
+        <Suspense fallback={<ExploreLoading />}>
+          <ExploreContent />
+        </Suspense>
       </div>
     </main>
+  );
+}
+
+async function ExploreContent() {
+  const interviewers = await getInterviewers();
+
+  return <ExploreGrid interviewers={interviewers} />;
+}
+
+function ExploreLoading() {
+  return (
+    <div className="flex min-h-[300px] items-center justify-center">
+      <p className="text-white/60">
+        Loading interviewers...
+      </p>
+    </div>
   );
 }

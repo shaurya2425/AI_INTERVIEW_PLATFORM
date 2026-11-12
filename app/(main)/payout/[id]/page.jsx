@@ -1,17 +1,31 @@
-// Assignment
 
+import { Suspense } from "react";
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import PayoutReviewClient from "./components/PayoutReviewClient";
-import { GoldTitle, GrayTitle, SectionLabel } from "@/components/reusables";
+import {
+  GoldTitle,
+  GrayTitle,
+  SectionLabel,
+} from "@/components/reusables";
 
-export default async function PayoutReviewPage({ params }) {
+export default function PayoutReviewPage({ params }) {
+  return (
+    <Suspense fallback={<PayoutLoading />}>
+      <PayoutReviewContent params={params} />
+    </Suspense>
+  );
+}
+
+async function PayoutReviewContent({ params }) {
   const { id } = await params;
 
   const payout = await db.payout.findUnique({
     where: { id },
     include: {
-      interviewer: { select: { name: true, email: true } },
+      interviewer: {
+        select: { name: true, email: true },
+      },
     },
   });
 
@@ -42,6 +56,14 @@ export default async function PayoutReviewPage({ params }) {
           }}
         />
       </div>
+    </main>
+  );
+}
+
+function PayoutLoading() {
+  return (
+    <main className="min-h-screen bg-[#0a0a0b] text-stone-100 flex items-center justify-center">
+      <p className="text-stone-400">Loading payout details...</p>
     </main>
   );
 }

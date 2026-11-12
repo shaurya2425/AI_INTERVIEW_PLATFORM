@@ -1,23 +1,40 @@
+
+import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import { db } from "@/lib/prisma";
 
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
+
 import { Badge } from "@/components/ui/badge";
 import { GrayTitle, SectionLabel } from "@/components/reusables";
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+
 import { CATEGORY_LABEL, EXPECT_ITEMS } from "@/lib/data";
 import SlotPicker from "./components/SlotPicker";
 import { getInterviewerProfile } from "@/actions/bookings";
 import StarsBackgroundDemo from "@/components/demo-component-stars-background";
 
-export default async function InterviewerProfilePage({ params }) {
+export default function InterviewerProfilePage({ params }) {
+  return (
+    <Suspense fallback={<ProfileLoading />}>
+      <InterviewerProfileContent params={params} />
+    </Suspense>
+  );
+}
+
+async function InterviewerProfileContent({ params }) {
   const { id } = await params;
 
   const user = await currentUser();
+
   if (!user) redirect("/");
 
   const dbUser = await db.user.findUnique({
@@ -34,7 +51,7 @@ export default async function InterviewerProfilePage({ params }) {
 
   return (
     <main className="min-h-screen bg-black">
-      {/* ── Hero identity banner ── */}
+      {/* Hero identity banner */}
       <section className="relative border-b border-white/8 overflow-hidden">
         <StarsBackgroundDemo />
 
@@ -57,6 +74,7 @@ export default async function InterviewerProfilePage({ params }) {
                 {interviewer.name?.[0] ?? "?"}
               </AvatarFallback>
             </Avatar>
+
             <div className="flex flex-col gap-3 min-w-0 pt-1">
               <h1 className="font-serif text-[clamp(2rem,4vw,3rem)] leading-[1.05] tracking-tight">
                 <GrayTitle>{interviewer.name}</GrayTitle>
@@ -79,12 +97,14 @@ export default async function InterviewerProfilePage({ params }) {
                     {interviewer.yearsExp}+ yrs experience
                   </Badge>
                 )}
+
                 <Badge
                   variant="outline"
                   className="border-amber-400/25 bg-amber-400/8 text-amber-400 text-xs px-3 py-1"
                 >
                   {interviewer.creditRate ?? 10} credits / session
                 </Badge>
+
                 {interviewer.availabilities?.[0] && (
                   <Badge
                     variant="outline"
@@ -99,9 +119,9 @@ export default async function InterviewerProfilePage({ params }) {
         </div>
       </section>
 
-      {/* ── Body ── */}
+      {/* Profile body */}
       <div className="max-w-6xl mx-auto px-8 py-12 grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
-        {/* ── LEFT ── */}
+        {/* Left section */}
         <div className="lg:col-span-3 flex flex-col gap-6 order-2 lg:-order-1">
           {interviewer.bio && (
             <div className="bg-[#0f0f11] border border-white/10 rounded-2xl p-8 flex flex-col gap-5">
@@ -120,6 +140,7 @@ export default async function InterviewerProfilePage({ params }) {
                   Interview categories this expert covers.
                 </p>
               </div>
+
               <div className="flex flex-wrap gap-2.5">
                 {interviewer.categories.map((cat) => (
                   <span
@@ -140,12 +161,14 @@ export default async function InterviewerProfilePage({ params }) {
                 Every session on Prept includes the following.
               </p>
             </div>
+
             <ul className="flex flex-col gap-5">
               {EXPECT_ITEMS.map(([icon, title, desc]) => (
                 <li key={title} className="flex items-start gap-4">
                   <span className="mt-0.5 w-10 h-10 shrink-0 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-lg">
                     {icon}
                   </span>
+
                   <div className="flex flex-col gap-0.5">
                     <p className="text-sm font-medium text-stone-200">
                       {title}
@@ -160,15 +183,25 @@ export default async function InterviewerProfilePage({ params }) {
           </div>
         </div>
 
-        {/* ── RIGHT — sticky slot picker ── */}
+        {/* Right section: Slot picker */}
         <div className="lg:col-span-2 lg:sticky top-24">
-          <SlotPicker   
+          <SlotPicker
             interviewer={interviewer}
             interviewerCredits={interviewer.creditRate ?? 10}
             userCredits={dbUser.credits}
           />
         </div>
       </div>
+    </main>
+  );
+}
+
+function ProfileLoading() {
+  return (
+    <main className="min-h-screen bg-black flex items-center justify-center">
+      <p className="text-stone-400">
+        Loading interviewer profile...
+      </p>
     </main>
   );
 }

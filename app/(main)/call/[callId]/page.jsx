@@ -1,8 +1,21 @@
+import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
+
 import { getCallData } from "@/actions/call";
 import CallRoom from "./components/CallRoom";
 
-export default async function CallPage({ params }) {
+// Parent page remains lightweight.
+// Runtime-dependent work happens inside CallContent.
+export default function CallPage({ params }) {
+  return (
+    <Suspense fallback={<CallLoading />}>
+      <CallContent params={params} />
+    </Suspense>
+  );
+}
+
+// Handles dynamic route parameters and authenticated data.
+async function CallContent({ params }) {
   const { callId } = await params;
 
   const result = await getCallData(callId);
@@ -10,16 +23,20 @@ export default async function CallPage({ params }) {
   if (result.error === "Unauthorized") {
     redirect("/");
   }
+
   if (result.error === "Call not found") {
     notFound();
   }
+
   if (result.error === "Forbidden") {
     redirect("/");
   }
 
-  const { token, currentUser, booking } = result;
+  if (result.error) {
+    throw new Error("Unable to load interview data");
+  }
 
-const isInterviewer = true; // TEMPORARY TESTING
+  const { token, currentUser, booking, isInterviewer } = result;
 
   return (
     <CallRoom
@@ -30,5 +47,14 @@ const isInterviewer = true; // TEMPORARY TESTING
       booking={booking}
       isInterviewer={isInterviewer}
     />
+  );
+}
+
+// Shown while interview data is being loaded.
+function CallLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-muted-foreground">Loading interview room...</p>
+    </div>
   );
 }
