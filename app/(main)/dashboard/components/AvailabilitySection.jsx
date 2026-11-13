@@ -10,6 +10,7 @@ import { GrayTitle } from "@/components/reusables";
 import { setAvailability } from "@/actions/dashboard";
 import useFetch from "@/hooks/use-fetch";
 import { Clock } from "lucide-react";
+import { validateTimeWindow } from "@/lib/time-validation";
 
 export default function AvailabilitySection({ initial }) {
   const [startTime, setStartTime] = useState(
@@ -22,7 +23,16 @@ export default function AvailabilitySection({ initial }) {
   );
   const [saved, setSaved] = useState(false);
 
-  const { data, loading, error, fn: saveFn } = useFetch(setAvailability);
+  const { data, loading, error, fn: saveFn, setData, clearError } = useFetch(setAvailability);
+  const validationError = validateTimeWindow(startTime, endTime);
+  const visibleError = (startTime && endTime && validationError) || error;
+
+  const handleTimeChange = (setTime, value) => {
+    setTime(value);
+    setSaved(false);
+    setData(undefined);
+    clearError();
+  };
 
   useEffect(() => {
     if (data?.success) {
@@ -40,7 +50,7 @@ export default function AvailabilitySection({ initial }) {
   };
 
   const handleSave = () => {
-    if (!startTime || !endTime) return;
+    if (validationError || loading) return;
     saveFn({ startTime: toISO(startTime), endTime: toISO(endTime) });
   };
 
@@ -86,23 +96,31 @@ export default function AvailabilitySection({ initial }) {
       <div className="h-px bg-muted" />
 
       {/* Time inputs */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label className="text-muted-foreground text-xs">Start time</Label>
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2 min-w-0">
+          <Label htmlFor="availability-start" className="text-muted-foreground text-xs">Start time</Label>
           <Input
+            id="availability-start"
             type="time"
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className="bg-surface border-border text-foreground"
+            disabled={loading}
+            aria-invalid={Boolean(startTime && endTime && validationError)}
+            aria-describedby={visibleError ? "availability-error" : undefined}
+            onChange={(e) => handleTimeChange(setStartTime, e.target.value)}
+            className="max-w-full bg-surface border-border text-foreground"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label className="text-muted-foreground text-xs">End time</Label>
+        <div className="flex flex-col gap-2 min-w-0">
+          <Label htmlFor="availability-end" className="text-muted-foreground text-xs">End time</Label>
           <Input
+            id="availability-end"
             type="time"
             value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="bg-surface border-border text-foreground"
+            disabled={loading}
+            aria-invalid={Boolean(startTime && endTime && validationError)}
+            aria-describedby={visibleError ? "availability-error" : undefined}
+            onChange={(e) => handleTimeChange(setEndTime, e.target.value)}
+            className="max-w-full bg-surface border-border text-foreground"
           />
         </div>
       </div>
@@ -123,14 +141,14 @@ export default function AvailabilitySection({ initial }) {
       )}
 
       {/* Error */}
-      {error && (
-        <p className="text-xs text-danger">{error?.message || error}</p>
+      {visibleError && (
+        <p id="availability-error" role="alert" className="text-xs text-danger">{visibleError}</p>
       )}
 
       {/* Save */}
       <Button
         variant="gold"
-        disabled={!hasWindow || loading}
+        disabled={Boolean(validationError) || loading}
         onClick={handleSave}
         className="self-start"
       >

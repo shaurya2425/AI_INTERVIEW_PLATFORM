@@ -1,24 +1,26 @@
 "use server";
 
+import { actionFailure, runAction } from "@/lib/action-result";
+
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 
-export const completeOnboarding = async (data) => {
+export const completeOnboarding = async (data) => runAction(async () => {
   const user = await currentUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    return actionFailure("Unauthorized");
   }
 
   const { role, title, company, yearsExp, bio, categories } = data;
 
   if (!role || !["INTERVIEWEE", "INTERVIEWER"].includes(role)) {
-    throw new Error("Invalid role");
+    return actionFailure("Invalid role");
   }
 
   if (role === "INTERVIEWER") {
     if (!title || !company || !yearsExp || !bio || !categories?.length) {
-      throw new Error("Please fill in all required fields");
+      return actionFailure("Please fill in all required fields");
     }
   }
 
@@ -40,6 +42,6 @@ export const completeOnboarding = async (data) => {
     return { success: true };
   } catch (error) {
     console.error("Onboarding error:", error);
-    throw new Error("Something went wrong. Please try again.");
+    return actionFailure("Something went wrong. Please try again.");
   }
-};
+}, "Unable to save your profile. Please try again.");

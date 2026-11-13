@@ -1,5 +1,8 @@
 "use server";
 
+import { actionFailure, runAction } from "@/lib/action-result";
+import { validateDateRange } from "@/lib/time-validation";
+
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { getDisplayName, withDisplayName } from "@/lib/user-name";
@@ -49,14 +52,19 @@ export const getInterviewerProfile = async (interviewerId) => {
   }
 };
 
-export const bookSlot = async ({ interviewerId, startTime, endTime }) => {
+export const bookSlot = async ({ interviewerId, startTime, endTime }) => runAction(async () => {
   const user = await currentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return actionFailure("Unauthorized");
+  const timeError = validateDateRange(startTime, endTime);
+  if (timeError) return actionFailure(timeError);
+  if (new Date(startTime).getTime() <= Date.now()) {
+    return actionFailure("This time has already passed. Please choose another slot.");
+  }
 
   // ── Arcjet rate limit ──────────────────────────────────────────────────────
   const req = await request();
   const rateLimitError = await checkRateLimit(bookingLimiter, req, user.id);
-  if (rateLimitError) throw new Error(rateLimitError);
+  if (rateLimitError) return actionFailure(rateLimitError);
   // ──────────────────────────────────────────────────────────────────────────
 
   const [dbUser, interviewer] = await Promise.all([
@@ -65,14 +73,14 @@ export const bookSlot = async ({ interviewerId, startTime, endTime }) => {
   ]);
 
   if (!dbUser || dbUser.role !== "INTERVIEWEE")
-    throw new Error("Only interviewees can book sessions");
+    return actionFailure("Only interviewees can book sessions");
   if (!interviewer || interviewer.role !== "INTERVIEWER")
-    throw new Error("Interviewer not found");
+    return actionFailure("Interviewer not found");
 
   const credits = interviewer.creditRate ?? 10;
 
   if (dbUser.credits < credits)
-    throw new Error("Insufficient credits. Please upgrade your plan.");
+    return actionFailure("Insufficient credits. Please upgrade your plan.");
 
   // Check slot isn't already taken
   const conflict = await db.booking.findFirst({
@@ -84,7 +92,7 @@ export const bookSlot = async ({ interviewerId, startTime, endTime }) => {
     },
   });
   if (conflict)
-    throw new Error("This slot was just booked. Please pick another.");
+    return actionFailure("This slot was just booked. Please pick another.");
 
   // ── Create Stream call ─────────────────────────────────────────────────────
   let streamCallId;
@@ -136,7 +144,7 @@ export const bookSlot = async ({ interviewerId, startTime, endTime }) => {
     });
   } catch (err) {
     console.error("Stream call creation failed:", err);
-    throw new Error("Failed to create video call. Please try again.");
+    return actionFailure("Failed to create video call. Please try again.");
   }
 
   try {
@@ -180,6 +188,6 @@ export const bookSlot = async ({ interviewerId, startTime, endTime }) => {
     return { success: true, bookingId: booking.id, streamCallId };
   } catch (err) {
     console.error("bookSlot transaction failed:", err);
-    throw new Error("Booking failed. Please try again.");
+    return actionFailure("Booking failed. Please try again.");
   }
-};
+}, "Unable to book this session. Please try again.");

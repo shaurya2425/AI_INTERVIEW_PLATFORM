@@ -62,7 +62,7 @@ export default function AIQuestionsPanel({ categories }) {
       </Button>
 
       {error && (
-        <p className="text-xs text-danger">{error?.message || error}</p>
+        <p className="text-xs text-danger">{error}</p>
       )}
 
       {/* Questions list */}

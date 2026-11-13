@@ -260,7 +260,7 @@ export default function SlotPicker({
             </div>
 
             {error && (
-              <p className="text-xs text-danger">{error?.message || error}</p>
+              <p className="text-xs text-danger">{error}</p>
             )}
 
             <div className="flex gap-2">

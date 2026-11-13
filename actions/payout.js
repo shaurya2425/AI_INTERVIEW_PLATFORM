@@ -2,19 +2,21 @@
 
 "use server";
 
+import { actionFailure, runAction } from "@/lib/action-result";
+
 import { db } from "@/lib/prisma";
 
-export const approvePayout = async ({ payoutId, adminPassword }) => {
-  if (!adminPassword) throw new Error("Password required");
+export const approvePayout = async ({ payoutId, adminPassword }) => runAction(async () => {
+  if (!adminPassword) return actionFailure("Password required");
 
   if (adminPassword !== process.env.ADMIN_PAYOUT_PASSWORD) {
-    throw new Error("Incorrect password");
+    return actionFailure("Incorrect password");
   }
 
   const payout = await db.payout.findUnique({ where: { id: payoutId } });
 
-  if (!payout) throw new Error("Payout not found");
-  if (payout.status === "PROCESSED") throw new Error("Already processed");
+  if (!payout) return actionFailure("Payout not found");
+  if (payout.status === "PROCESSED") return actionFailure("Already processed");
 
   await db.payout.update({
     where: { id: payoutId },
@@ -26,4 +28,4 @@ export const approvePayout = async ({ payoutId, adminPassword }) => {
   });
 
   return { success: true };
-};
+}, "Unable to approve the payout. Please try again.");

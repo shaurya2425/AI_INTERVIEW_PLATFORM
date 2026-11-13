@@ -1,5 +1,8 @@
 "use server";
 
+import { actionFailure, runAction } from "@/lib/action-result";
+import { validateDateRange } from "@/lib/time-validation";
+
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { getDisplayName, withDisplayName } from "@/lib/user-name";
@@ -21,16 +24,15 @@ const withdrawalLimiter = createRateLimiter({
 
 // ─── AVAILABILITY ─────────────────────────────────────────────────────────────
 
-export const setAvailability = async ({ startTime, endTime }) => {
+export const setAvailability = async ({ startTime, endTime }) => runAction(async () => {
   const user = await currentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return actionFailure("Unauthorized");
 
   const dbUser = await db.user.findUnique({ where: { clerkUserId: user.id } });
-  if (!dbUser || dbUser.role !== "INTERVIEWER") throw new Error("Forbidden");
+  if (!dbUser || dbUser.role !== "INTERVIEWER") return actionFailure("Forbidden");
 
-  if (!startTime || !endTime) throw new Error("Start and end time required");
-  if (new Date(startTime) >= new Date(endTime))
-    throw new Error("Start time must be before end time");
+  const timeError = validateDateRange(startTime, endTime);
+  if (timeError) return actionFailure(timeError);
 
   try {
     const existing = await db.availability.findFirst({
@@ -57,9 +59,9 @@ export const setAvailability = async ({ startTime, endTime }) => {
     return { success: true };
   } catch (err) {
     console.error(err);
-    throw new Error("Failed to save availability");
+    return actionFailure("Failed to save availability");
   }
-};
+}, "Unable to save availability. Please try again.");
 
 export const getAvailability = async () => {
   const user = await currentUser();
@@ -133,22 +135,22 @@ export const requestWithdrawal = async ({
   credits,
   paymentMethod,
   paymentDetail,
-}) => {
+}) => runAction(async () => {
   const user = await currentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return actionFailure("Unauthorized");
 
   const req = await request();
   const rateLimitError = await checkRateLimit(withdrawalLimiter, req, user.id);
-  if (rateLimitError) throw new Error(rateLimitError);
+  if (rateLimitError) return actionFailure(rateLimitError);
 
   const dbUser = await db.user.findUnique({ where: { clerkUserId: user.id } });
-  if (!dbUser || dbUser.role !== "INTERVIEWER") throw new Error("Forbidden");
+  if (!dbUser || dbUser.role !== "INTERVIEWER") return actionFailure("Forbidden");
 
-  if (!credits || credits <= 0) throw new Error("Invalid credit amount");
+  if (!credits || credits <= 0) return actionFailure("Invalid credit amount");
   if (credits > dbUser.creditBalance)
-    throw new Error("Insufficient credit balance");
+    return actionFailure("Insufficient credit balance");
   if (!paymentMethod || !paymentDetail)
-    throw new Error("Payment details required");
+    return actionFailure("Payment details required");
 
   const PLATFORM_FEE = 0.2;
   const netAmount = credits * (1 - PLATFORM_FEE) * 5;
@@ -202,9 +204,9 @@ export const requestWithdrawal = async ({
     return { success: true, netAmount };
   } catch (err) {
     console.error(err);
-    throw new Error("Withdrawal request failed");
+    return actionFailure("Withdrawal request failed");
   }
-};
+}, "Unable to request withdrawal. Please try again.");
 
 export const getWithdrawalHistory = async () => {
   const user = await currentUser();

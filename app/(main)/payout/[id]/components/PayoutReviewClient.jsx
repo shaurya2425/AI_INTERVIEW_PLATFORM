@@ -90,7 +90,7 @@ export default function PayoutReviewClient({ payout }) {
       </div>
 
       {error && (
-        <p className="text-xs text-danger">{error?.message || error}</p>
+        <p className="text-xs text-danger">{error}</p>
       )}
 
       <Button

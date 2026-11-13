@@ -1,5 +1,7 @@
 "use server";
 
+import { actionFailure, runAction } from "@/lib/action-result";
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -19,12 +21,12 @@ const CATEGORY_PROMPTS = {
     "React Native, iOS/Android, performance, offline support, app lifecycle",
 };
 
-export const generateInterviewQuestions = async ({ category }) => {
+export const generateInterviewQuestions = async ({ category }) => runAction(async () => {
   const user = await currentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return actionFailure("Unauthorized");
 
   if (!category || !CATEGORY_PROMPTS[category])
-    throw new Error("Invalid category");
+    return actionFailure("Invalid category");
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
@@ -42,4 +44,4 @@ Respond ONLY with a valid JSON array. No markdown, no backticks, no explanation.
   const questions = JSON.parse(clean);
 
   return { questions };
-};
+}, "Unable to generate questions. Please try again.");

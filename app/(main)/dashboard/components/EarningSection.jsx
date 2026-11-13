@@ -273,7 +273,7 @@ export default function EarningsSection({ stats, history }) {
 
                 {error && (
                   <p className="text-xs text-danger">
-                    {error?.message || error}
+                    {error}
                   </p>
                 )}
               </div>

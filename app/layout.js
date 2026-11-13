@@ -27,6 +27,11 @@ const dmSans = DM_Sans({
 export const metadata = {
   title: "Prept",
   description: "Prepare with purpose. Practice with confidence.",
+  icons: {
+    icon: { url: "/logo.png", type: "image/png" },
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
