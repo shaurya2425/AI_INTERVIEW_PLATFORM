@@ -41,7 +41,7 @@ export default function SlotPicker({
     }
   }, [selectedSlot]);
 
-  const { data, loading, error, fn: bookFn } = useFetch(bookSlot);
+  const { data, loading, error, fn: bookFn, reportError } = useFetch(bookSlot);
 
   const availability = interviewer.availabilities?.[0];
   const canAfford = userCredits >= interviewerCredits;
@@ -80,7 +80,8 @@ export default function SlotPicker({
   };
 
   const handleConfirm = () => {
-    if (!selectedSlot) return;
+    if (loading) return;
+    if (!selectedSlot) return reportError("Choose an available time slot first.");
     bookFn({
       interviewerId: interviewer.id,
       startTime: selectedSlot.startTime.toISOString(),

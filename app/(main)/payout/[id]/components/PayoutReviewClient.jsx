@@ -14,7 +14,13 @@ export default function PayoutReviewClient({ payout }) {
   const [password, setPassword] = useState("");
   const [done, setDone] = useState(payout.status === "PROCESSED");
 
-  const { data, loading, error, fn: approveFn } = useFetch(approvePayout);
+  const { data, loading, error, fn: approveFn, reportError } = useFetch(approvePayout);
+
+  const handleApprove = () => {
+    if (loading) return;
+    if (!password.trim()) return reportError("Password required");
+    approveFn({ payoutId: payout.id, adminPassword: password });
+  };
 
   useEffect(() => {
     if (data?.success) setDone(true);
@@ -79,11 +85,7 @@ export default function PayoutReviewClient({ payout }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) =>
-            e.key === "Enter" &&
-            password.trim() &&
-            approveFn({ payoutId: payout.id, adminPassword: password })
-          }
+          onKeyDown={(e) => e.key === "Enter" && handleApprove()}
           placeholder="Enter password…"
           className="bg-surface border-border text-foreground"
         />
@@ -95,10 +97,8 @@ export default function PayoutReviewClient({ payout }) {
 
       <Button
         variant="gold"
-        disabled={!password.trim() || loading}
-        onClick={() =>
-          approveFn({ payoutId: payout.id, adminPassword: password })
-        }
+        disabled={loading}
+        onClick={handleApprove}
         className="w-full"
       >
         {loading ? "Approving…" : `Approve $${payout.netAmount.toFixed(2)} →`}

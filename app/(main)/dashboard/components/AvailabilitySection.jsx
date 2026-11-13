@@ -23,7 +23,7 @@ export default function AvailabilitySection({ initial }) {
   );
   const [saved, setSaved] = useState(false);
 
-  const { data, loading, error, fn: saveFn, setData, clearError } = useFetch(setAvailability);
+  const { data, loading, error, fn: saveFn, setData, clearError, reportError } = useFetch(setAvailability);
   const validationError = validateTimeWindow(startTime, endTime);
   const visibleError = (startTime && endTime && validationError) || error;
 
@@ -50,7 +50,8 @@ export default function AvailabilitySection({ initial }) {
   };
 
   const handleSave = () => {
-    if (validationError || loading) return;
+    if (loading) return;
+    if (validationError) return reportError(validationError);
     saveFn({ startTime: toISO(startTime), endTime: toISO(endTime) });
   };
 
@@ -148,7 +149,7 @@ export default function AvailabilitySection({ initial }) {
       {/* Save */}
       <Button
         variant="gold"
-        disabled={Boolean(validationError) || loading}
+        disabled={loading}
         onClick={handleSave}
         className="self-start"
       >

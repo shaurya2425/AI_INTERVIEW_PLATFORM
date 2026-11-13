@@ -12,7 +12,15 @@ function ThemedServices({ children }) {
   return (
     <ClerkProvider appearance={{ theme: resolvedTheme === "dark" ? dark : undefined }}>
       {children}
-      <Toaster theme={resolvedTheme === "dark" ? "dark" : "light"} richColors />
+      <Toaster
+        theme={resolvedTheme === "dark" ? "dark" : "light"}
+        position="top-center"
+        offset={80}
+        mobileOffset={{ top: 80, left: 16, right: 16 }}
+        duration={6000}
+        closeButton
+        richColors
+      />
     </ClerkProvider>
   );
 }

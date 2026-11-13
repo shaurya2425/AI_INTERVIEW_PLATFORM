@@ -17,6 +17,7 @@ export default function AIQuestionsPanel({ categories }) {
     loading,
     error,
     fn: generateFn,
+    reportError,
   } = useFetch(generateInterviewQuestions);
 
   const questions = data?.questions ?? [];
@@ -44,8 +45,11 @@ export default function AIQuestionsPanel({ categories }) {
       <Button
         variant="gold"
         size="sm"
-        disabled={loading || !selectedCategory}
-        onClick={() => generateFn({ category: selectedCategory })}
+        disabled={loading}
+        onClick={() => {
+          if (!selectedCategory) return reportError("Select an interview category first.");
+          generateFn({ category: selectedCategory });
+        }}
         className="self-start gap-2"
       >
         {loading ? (

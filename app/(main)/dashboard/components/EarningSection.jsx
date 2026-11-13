@@ -40,7 +40,7 @@ export default function EarningsSection({ stats, history }) {
   const [method, setMethod] = useState("PAYPAL");
   const [detail, setDetail] = useState("");
 
-  const { data, loading, error, fn: withdrawFn } = useFetch(requestWithdrawal);
+  const { data, loading, error, fn: withdrawFn, reportError } = useFetch(requestWithdrawal);
 
   const balance = (stats?.creditBalance ?? 0) * 5;
   const totalEarnedDollars = (stats?.totalEarned ?? 0) * 5;
@@ -288,14 +288,15 @@ export default function EarningsSection({ stats, history }) {
                 </Button>
                 <Button
                   variant="gold"
-                  disabled={!isValid || loading}
-                  onClick={() =>
+                  disabled={loading}
+                  onClick={() => {
+                    if (!isValid) return reportError("Payment details required");
                     withdrawFn({
                       credits: stats?.creditBalance,
                       paymentMethod: method,
-                      paymentDetail: detail,
-                    })
-                  }
+                      paymentDetail: detail.trim(),
+                    });
+                  }}
                 >
                   {loading ? "Submitting…" : "Confirm withdrawal"}
                 </Button>

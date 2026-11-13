@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner";
 import { cva } from "class-variance-authority";
 import { cn } from "cn"
 
@@ -119,10 +120,10 @@ function CodeBlockCopyButton({
         className={cn(className)}
         onClick={(event) => {
           onClick?.(event)
-          navigator.clipboard
-            .writeText(value)
+          Promise.resolve()
+            .then(() => navigator.clipboard.writeText(value))
             .then(() => setCopied(true))
-            .catch(() => {})
+            .catch(() => toast.error("Could not copy to clipboard. Please select and copy the text manually."))
         }}
         {...props}
       >

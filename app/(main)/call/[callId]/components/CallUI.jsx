@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState } from "react";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 
 // Stream Video
 import {
@@ -53,9 +54,13 @@ export default function CallUI({
       if (call) {
         const isRecording = call.state?.recording;
         if (isRecording) {
-          await call.stopRecording().catch(() => {});
+          await call.stopRecording().catch(() => {
+            toast.error("Could not stop the recording before leaving the call.");
+          });
         }
-        await call.leave().catch(() => {});
+        await call.leave().catch(() => {
+          toast.error("Could not confirm that the call ended. Close the call tab if your camera or microphone remains active.");
+        });
       }
     } finally {
       onLeave();
@@ -74,9 +79,11 @@ export default function CallUI({
   });
 
   const [chatChannel, setChatChannel] = useState(null);
+  const [chatError, setChatError] = useState(null);
 
   useEffect(() => {
     if (!chatClient) return;
+    let cancelled = false;
 
     const channel = chatClient.channel("messaging", callId, {
       name: "Interview Chat",
@@ -88,10 +95,20 @@ export default function CallUI({
 
     channel
       .watch()
-      .then(() => setChatChannel(channel))
-      .catch(console.error);
+      .then(() => {
+        if (cancelled) return;
+        setChatChannel(channel);
+        setChatError(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        const message = "Unable to connect to interview chat. Refresh the page to reconnect.";
+        setChatError(message);
+        toast.error(message, { id: "chat-connection-error" });
+      });
 
     return () => {
+      cancelled = true;
       channel.stopWatching().catch(() => {});
     };
   }, [chatClient, callId, booking]);
@@ -185,8 +202,8 @@ export default function CallUI({
                   </Channel>
                 </Chat>
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 size={18} className="text-muted-foreground animate-spin" />
+                <div className="flex items-center justify-center h-full p-4">
+                  {chatError ? <p role="alert" className="text-sm text-danger">{chatError}</p> : <Loader2 size={18} className="text-muted-foreground animate-spin" />}
                 </div>
               )
             ) : (

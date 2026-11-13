@@ -123,6 +123,15 @@ test("shared hook displays expected errors and clears stale success data", async
   assert.equal(values[2], null);
 });
 
+test("local form validation uses the same inline error and toast message", () => {
+  let calls = 0;
+  const { hook, values, toasts } = loadHook(() => { calls++; });
+  hook.reportError("Start time must be before end time");
+  assert.equal(calls, 0);
+  assert.equal(values[2], "Start time must be before end time");
+  assert.deepEqual(toasts, ["Start time must be before end time"]);
+});
+
 test("shared hook never exposes minified React errors or raw network errors", async () => {
   for (const error of [new Error("Minified React error #441"), new Error("internal database connection details"), "network failure"]) {
     const { hook, values, toasts } = loadHook(async () => { throw error; });

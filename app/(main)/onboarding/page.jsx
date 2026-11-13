@@ -14,7 +14,7 @@ import { CATEGORIES, ONBOARDING_ROLES, YEARS_OPTIONS } from "@/lib/data";
 export default function OnboardingPage() {
   const router = useRouter();
 
-  const { data, loading, fn: onboardingFn } = useFetch(completeOnboarding);
+  const { data, loading, fn: onboardingFn, reportError } = useFetch(completeOnboarding);
 
   const [role, setRole] = useState(null);
   const [form, setForm] = useState({
@@ -26,10 +26,10 @@ export default function OnboardingPage() {
   });
 
   useEffect(() => {
-    if (data && !loading) {
+    if (data?.success && !loading) {
       router.push(role === "INTERVIEWER" ? "/dashboard" : "/explore");
     }
-  }, [data, router]);
+  }, [data, loading, role, router]);
 
   const toggleCategory = (val) => {
     setForm((prev) => ({
@@ -51,7 +51,8 @@ export default function OnboardingPage() {
     role === "INTERVIEWEE" || (role === "INTERVIEWER" && isInterviewerValid);
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (loading) return;
+    if (!canSubmit) return reportError("Please fill in all required fields and select at least one interview category.");
 
     onboardingFn({
       role,
@@ -219,7 +220,7 @@ export default function OnboardingPage() {
               variant="gold"
               size="hero"
               className="w-full"
-              disabled={!canSubmit || loading}
+              disabled={loading}
               onClick={handleSubmit}
             >
               {loading

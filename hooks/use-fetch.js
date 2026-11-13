@@ -7,6 +7,14 @@ const useFetch = (cb) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const reportError = (message) => {
+    const text = typeof message === "string" && message.trim()
+      ? message
+      : UNEXPECTED_ACTION_ERROR;
+    setError(text);
+    toast.error(text);
+  };
+
   const fn = async (...args) => {
     setLoading(true);
     setError(null);
@@ -18,8 +26,7 @@ const useFetch = (cb) => {
         const message = typeof response.error === "string"
           ? response.error
           : UNEXPECTED_ACTION_ERROR;
-        setError(message);
-        toast.error(message);
+        reportError(message);
         return response;
       }
       setData(response);
@@ -27,14 +34,13 @@ const useFetch = (cb) => {
       return response;
     } catch {
       // Network failures and redacted server exceptions are not user messages.
-      setError(UNEXPECTED_ACTION_ERROR);
-      toast.error(UNEXPECTED_ACTION_ERROR);
+      reportError(UNEXPECTED_ACTION_ERROR);
     } finally {
       setLoading(false);
     }
   };
 
-  return { data, loading, error, fn, setData, clearError: () => setError(null) };
+  return { data, loading, error, fn, setData, reportError, clearError: () => setError(null) };
 };
 
 export default useFetch;

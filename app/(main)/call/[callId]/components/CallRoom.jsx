@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 // Stream Video
 import {
@@ -26,40 +28,42 @@ export default function CallRoom({
   const router = useRouter();
   const [videoClient, setVideoClient] = useState(null);
   const [call, setCall] = useState(null);
-  const clientRef = useRef(null);
-  const joinedRef = useRef(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   useEffect(() => {
-    // Guard against React StrictMode double-invoke in development
-    if (joinedRef.current) return;
-    joinedRef.current = true;
-
-    const client = new StreamVideoClient({
-      apiKey,
-      user: {
-        id: currentUser.id,
-        name: currentUser.name,
-        image: currentUser.imageUrl,
-      },
-      token,
-    });
-
-    const callInstance = client.call("default", callId);
-
-    callInstance
-      .join({ create: false })
-      .then(() => {
-        clientRef.current = client;
+    let cancelled = false;
+    let client;
+    let callInstance;
+    const connect = async () => {
+      try {
+        client = new StreamVideoClient({
+          apiKey,
+          user: { id: currentUser.id, name: currentUser.name, image: currentUser.imageUrl },
+          token,
+        });
+        callInstance = client.call("default", callId);
+        await callInstance.join({ create: false });
+        if (cancelled) return;
+        setConnectionError(null);
         setVideoClient(client);
         setCall(callInstance);
-      })
-      .catch(console.error);
+      } catch {
+        if (cancelled) return;
+        const message = "Unable to join the interview. Check your connection and camera/microphone permissions, then try again.";
+        setConnectionError(message);
+        toast.error(message, { id: "call-connection-error" });
+      }
+    };
+    const connection = connect();
 
     return () => {
-      callInstance.leave().catch(() => {});
-      client.disconnectUser().catch(() => {});
-      clientRef.current = null;
-      joinedRef.current = false; // reset so hot reload works
+      cancelled = true;
+      // Wait for a pending join before cleaning up, without notifying users
+      // about expected teardown failures after navigation.
+      void connection.then(async () => {
+        await callInstance?.leave().catch(() => {});
+        await client?.disconnectUser().catch(() => {});
+      });
     };
   }, [
     apiKey,
@@ -73,6 +77,16 @@ export default function CallRoom({
   const handleLeave = useCallback(() => {
     router.push(isInterviewer ? "/dashboard" : "/appointments");
   }, [isInterviewer, router]);
+
+  if (connectionError) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p role="alert" className="max-w-md text-sm text-danger">{connectionError}</p>
+        <Button onClick={() => window.location.reload()}>Try again</Button>
+        <Button variant="outline" onClick={handleLeave}>Back to appointments</Button>
+      </div>
+    );
+  }
 
   if (!videoClient || !call) {
     return (

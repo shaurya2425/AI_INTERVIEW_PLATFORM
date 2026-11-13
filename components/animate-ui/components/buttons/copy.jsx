@@ -1,5 +1,6 @@
 'use client';;
 import * as React from 'react';
+import { toast } from 'sonner';
 import { cva } from 'class-variance-authority';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
@@ -61,8 +62,8 @@ function CopyButton({
       onClick?.(e);
       if (copied) return;
       if (content) {
-        navigator.clipboard
-          .writeText(content)
+        Promise.resolve()
+          .then(() => navigator.clipboard.writeText(content))
           .then(() => {
             setIsCopied(true);
             onCopiedChange?.(true, content);
@@ -71,8 +72,8 @@ function CopyButton({
               onCopiedChange?.(false);
             }, delay);
           })
-          .catch((error) => {
-            console.error('Error copying command', error);
+          .catch(() => {
+            toast.error('Could not copy to clipboard. Please select and copy the text manually.');
           });
       }
     },
