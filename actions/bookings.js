@@ -2,6 +2,7 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { getDisplayName, withDisplayName } from "@/lib/user-name";
 import { StreamClient } from "@stream-io/node-sdk";
 import { revalidatePath } from "next/cache";
 import { request } from "@arcjet/next";
@@ -41,7 +42,7 @@ export const getInterviewerProfile = async (interviewerId) => {
       },
     });
 
-    return interviewer ?? null;
+    return withDisplayName(interviewer) ?? null;
   } catch (err) {
     console.error("getInterviewerProfile error:", err);
     throw new Error("Failed to fetch interviewer profile");
@@ -96,13 +97,13 @@ export const bookSlot = async ({ interviewerId, startTime, endTime }) => {
     await streamClient.upsertUsers([
       {
         id: dbUser.clerkUserId,
-        name: dbUser.name ?? "Interviewee",
+        name: getDisplayName(dbUser.name, "Interviewee"),
         image: dbUser.imageUrl ?? undefined,
         role: "user",
       },
       {
         id: interviewer.clerkUserId,
-        name: interviewer.name ?? "Interviewer",
+        name: getDisplayName(interviewer.name, "Interviewer"),
         image: interviewer.imageUrl ?? undefined,
         role: "user",
       },

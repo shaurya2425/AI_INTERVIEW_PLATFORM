@@ -1,6 +1,7 @@
 // app/api/webhooks/stream/route.js
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db } from "@/lib/prisma";
+import { withDisplayName } from "@/lib/user-name";
 
 export async function POST(request) {
   const body = await request.json();
@@ -50,6 +51,8 @@ export async function POST(request) {
       return Response.json({ ok: true });
     }
 
+    booking.interviewer = withDisplayName(booking.interviewer);
+    booking.interviewee = withDisplayName(booking.interviewee);
     console.log(
       `[stream-webhook] Booking found: ${booking.id} | interviewer: ${booking.interviewer.name} | interviewee: ${booking.interviewee.name}`
     );
@@ -253,4 +256,4 @@ Analyze the candidate's performance. Respond ONLY with a valid JSON object, no m
     // Always 200 — non-2xx triggers Stream retries, making the race worse
     return Response.json({ ok: true });
   }
-} 
+}

@@ -3,6 +3,7 @@ import "server-only";
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { getClerkDisplayName, withDisplayName } from "@/lib/user-name";
 import { StreamClient } from "@stream-io/node-sdk";
 
 export const getCallData = async (callId) => {
@@ -79,27 +80,20 @@ export const getCallData = async (callId) => {
   });
 
   // 7. Return only the required data
-  const fullName = [
-    user.firstName,
-    user.lastName,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return {
     token,
     isInterviewer,
 
     currentUser: {
       id: user.id,
-      name: fullName || user.username || "User",
+      name: getClerkDisplayName(user),
       imageUrl: user.imageUrl,
     },
 
     booking: {
       id: booking.id,
-      interviewer: booking.interviewer,
-      interviewee: booking.interviewee,
+      interviewer: withDisplayName(booking.interviewer),
+      interviewee: withDisplayName(booking.interviewee),
       categories: booking.interviewer.categories,
       startTime: booking.startTime.toISOString(),
       endTime: booking.endTime.toISOString(),

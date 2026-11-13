@@ -1,6 +1,7 @@
 
 import { Suspense } from "react";
 import { db } from "@/lib/prisma";
+import { getDisplayName } from "@/lib/user-name";
 import { notFound } from "next/navigation";
 import PayoutReviewClient from "./components/PayoutReviewClient";
 import {
@@ -51,7 +52,7 @@ async function PayoutReviewContent({ params }) {
             paymentMethod: payout.paymentMethod,
             paymentDetail: payout.paymentDetail,
             status: payout.status,
-            interviewerName: payout.interviewer.name,
+            interviewerName: getDisplayName(payout.interviewer.name),
             interviewerEmail: payout.interviewer.email,
           }}
         />

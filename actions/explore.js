@@ -3,6 +3,7 @@ import "server-only";
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { withDisplayName } from "@/lib/user-name";
 
 export const getInterviewers = async () => {
   const user = await currentUser();
@@ -42,5 +43,5 @@ export const getInterviewers = async () => {
     },
   });
 
-  return interviewers;
+  return interviewers.map(withDisplayName);
 };

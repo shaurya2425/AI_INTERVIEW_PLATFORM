@@ -2,6 +2,7 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { getDisplayName, withDisplayName } from "@/lib/user-name";
 import { revalidatePath } from "next/cache";
 import { request } from "@arcjet/next";
 import { createRateLimiter, checkRateLimit } from "@/lib/arcjet";
@@ -81,7 +82,7 @@ export const getInterviewerAppointments = async () => {
   const dbUser = await db.user.findUnique({ where: { clerkUserId: user.id } });
   if (!dbUser) throw new Error("User not found");
 
-  return db.booking.findMany({
+  const bookings = await db.booking.findMany({
     where: { interviewerId: dbUser.id },
     include: {
       interviewee: { select: { name: true, imageUrl: true, email: true } },
@@ -89,6 +90,10 @@ export const getInterviewerAppointments = async () => {
     },
     orderBy: { startTime: "desc" },
   });
+  return bookings.map((booking) => ({
+    ...booking,
+    interviewee: withDisplayName(booking.interviewee),
+  }));
 };
 
 // ─── EARNINGS / WITHDRAWAL ────────────────────────────────────────────────────
@@ -173,7 +178,7 @@ export const requestWithdrawal = async ({
       const reviewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/payout/${payout.id}`;
       const html = await render(
         WithdrawalRequestEmail({
-          interviewerName: dbUser.name ?? "Unknown",
+          interviewerName: getDisplayName(dbUser.name, "Unknown"),
           interviewerEmail: dbUser.email,
           credits,
           platformFee,
@@ -186,7 +191,7 @@ export const requestWithdrawal = async ({
       await resend.emails.send({
         from: "Prept <onboarding@resend.dev>",
         to: ADMIN_EMAIL,
-        subject: `Withdrawal Request — ${dbUser.name} · ${credits} credits`,
+        subject: `Withdrawal Request — ${getDisplayName(dbUser.name)} · ${credits} credits`,
         html,
       });
     } catch (emailErr) {
