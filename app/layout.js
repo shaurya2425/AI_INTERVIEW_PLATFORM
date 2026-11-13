@@ -3,13 +3,10 @@ import "./globals.css";
 import { DM_Sans, Lora } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import {
-  ClerkProvider,
   SignInButton,
   SignUpButton,
 } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
 import Header from "@/components/header";
-import { Toaster } from "sonner";
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,11 +35,6 @@ export default function RootLayout({ children }) {
       <body
         className={`${lora.variable} ${dmSans.variable} h-full antialiased`}
       >
-        <ClerkProvider
-          appearance={{
-            theme: dark,
-          }}
-        >
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -57,10 +49,9 @@ export default function RootLayout({ children }) {
               {children}
             </main>
 
-            <Toaster richColors />
 
             {/* FOOTER */}
-            <footer className="relative overflow-hidden border-t border-white/10 bg-[#090909] text-stone-400">
+            <footer className="relative overflow-hidden border-t border-border bg-card text-muted-foreground">
 
               <div className="mx-auto max-w-7xl px-6 py-14 sm:px-10 lg:py-16">
 
@@ -76,16 +67,17 @@ export default function RootLayout({ children }) {
                         width={120}
                         height={48}
                         style={{ width: "auto", height: "48px" }}
+                        className="brightness-0 dark:brightness-100"
                         priority
                       />
                     </Link>
 
-                    <p className="mt-5 max-w-xs text-sm leading-7 text-stone-400">
+                    <p className="mt-5 max-w-xs text-sm leading-7 text-muted-foreground">
                       Prepare with purpose. Practice with confidence.
                       Take your interview preparation to the next level.
                     </p>
 
-                    {/* <span className="mt-6 inline-block text-[10px] font-semibold uppercase tracking-[0.3em] text-[#D6B46A]">
+                    {/* <span className="mt-6 inline-block text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">
                       Dark Edition
                     </span> */}
 
@@ -93,7 +85,7 @@ export default function RootLayout({ children }) {
 
                   {/* PLATFORM */}
                   <div>
-                    <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                    <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
                       Platform
                     </h3>
 
@@ -101,7 +93,7 @@ export default function RootLayout({ children }) {
                       <li>
                         <Link
                           href="/"
-                          className="transition-colors hover:text-[#D6B46A]"
+                          className="transition-colors hover:text-brand"
                         >
                           Home
                         </Link>
@@ -110,7 +102,7 @@ export default function RootLayout({ children }) {
                       <li>
                         <Link
                           href="/explore"
-                          className="transition-colors hover:text-[#D6B46A]"
+                          className="transition-colors hover:text-brand"
                         >
                           Explore
                         </Link>
@@ -119,7 +111,7 @@ export default function RootLayout({ children }) {
                       <li>
                         <Link
                           href="/appointments"
-                          className="transition-colors hover:text-[#D6B46A]"
+                          className="transition-colors hover:text-brand"
                         >
                           Appointments
                         </Link>
@@ -129,7 +121,7 @@ export default function RootLayout({ children }) {
 
                   {/* FOR EVERYONE */}
                   <div>
-                    <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                    <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
                       For Everyone
                     </h3>
 
@@ -137,7 +129,7 @@ export default function RootLayout({ children }) {
                       <li>
                         <Link
                           href="/explore"
-                          className="transition-colors hover:text-[#D6B46A]"
+                          className="transition-colors hover:text-brand"
                         >
                           Find Interviews
                         </Link>
@@ -146,7 +138,7 @@ export default function RootLayout({ children }) {
                       <li>
                         <Link
                           href="/appointments"
-                          className="transition-colors hover:text-[#D6B46A]"
+                          className="transition-colors hover:text-brand"
                         >
                           Track Progress
                         </Link>
@@ -156,14 +148,14 @@ export default function RootLayout({ children }) {
 
                   {/* ACCOUNT */}
                   <div>
-                    <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                    <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
                       Account
                     </h3>
 
                     <ul className="space-y-4 text-sm">
                       <li>
                         <SignInButton mode="modal">
-                          <button className="transition-colors hover:text-[#D6B46A]">
+                          <button className="transition-colors hover:text-brand">
                             Sign In
                           </button>
                         </SignInButton>
@@ -171,7 +163,7 @@ export default function RootLayout({ children }) {
 
                       <li>
                         <SignUpButton mode="modal">
-                          <button className="transition-colors hover:text-[#D6B46A]">
+                          <button className="transition-colors hover:text-brand">
                             Get Started
                           </button>
                         </SignUpButton>
@@ -182,15 +174,15 @@ export default function RootLayout({ children }) {
                 </div>
 
                 {/* BOTTOM BAR */}
-                <div className="mt-14 border-t border-white/10 pt-7">
+                <div className="mt-14 border-t border-border pt-7">
                   <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
 
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-muted-foreground">
                       © 2026 Prept. All rights reserved.
                     </p>
 
-                    <p className="text-xs tracking-wide text-stone-500">
-                      Made with <span className="text-[#D6B46A]">♥</span> for better interviews.
+                    <p className="text-xs tracking-wide text-muted-foreground">
+                      Made with <span className="text-brand">♥</span> for better interviews.
                     </p>
 
                   </div>
@@ -200,7 +192,6 @@ export default function RootLayout({ children }) {
             </footer>
 
           </ThemeProvider>
-        </ClerkProvider>
       </body>
     </html>
   );

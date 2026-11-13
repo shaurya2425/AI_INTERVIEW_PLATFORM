@@ -8,20 +8,21 @@ import { checkUser } from "@/lib/checkUser";
 import { CalendarDays, Users } from "lucide-react";
 import CreditButton from "./CreditButton";
 import RoleRedirect from "./RoleRedirect";
+import ThemeToggle from "./theme-toggle";
 
 export default async function Header() {
   const user = await checkUser();
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-3 sm:px-10 py-3 border-b border-white/7 backdrop-blur-xl">
+    <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-2 px-3 sm:px-10 py-3 border-b border-border bg-background/80 text-foreground backdrop-blur-xl">
       {/* LOGO */}
-      <Link href="/">
+      <Link href="/" className="shrink-0" aria-label="Prept home">
         <Image
           src="/logo.png"
-          alt="Logo"
+          alt="Prept"
           width={100}
           height={100}
-          className="h-11 w-auto"
+          className="h-9 sm:h-11 w-auto brightness-0 dark:brightness-100"
         />
       </Link>
 
@@ -29,7 +30,8 @@ export default async function Header() {
 
       {/* AUTHENTICATION */}
       <Suspense fallback={<div className="h-9 w-24" />}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
+          <ThemeToggle />
           <Show when="signed-out">
             <SignInButton>
               <Button variant="ghost">Sign in</Button>
@@ -52,13 +54,13 @@ export default async function Header() {
                 <Button variant="ghost" asChild>
                   <Link href="/explore">
                     <Users size={16} />
-                    <span className="hidden md:inline">Explore</span>
+                    <span className="sr-only md:not-sr-only">Explore</span>
                   </Link>
                 </Button>
                 <Button variant="default" asChild>
                   <Link href="/appointments">
                     <CalendarDays size={16} />
-                    <span className="hidden md:inline">My Appointments</span>
+                    <span className="sr-only md:not-sr-only">My Appointments</span>
                   </Link>
                 </Button>
               </>

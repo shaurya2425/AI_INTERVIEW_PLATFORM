@@ -12,7 +12,7 @@ import { CalendarDays } from "lucide-react";
 
 export default function MyAppointmentsPage() {
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-background">
       <PageHeader
         label="My appointments"
         gray="Your interview"
@@ -55,14 +55,14 @@ async function AppointmentsContent() {
       {appointments.length === 0 && (
         <div className="flex flex-col items-center justify-center py-28 gap-5 text-center">
           <span className="w-16 h-16 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-3xl">
-            <CalendarDays size={28} className="text-amber-400" />
+            <CalendarDays size={28} className="text-brand" />
           </span>
 
           <div>
-            <p className="text-base text-stone-400 font-light">
+            <p className="text-base text-muted-foreground font-light">
               No sessions booked yet.
             </p>
-            <p className="text-sm text-stone-600 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Browse expert interviewers and book your first session.
             </p>
           </div>
@@ -77,10 +77,10 @@ async function AppointmentsContent() {
       {scheduled.length > 0 && (
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-4">
-            <p className="text-xs font-semibold text-stone-500 tracking-widest uppercase">
+            <p className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
               Upcoming ({scheduled.length})
             </p>
-            <div className="flex-1 h-px bg-white/5" />
+            <div className="flex-1 h-px bg-muted" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -99,10 +99,10 @@ async function AppointmentsContent() {
       {past.length > 0 && (
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-4">
-            <p className="text-xs font-semibold text-stone-500 tracking-widest uppercase">
+            <p className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
               Past ({past.length})
             </p>
-            <div className="flex-1 h-px bg-white/5" />
+            <div className="flex-1 h-px bg-muted" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -124,7 +124,7 @@ async function AppointmentsContent() {
 function AppointmentsLoading() {
   return (
     <div className="flex min-h-[300px] items-center justify-center">
-      <p className="text-stone-400">
+      <p className="text-muted-foreground">
         Loading your appointments...
       </p>
     </div>

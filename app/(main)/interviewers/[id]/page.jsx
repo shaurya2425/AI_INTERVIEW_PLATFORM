@@ -50,27 +50,27 @@ async function InterviewerProfileContent({ params }) {
   if (!interviewer) notFound();
 
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-background">
       {/* Hero identity banner */}
-      <section className="relative border-b border-white/8 overflow-hidden">
+      <section className="relative border-b border-border overflow-hidden">
         <StarsBackgroundDemo />
 
         <div className="relative max-w-6xl mx-auto px-8 pt-20 pb-14 flex flex-col gap-8">
           <Link href="/explore">
-            <Button variant="link" className="text-stone-500 cursor-pointer">
+            <Button variant="link" className="text-muted-foreground cursor-pointer">
               <ArrowLeft size={13} />
               Back to explore
             </Button>
           </Link>
 
           <div className="flex items-start gap-8">
-            <Avatar className="w-24 h-24 border-2 border-white/10 shrink-0 rounded-2xl">
+            <Avatar className="w-24 h-24 border-2 border-border shrink-0 rounded-2xl">
               <AvatarImage
                 src={interviewer.imageUrl}
                 alt={interviewer.name}
                 className="rounded-2xl"
               />
-              <AvatarFallback className="rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400 text-3xl font-medium">
+              <AvatarFallback className="rounded-2xl bg-amber-400/10 border border-amber-400/20 text-brand text-3xl font-medium">
                 {interviewer.name?.[0] ?? "?"}
               </AvatarFallback>
             </Avatar>
@@ -81,9 +81,9 @@ async function InterviewerProfileContent({ params }) {
               </h1>
 
               {interviewer.title && interviewer.company && (
-                <p className="text-base text-stone-400 font-light">
+                <p className="text-base text-muted-foreground font-light">
                   {interviewer.title}
-                  <span className="text-stone-700 mx-2">·</span>
+                  <span className="text-muted-foreground mx-2">·</span>
                   {interviewer.company}
                 </p>
               )}
@@ -92,7 +92,7 @@ async function InterviewerProfileContent({ params }) {
                 {interviewer.yearsExp && (
                   <Badge
                     variant="outline"
-                    className="border-white/10 text-stone-400 text-xs px-3 py-1"
+                    className="border-border text-muted-foreground text-xs px-3 py-1"
                   >
                     {interviewer.yearsExp}+ yrs experience
                   </Badge>
@@ -100,7 +100,7 @@ async function InterviewerProfileContent({ params }) {
 
                 <Badge
                   variant="outline"
-                  className="border-amber-400/25 bg-amber-400/8 text-amber-400 text-xs px-3 py-1"
+                  className="border-amber-400/25 bg-amber-400/8 text-brand text-xs px-3 py-1"
                 >
                   {interviewer.creditRate ?? 10} credits / session
                 </Badge>
@@ -108,7 +108,7 @@ async function InterviewerProfileContent({ params }) {
                 {interviewer.availabilities?.[0] && (
                   <Badge
                     variant="outline"
-                    className="border-green-500/20 bg-green-500/8 text-green-400 text-xs px-3 py-1"
+                    className="border-green-500/20 bg-green-500/8 text-success text-xs px-3 py-1"
                   >
                     🟢 Available
                   </Badge>
@@ -124,19 +124,19 @@ async function InterviewerProfileContent({ params }) {
         {/* Left section */}
         <div className="lg:col-span-3 flex flex-col gap-6 order-2 lg:-order-1">
           {interviewer.bio && (
-            <div className="bg-[#0f0f11] border border-white/10 rounded-2xl p-8 flex flex-col gap-5">
+            <div className="bg-card border border-border rounded-2xl p-8 flex flex-col gap-5">
               <SectionLabel>About</SectionLabel>
-              <p className="text-base text-stone-300 font-light leading-relaxed">
+              <p className="text-base text-foreground font-light leading-relaxed">
                 {interviewer.bio}
               </p>
             </div>
           )}
 
           {interviewer.categories?.length > 0 && (
-            <div className="bg-[#0f0f11] border border-white/10 rounded-2xl p-8 flex flex-col gap-5">
+            <div className="bg-card border border-border rounded-2xl p-8 flex flex-col gap-5">
               <div>
                 <SectionLabel>Specialties</SectionLabel>
-                <p className="text-sm text-stone-500 font-light mt-1">
+                <p className="text-sm text-muted-foreground font-light mt-1">
                   Interview categories this expert covers.
                 </p>
               </div>
@@ -145,7 +145,7 @@ async function InterviewerProfileContent({ params }) {
                 {interviewer.categories.map((cat) => (
                   <span
                     key={cat}
-                    className="text-sm px-4 py-2 rounded-xl border border-amber-400/20 bg-amber-400/5 text-amber-400"
+                    className="text-sm px-4 py-2 rounded-xl border border-amber-400/20 bg-amber-400/5 text-brand"
                   >
                     {CATEGORY_LABEL[cat] ?? cat}
                   </span>
@@ -154,10 +154,10 @@ async function InterviewerProfileContent({ params }) {
             </div>
           )}
 
-          <div className="bg-[#0f0f11] border border-white/10 rounded-2xl p-8 flex flex-col gap-6">
+          <div className="bg-card border border-border rounded-2xl p-8 flex flex-col gap-6">
             <div>
               <SectionLabel>What to expect</SectionLabel>
-              <p className="text-sm text-stone-500 font-light mt-1">
+              <p className="text-sm text-muted-foreground font-light mt-1">
                 Every session on Prept includes the following.
               </p>
             </div>
@@ -170,10 +170,10 @@ async function InterviewerProfileContent({ params }) {
                   </span>
 
                   <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-medium text-stone-200">
+                    <p className="text-sm font-medium text-foreground">
                       {title}
                     </p>
-                    <p className="text-xs text-stone-500 font-light leading-relaxed">
+                    <p className="text-xs text-muted-foreground font-light leading-relaxed">
                       {desc}
                     </p>
                   </div>
@@ -198,8 +198,8 @@ async function InterviewerProfileContent({ params }) {
 
 function ProfileLoading() {
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center">
-      <p className="text-stone-400">
+    <main className="min-h-screen bg-background flex items-center justify-center">
+      <p className="text-muted-foreground">
         Loading interviewer profile...
       </p>
     </main>

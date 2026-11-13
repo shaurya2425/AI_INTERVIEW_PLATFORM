@@ -20,12 +20,12 @@ export default function CreditButton({ role, credits }) {
     <>
       <Button
         variant="outline"
-        className="border-amber-400/20 text-amber-400 cursor-pointer"
+        className="border-amber-400/20 text-brand cursor-pointer"
         onClick={handleClick}
       >
         <Coins size={14} />
-        <span className=" opacity-70">
-          {credits} {role === "INTERVIEWER" ? "Earned" : "Credits"}
+        <span>
+          {credits} <span className="sr-only sm:not-sr-only">{role === "INTERVIEWER" ? "Earned" : "Credits"}</span>
         </span>
       </Button>
 

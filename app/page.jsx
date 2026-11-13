@@ -13,16 +13,16 @@ import Link from "next/link";
 function MockUI({ rows = 3 }) {
   const widths = ["w-4/5", "w-3/5", "w-2/5", "w-4/5", "w-1/2"];
   const colors = [
-    "bg-white/5",
-    "bg-white/5",
+    "bg-muted",
+    "bg-muted",
     "bg-amber-400/15",
-    "bg-white/5",
-    "bg-white/5",
+    "bg-muted",
+    "bg-muted",
   ];
 
   return (
-    <div className="mt-5 rounded-xl bg-[#141417] border border-white/10 overflow-hidden">
-      <div className="h-9 bg-white/5 border-b border-white/10 flex items-center px-3.5 gap-1.5">
+    <div className="mt-5 rounded-xl bg-surface border border-border overflow-hidden">
+      <div className="h-9 bg-muted border-b border-border flex items-center px-3.5 gap-1.5">
         <span className="w-2 h-2 rounded-full bg-[#ff5f57]" />
         <span className="w-2 h-2 rounded-full bg-[#ffbd2e]" />
         <span className="w-2 h-2 rounded-full bg-[#28c840]" />
@@ -42,7 +42,7 @@ function MockUI({ rows = 3 }) {
 export function BentoCard({ icon, title, desc, children, className = "" }) {
   return (
     <div
-      className={`relative bg-[#0f0f11] border border-white/10 hover:border-amber-400/20 rounded-2xl p-9 h-full transition duration-300 overflow-hidden ${className}`}
+      className={`relative bg-card border border-border hover:border-amber-400/20 rounded-2xl p-9 h-full transition duration-300 overflow-hidden ${className}`}
     >
       <div className="absolute inset-0 bg-linear-to-br from-amber-400/5 via-transparent pointer-events-none" />
 
@@ -52,7 +52,7 @@ export function BentoCard({ icon, title, desc, children, className = "" }) {
 
       <h3 className="font-serif text-xl tracking-tight mb-2">{title}</h3>
 
-      <p className="text-sm text-stone-400 leading-relaxed">{desc}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
 
       {children}
     </div>
@@ -62,22 +62,22 @@ export function BentoCard({ icon, title, desc, children, className = "" }) {
 
 export default function LandingPage() {
   return (
-    <div className="bg-black overflow-x-hidden">
+    <div className="bg-background overflow-x-hidden">
       {/* Hero */}
 
       <section className="pt-28 sm:pt-32 relative min-h-screen grid grid-cols-1 lg:grid-cols-5 px-4 sm:px-8 pb-20 overflow-hidden">
         <StarsBackgroundDemo />
 
-        <div className="col-span-full lg:col-span-3 flex flex-col items-center justify-center text-center lg:-rotate-2">
+        <div className="relative z-10 col-span-full lg:col-span-3 flex flex-col items-center justify-center text-center">
           <Badge variant="gold">Powered by AI - Now in Beta</Badge>
 
-          <h1 className="font-serif relative text-5xl sm:text:text-6xl lg:text-7xl tracking-tighter max-w-4xl">
+          <h1 className="font-serif relative text-5xl sm:text-6xl lg:text-7xl tracking-tighter max-w-4xl mt-5">
             <GrayTitle>Ace your interview</GrayTitle>
             <br />
             <GoldTitle>with real experts</GoldTitle>
           </h1>
 
-          <p className="relative text-sm sm:text-base md:text-lg text-stone-400 max-w-xl mt-6 leading-relaxed">
+          <p className="relative text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mt-6 leading-relaxed">
             Book 1:1 mock interviews with senior engineers from top companies.
             Get AI-powered feedback, role-specific questions, and the confidence
             to land your dream job.
@@ -102,7 +102,7 @@ export default function LandingPage() {
               {AVATARS.map((av, i) => (
                 <div
                   key={i}
-                  className={`w-8 h-8 rounded-full border-2 border-[#0a0a0b] overflow-hidden ${
+                  className={`w-8 h-8 rounded-full border-2 border-background overflow-hidden ${
                     i > 0 ? "-ml-2" : ""
                   }`}
                 >
@@ -117,8 +117,8 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <p className="text-sm text-stone-500 text-center sm:text-left">
-              <strong className="text-stone-400 font-medium">
+            <p className="text-sm text-muted-foreground text-center sm:text-left">
+              <strong className="text-muted-foreground font-medium">
                 2,400+ engineers
               </strong>{" "}
               cracked FAANG interviews via Prept
@@ -127,7 +127,7 @@ export default function LandingPage() {
         </div>
 
         {/* RIGHT */}
-        <div className="col-span-full lg:col-span-2 flex items-center justify-center lg:justify-start mt-12 lg:mt-0 lg:rotate-3">
+        <div className="relative z-10 col-span-full lg:col-span-2 flex items-center justify-center lg:justify-start mt-12 lg:mt-0">
           {/* <Image
             src="/hero.png"
             alt="Hero illustration"
@@ -142,12 +142,12 @@ export default function LandingPage() {
       </section>
 
       {/* LOGOS */}
-      <section className="relative z-10 border-y border-white/10 py-14">
-        <p className="text-center text-xs font-medium text-stone-600 tracking-widest uppercase mb-8">
+      <section className="relative z-10 border-y border-border py-14">
+        <p className="text-center text-xs font-medium text-muted-foreground tracking-widest uppercase mb-8">
           Interviewees landed roles at
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-24 px-6">
+        <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-20 px-6">
           {LOGOS.map((l) => (
             <Image
               key={l.alt}
@@ -155,7 +155,7 @@ export default function LandingPage() {
               alt={l.alt}
               width={50}
               height={50}
-              className="h-6 w-auto opacity-60 grayscale"
+              className="h-6 w-auto opacity-75 grayscale brightness-0 dark:invert"
             />
           ))}
         </div>
@@ -174,7 +174,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12 md:col-span-7">
             <BentoCard
-              icon={<Bot size={20} className="text-amber-400" />}
+              icon={<Bot size={20} className="text-brand" />}
               title={<GrayTitle>AI Question Generator</GrayTitle>}
               desc="Interviewers get a live AI co-pilot generating role-specific questions on demand — system design, behavioural, DSA — all tailored to the candidate's level."
             >
@@ -190,17 +190,17 @@ export default function LandingPage() {
 
           <div className="col-span-12 md:col-span-5">
             <BentoCard
-              icon={<Wallet size={16} className="text-amber-400" />}
+              icon={<Wallet size={16} className="text-brand" />}
               title={<GrayTitle>Credit System</GrayTitle>}
               desc="Subscribe for monthly credits. Book sessions. Interviewers earn and withdraw any time."
             >
-              <div className="mt-5 rounded-xl bg-[#141417] border border-white/10 p-5 flex justify-between items-end">
+              <div className="mt-5 rounded-xl bg-surface border border-border p-5 flex justify-between items-end">
                 <div>
-                  <p className="text-xs text-stone-600 mb-1">Your balance</p>
-                  <p className="font-serif text-4xl leading-none bg-linear-to-br from-amber-300 to-amber-500 bg-clip-text text-transparent">
+                  <p className="text-xs text-muted-foreground mb-1">Your balance</p>
+                  <p className="font-serif text-4xl leading-none bg-linear-to-br from-gold-start to-gold-end bg-clip-text text-transparent">
                     28
                   </p>
-                  <p className="text-xs text-stone-600 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     credits remaining
                   </p>
                 </div>
@@ -278,11 +278,11 @@ export default function LandingPage() {
           {ROLES.map((role) => (
             <div
               key={role.label}
-              className="relative bg-[#0f0f11] border border-white/10 hover:border-amber-400/20 rounded-2xl p-12 h-full transition duration-300 overflow-hidden"
+              className="relative bg-card border border-border hover:border-amber-400/20 rounded-2xl p-12 h-full transition duration-300 overflow-hidden"
             >
               <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.05)_0%,transparent_70%)] pointer-events-none" />
 
-              <span className="inline-block text-xs font-semibold text-amber-400 tracking-widest uppercase border border-amber-400/20 bg-amber-400/10 rounded-full px-3 py-1.5 mb-5">
+              <span className="inline-block text-xs font-semibold text-brand tracking-widest uppercase border border-amber-400/20 bg-amber-400/10 rounded-full px-3 py-1.5 mb-5">
                 {role.label}
               </span>
 
@@ -290,14 +290,14 @@ export default function LandingPage() {
                 {role.title}
               </h3>
 
-              <p className="text-sm text-stone-400 leading-relaxed mb-8">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                 {role.desc}
               </p>
 
               <ul className="space-y-3">
                 {role.perks.map((p) => (
-                  <li key={p} className="flex gap-3 text-sm text-stone-400">
-                    <span className="mt-0.5 min-w-4 h-4 rounded-full bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-xs text-amber-400">
+                  <li key={p} className="flex gap-3 text-sm text-muted-foreground">
+                    <span className="mt-0.5 min-w-4 h-4 rounded-full bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-xs text-brand">
                       ✓
                     </span>
                     {p}
@@ -317,7 +317,7 @@ export default function LandingPage() {
             gray="Simple, transparent"
             gold="credit-based plans"
           />
-          <p className="text-stone-400 mt-3 text-sm">
+          <p className="text-muted-foreground mt-3 text-sm">
             Each credit = one session. Unused credits roll over.
           </p>
         </div>
@@ -336,7 +336,7 @@ export default function LandingPage() {
             <GoldTitle>starts here</GoldTitle>
           </h2>
 
-          <p className="relative text-stone-400 font-light text-sm mb-11">
+          <p className="relative text-muted-foreground font-light text-sm mb-11">
             Join thousands of engineers already levelling up on Prept.
           </p>
 
@@ -358,4 +358,3 @@ export default function LandingPage() {
     </div>
   );
 }
-  

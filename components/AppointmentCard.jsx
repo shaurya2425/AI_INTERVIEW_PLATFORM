@@ -35,8 +35,8 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
 
   const creditsStyle =
     mode === "interviewer"
-      ? "border-green-500/20 bg-green-500/10 text-green-400"
-      : "border-amber-400/20 bg-amber-400/5 text-amber-400";
+      ? "border-green-500/20 bg-green-500/10 text-success"
+      : "border-amber-400/20 bg-amber-400/5 text-brand";
 
   const isUpcoming = status === "SCHEDULED";
 
@@ -51,32 +51,32 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
         }
       />
 
-      <article className="group relative bg-[#0f0f11] border border-white/10 transition-all duration-300 hover:-translate-y-0.5 rounded-2xl bg-linear-to-t from-transparent via-transparent to-amber-300/10 p-7 flex flex-col gap-6 self-start">
+      <article className="group relative bg-card border border-border transition-all duration-300 hover:-translate-y-0.5 rounded-2xl bg-linear-to-t from-transparent via-transparent to-amber-300/10 p-7 flex flex-col gap-6 self-start">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <Avatar className="w-14 h-14 border border-white/10 rounded-2xl shrink-0">
+            <Avatar className="w-14 h-14 border border-border rounded-2xl shrink-0">
               <AvatarImage
                 src={person?.imageUrl}
                 alt={person?.name}
                 className="rounded-2xl"
               />
-              <AvatarFallback className="rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400 text-lg font-medium">
+              <AvatarFallback className="rounded-2xl bg-amber-400/10 border border-amber-400/20 text-brand text-lg font-medium">
                 {person?.name?.[0] ?? "?"}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex flex-col gap-1 min-w-0">
-              <p className="text-base font-medium text-stone-200 leading-tight truncate">
+              <p className="text-base font-medium text-foreground leading-tight truncate">
                 {person?.name ?? "—"}
               </p>
               {person?.title && person?.company ? (
-                <p className="text-xs text-stone-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {person.title}
-                  <span className="text-stone-700 mx-1.5">·</span>
+                  <span className="text-muted-foreground mx-1.5">·</span>
                   {person.company}
                 </p>
               ) : (
-                <p className="text-xs text-stone-600 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {person?.email}
                 </p>
               )}
@@ -85,7 +85,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
                   {person.categories.slice(0, 3).map((cat) => (
                     <span
                       key={cat}
-                      className="text-[10px] px-2 py-0.5 rounded-md border border-amber-400/20 bg-amber-400/5 text-amber-400 leading-tight"
+                      className="text-[10px] px-2 py-0.5 rounded-md border border-amber-400/20 bg-amber-400/5 text-brand leading-tight"
                     >
                       {cat.replace("_", " ")}
                     </span>
@@ -105,52 +105,52 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
           </div>
         </div>
 
-        <div className="h-px bg-white/5" />
+        <div className="h-px bg-muted" />
 
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-stone-600">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <Calendar size={12} />
               <span className="text-[10px] font-semibold tracking-widest uppercase">
                 Date
               </span>
             </div>
-            <p className="text-sm text-stone-300">{formatDate(startTime)}</p>
+            <p className="text-sm text-foreground">{formatDate(startTime)}</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-stone-600">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <Clock size={12} />
               <span className="text-[10px] font-semibold tracking-widest uppercase">
                 Time
               </span>
             </div>
-            <p className="text-sm text-stone-300">
+            <p className="text-sm text-foreground">
               {formatTime(startTime)}
-              <span className="text-stone-600 mx-1">–</span>
+              <span className="text-muted-foreground mx-1">–</span>
               {formatTime(endTime)}
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-stone-600">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <Video size={12} />
               <span className="text-[10px] font-semibold tracking-widest uppercase">
                 Duration
               </span>
             </div>
-            <p className="text-sm text-stone-300">
+            <p className="text-sm text-foreground">
               {formatDuration(startTime, endTime)}
             </p>
           </div>
         </div>
 
         {feedback?.summary && (
-          <div className="rounded-xl border border-white/8 bg-[#141417] px-4 py-3 flex flex-col gap-1.5">
-            <p className="text-[10px] font-semibold text-stone-600 tracking-widest uppercase">
+          <div className="rounded-xl border border-border bg-surface px-4 py-3 flex flex-col gap-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
               AI Feedback
             </p>
-            <p className="text-xs text-stone-400 font-light leading-relaxed line-clamp-2">
+            <p className="text-xs text-muted-foreground font-light leading-relaxed line-clamp-2">
               {feedback.summary}
             </p>
           </div>
@@ -185,7 +185,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1.5 border-amber-400/20 text-amber-400 hover:bg-amber-400/10 hover:border-amber-400/40"
+                    className="gap-1.5 border-amber-400/20 text-brand hover:bg-amber-400/10 hover:border-amber-400/40"
                     onClick={() => setFeedbackOpen(true)}
                   >
                     <Sparkles size={12} />

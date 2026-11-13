@@ -61,7 +61,7 @@ async function DashboardContent() {
   ]);
 
   return (
-    <main className="min-h-screen w-full bg-black">
+    <main className="min-h-screen w-full bg-background">
       {/* Page Header */}
       <PageHeader
         label="Interviewer dashboard"
@@ -74,11 +74,11 @@ async function DashboardContent() {
         }
         right={
           <div>
-            <p className="text-xs text-stone-600">
+            <p className="text-xs text-muted-foreground">
               Credit balance
             </p>
 
-            <p className="text-right font-serif text-3xl leading-none bg-linear-to-br from-amber-300 to-amber-500 bg-clip-text text-transparent">
+            <p className="text-right font-serif text-3xl leading-none bg-linear-to-br from-gold-start to-gold-end bg-clip-text text-transparent">
               {stats?.creditBalance ?? 0}
             </p>
           </div>
@@ -92,12 +92,12 @@ async function DashboardContent() {
           className="!flex !w-full !flex-col gap-8"
         >
           {/* Horizontal Tabs */}
-          <TabsList className="grid h-auto min-h-10 w-full grid-cols-3 bg-[#0f0f11] border border-white/10 rounded-xl p-1">
+          <TabsList className="grid h-auto min-h-10 w-full grid-cols-3 bg-card border border-border rounded-xl p-1">
             <TabsTrigger
               value="earnings"
               className="flex items-center justify-center gap-2 py-3"
             >
-              <Wallet size={16} className="text-amber-400" />
+              <Wallet size={16} className="text-brand" />
               Earnings
             </TabsTrigger>
 
@@ -105,7 +105,7 @@ async function DashboardContent() {
               value="appointments"
               className="flex items-center justify-center gap-2 py-3"
             >
-              <ClipboardList size={16} className="text-amber-400" />
+              <ClipboardList size={16} className="text-brand" />
               Appointments
             </TabsTrigger>
 
@@ -113,7 +113,7 @@ async function DashboardContent() {
               value="availability"
               className="flex items-center justify-center gap-2 py-3"
             >
-              <Clock size={16} className="text-amber-400" />
+              <Clock size={16} className="text-brand" />
               Availability
             </TabsTrigger>
           </TabsList>
@@ -156,8 +156,8 @@ async function DashboardContent() {
 
 function DashboardLoading() {
   return (
-    <main className="min-h-screen w-full bg-black flex items-center justify-center">
-      <p className="text-stone-400">
+    <main className="min-h-screen w-full bg-background flex items-center justify-center">
+      <p className="text-muted-foreground">
         Loading your dashboard...
       </p>
     </main>

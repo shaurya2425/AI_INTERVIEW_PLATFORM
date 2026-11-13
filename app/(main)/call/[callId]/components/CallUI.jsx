@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState } from "react";
+import { useTheme } from "next-themes";
 
 // Stream Video
 import {
@@ -39,6 +40,7 @@ export default function CallUI({
   token,
   currentUser,
 }) {
+  const { resolvedTheme } = useTheme();
   const { useCallCallingState } = useCallStateHooks();
   const call = useCall();
   const callingState = useCallCallingState();
@@ -96,29 +98,29 @@ export default function CallUI({
 
   if (callingState === CallingState.LEFT) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex flex-col items-center justify-center gap-3">
-        <p className="text-stone-400 text-sm">Leaving call…</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
+        <p className="text-muted-foreground text-sm">Leaving call…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[92vh] bg-[#0a0a0b] flex flex-col overflow-hidden">
+    <div className="min-h-[92vh] bg-background flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/8 shrink-0">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="border-white/10 text-stone-500 text-xs"
+            className="border-border text-muted-foreground text-xs"
           >
             {booking.interviewer.name}
-            <span className="text-stone-700 mx-1.5">×</span>
+            <span className="text-muted-foreground mx-1.5">×</span>
             {booking.interviewee.name}
           </Badge>
           {isInterviewer && (
             <Badge
               variant="outline"
-              className="border-amber-400/20 bg-amber-400/5 text-amber-400 text-xs"
+              className="border-amber-400/20 bg-amber-400/5 text-brand text-xs"
             >
               Interviewer
             </Badge>
@@ -127,26 +129,26 @@ export default function CallUI({
       </div>
 
       {/* Body: video + side panel */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0">
         {/* ── LEFT: Video ── */}
         <div className="flex flex-col flex-1 min-w-0">
-          <StreamTheme>
+          <StreamTheme className="prept-video-theme">
             <SpeakerLayout participantBarPosition="bottom" />
             <CallControls onLeave={handleLeave} />
           </StreamTheme>
         </div>
 
         {/* ── RIGHT: Chat / AI panel ── */}
-        <div className="w-85 shrink-0 flex flex-col border-l border-white/8 bg-[#0a0a0b]">
+        <div className="w-full lg:w-85 min-h-96 shrink-0 flex flex-col border-t lg:border-t-0 lg:border-l border-border bg-background">
           {/* Tab switcher */}
-          <div className="flex border-b border-white/8 shrink-0">
+          <div className="flex border-b border-border shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab("chat")}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-medium transition-colors ${
                 activeTab === "chat"
-                  ? "text-amber-400 border-b-2 border-amber-400"
-                  : "text-stone-500 hover:text-stone-300"
+                  ? "text-brand border-b-2 border-amber-400"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <MessageSquare size={13} />
@@ -160,8 +162,8 @@ export default function CallUI({
                 onClick={() => setActiveTab("ai")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-medium transition-colors ${
                   activeTab === "ai"
-                    ? "text-amber-400 border-b-2 border-amber-400"
-                    : "text-stone-500 hover:text-stone-300"
+                    ? "text-brand border-b-2 border-amber-400"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Sparkles size={13} />
@@ -174,7 +176,7 @@ export default function CallUI({
           <div className="flex-1 min-h-0 overflow-hidden">
             {activeTab === "chat" ? (
               chatClient && chatChannel ? (
-                <Chat client={chatClient} theme="str-chat__theme-dark">
+                <Chat client={chatClient} theme={resolvedTheme === "dark" ? "str-chat__theme-dark" : "str-chat__theme-light"}>
                   <Channel channel={chatChannel}>
                     <Window>
                       <MessageList />
@@ -184,7 +186,7 @@ export default function CallUI({
                 </Chat>
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <Loader2 size={18} className="text-stone-600 animate-spin" />
+                  <Loader2 size={18} className="text-muted-foreground animate-spin" />
                 </div>
               )
             ) : (

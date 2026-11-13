@@ -58,17 +58,17 @@ export default function AvailabilitySection({ initial }) {
     : null;
 
   return (
-    <section className="bg-[#0f0f11] border border-white/10 rounded-2xl p-8 flex flex-col gap-7">
+    <section className="bg-card border border-border rounded-2xl p-8 flex flex-col gap-7">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-lg mb-4">
-            <Clock size={18} className="text-amber-400" />
+            <Clock size={18} className="text-brand" />
           </span>
           <h2 className="font-serif text-xl tracking-tight">
             <GrayTitle>Daily availability window</GrayTitle>
           </h2>
-          <p className="text-xs text-stone-500 font-light mt-1">
+          <p className="text-xs text-muted-foreground font-light mt-1">
             Interviewees can book within this window every day.
           </p>
         </div>
@@ -76,33 +76,33 @@ export default function AvailabilitySection({ initial }) {
         {initial && (
           <Badge
             variant="outline"
-            className="shrink-0 border-green-500/20 bg-green-500/10 text-green-400"
+            className="shrink-0 border-green-500/20 bg-green-500/10 text-success"
           >
             Active
           </Badge>
         )}
       </div>
 
-      <div className="h-px bg-white/5" />
+      <div className="h-px bg-muted" />
 
       {/* Time inputs */}
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
-          <Label className="text-stone-400 text-xs">Start time</Label>
+          <Label className="text-muted-foreground text-xs">Start time</Label>
           <Input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="bg-[#141417] border-white/10 text-stone-100"
+            className="bg-surface border-border text-foreground"
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label className="text-stone-400 text-xs">End time</Label>
+          <Label className="text-muted-foreground text-xs">End time</Label>
           <Input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="bg-[#141417] border-white/10 text-stone-100"
+            className="bg-surface border-border text-foreground"
           />
         </div>
       </div>
@@ -112,11 +112,11 @@ export default function AvailabilitySection({ initial }) {
         <div className="flex items-center gap-3">
           <Badge
             variant="outline"
-            className="border-amber-400/20 bg-amber-400/5 text-amber-400"
+            className="border-amber-400/20 bg-amber-400/5 text-brand"
           >
             {duration} window
           </Badge>
-          <span className="text-xs text-stone-600">
+          <span className="text-xs text-muted-foreground">
             Interviewees see this as your open booking range
           </span>
         </div>
@@ -124,7 +124,7 @@ export default function AvailabilitySection({ initial }) {
 
       {/* Error */}
       {error && (
-        <p className="text-xs text-red-400">{error?.message || error}</p>
+        <p className="text-xs text-danger">{error?.message || error}</p>
       )}
 
       {/* Save */}

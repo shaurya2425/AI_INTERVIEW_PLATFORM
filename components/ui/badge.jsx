@@ -20,7 +20,7 @@ const badgeVariants = cva(
         link: "text-primary underline-offset-4 [a&]:hover:underline",
 
         // Custom
-        gold: "border-amber-400/30 bg-amber-400/10 text-amber-300 py-1 px-3",
+        gold: "border-amber-400/30 bg-amber-400/10 text-brand py-1 px-3",
       },
     },
     defaultVariants: {

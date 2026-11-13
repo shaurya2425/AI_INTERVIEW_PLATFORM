@@ -32,7 +32,7 @@ async function PayoutReviewContent({ params }) {
   if (!payout) notFound();
 
   return (
-    <main className="min-h-screen bg-[#0a0a0b] text-stone-100 antialiased px-6 flex items-center justify-center">
+    <main className="min-h-screen bg-background text-foreground antialiased px-6 flex items-center justify-center">
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="text-center">
           <SectionLabel>Admin</SectionLabel>
@@ -62,8 +62,8 @@ async function PayoutReviewContent({ params }) {
 
 function PayoutLoading() {
   return (
-    <main className="min-h-screen bg-[#0a0a0b] text-stone-100 flex items-center justify-center">
-      <p className="text-stone-400">Loading payout details...</p>
+    <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <p className="text-muted-foreground">Loading payout details...</p>
     </main>
   );
 }

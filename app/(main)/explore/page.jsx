@@ -7,7 +7,7 @@ import ExploreGrid from "./components/ExploreGrid";
 
 export default function ExplorePage() {
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-background">
       {/* Page header */}
       <PageHeader
         label="Explore"
@@ -35,7 +35,7 @@ async function ExploreContent() {
 function ExploreLoading() {
   return (
     <div className="flex min-h-[300px] items-center justify-center">
-      <p className="text-white/60">
+      <p className="text-muted-foreground">
         Loading interviewers...
       </p>
     </div>
