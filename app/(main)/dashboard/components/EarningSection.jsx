@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -298,7 +300,8 @@ export default function EarningsSection({ stats, history }) {
                     });
                   }}
                 >
-                  {loading ? "Submitting…" : "Confirm withdrawal"}
+                  {loading && <LoadingSpinner className="size-4 text-current" />}
+        {loading ? "Submitting…" : "Confirm withdrawal"}
                 </Button>
               </DialogFooter>
             </>

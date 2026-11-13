@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
@@ -197,11 +198,5 @@ async function InterviewerProfileContent({ params }) {
 }
 
 function ProfileLoading() {
-  return (
-    <main className="min-h-screen bg-background flex items-center justify-center">
-      <p className="text-muted-foreground">
-        Loading interviewer profile...
-      </p>
-    </main>
-  );
+  return <PageLoader label="Loading interviewer profile" className="min-h-screen" />;
 }

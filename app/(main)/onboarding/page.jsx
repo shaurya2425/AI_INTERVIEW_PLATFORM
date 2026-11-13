@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GoldTitle, GrayTitle, SectionLabel } from "@/components/reusables";
@@ -223,7 +225,8 @@ export default function OnboardingPage() {
               disabled={loading}
               onClick={handleSubmit}
             >
-              {loading
+              {loading && <LoadingSpinner className="size-4 text-current" />}
+        {loading
                 ? "Setting up your account…"
                 : role === "INTERVIEWER"
                 ? "Create interviewer profile →"

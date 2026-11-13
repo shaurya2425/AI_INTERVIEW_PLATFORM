@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
 import { db } from "@/lib/prisma";
@@ -62,9 +63,5 @@ async function PayoutReviewContent({ params }) {
 }
 
 function PayoutLoading() {
-  return (
-    <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
-      <p className="text-muted-foreground">Loading payout details...</p>
-    </main>
-  );
+  return <PageLoader label="Loading payout details" className="min-h-screen" />;
 }

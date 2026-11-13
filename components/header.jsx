@@ -9,6 +9,7 @@ import { CalendarDays, Users } from "lucide-react";
 import CreditButton from "./CreditButton";
 import RoleRedirect from "./RoleRedirect";
 import ThemeToggle from "./theme-toggle";
+import { LoadingSpinner } from "./ui/loading-spinner";
 
 export default async function Header() {
   const user = await checkUser();
@@ -29,7 +30,7 @@ export default async function Header() {
       {user && <RoleRedirect role={user.role} />}
 
       {/* AUTHENTICATION */}
-      <Suspense fallback={<div className="h-9 w-24" />}>
+      <Suspense fallback={<div className="h-9 w-24 flex items-center justify-center"><LoadingSpinner label="Loading account" /></div>}>
         <div className="flex items-center gap-1 sm:gap-3">
           <ThemeToggle />
           <Show when="signed-out">

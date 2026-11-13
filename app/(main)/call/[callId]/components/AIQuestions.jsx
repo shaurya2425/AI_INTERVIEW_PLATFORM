@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { CATEGORY_LABEL } from "@/lib/data";
 import { generateInterviewQuestions } from "@/actions/aiQuestions";
 import useFetch from "@/hooks/use-fetch";
@@ -54,7 +55,7 @@ export default function AIQuestionsPanel({ categories }) {
       >
         {loading ? (
           <>
-            <Loader2 size={13} className="animate-spin" />
+            <LoadingSpinner label="Generating questions" className="size-4 text-current" />
             Generating…
           </>
         ) : (

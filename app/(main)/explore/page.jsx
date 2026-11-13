@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
 
@@ -33,11 +34,5 @@ async function ExploreContent() {
 }
 
 function ExploreLoading() {
-  return (
-    <div className="flex min-h-[300px] items-center justify-center">
-      <p className="text-muted-foreground">
-        Loading interviewers...
-      </p>
-    </div>
-  );
+  return <PageLoader label="Loading interviewers" className="min-h-[300px]" />;
 }

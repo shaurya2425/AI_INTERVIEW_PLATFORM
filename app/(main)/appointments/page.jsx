@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
@@ -122,11 +123,5 @@ async function AppointmentsContent() {
 }
 
 function AppointmentsLoading() {
-  return (
-    <div className="flex min-h-[300px] items-center justify-center">
-      <p className="text-muted-foreground">
-        Loading your appointments...
-      </p>
-    </div>
-  );
+  return <PageLoader label="Loading your appointments" className="min-h-[300px]" />;
 }

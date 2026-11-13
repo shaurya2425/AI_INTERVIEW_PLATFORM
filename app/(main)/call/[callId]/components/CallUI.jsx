@@ -27,7 +27,8 @@ import {
 import "stream-chat-react/dist/css/v2/index.css";
 
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Sparkles, Loader2 } from "lucide-react";
+import { MessageSquare, Sparkles } from "lucide-react";
+import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
 import AIQuestionsPanel from "./AIQuestions";
 
 // ─── Call UI (inside StreamCall context) ─────────────────────────────────────
@@ -115,9 +116,7 @@ export default function CallUI({
 
   if (callingState === CallingState.LEFT) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
-        <p className="text-muted-foreground text-sm">Leaving call…</p>
-      </div>
+      <PageLoader label="Leaving call" className="min-h-screen" />
     );
   }
 
@@ -203,7 +202,7 @@ export default function CallUI({
                 </Chat>
               ) : (
                 <div className="flex items-center justify-center h-full p-4">
-                  {chatError ? <p role="alert" className="text-sm text-danger">{chatError}</p> : <Loader2 size={18} className="text-muted-foreground animate-spin" />}
+                  {chatError ? <p role="alert" className="text-sm text-danger">{chatError}</p> : <LoadingSpinner label="Connecting to chat" />}
                 </div>
               )
             ) : (

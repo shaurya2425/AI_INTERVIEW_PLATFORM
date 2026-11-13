@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/ui/loading-spinner";
 import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
 
@@ -52,9 +53,5 @@ async function CallContent({ params }) {
 
 // Shown while interview data is being loaded.
 function CallLoading() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Loading interview room...</p>
-    </div>
-  );
+  return <PageLoader label="Loading interview room" className="min-h-screen" />;
 }

@@ -14,7 +14,7 @@ import {
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import "stream-chat-react/dist/css/v2/index.css";
 
-import { Loader2 } from "lucide-react";
+import { PageLoader } from "@/components/ui/loading-spinner";
 import CallUI from "./CallUI";
 
 export default function CallRoom({
@@ -90,10 +90,7 @@ export default function CallRoom({
 
   if (!videoClient || !call) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
-        <Loader2 size={28} className="text-brand animate-spin" />
-        <p className="text-muted-foreground text-sm font-light">Connecting to call…</p>
-      </div>
+      <PageLoader label="Connecting to call" className="min-h-screen" />
     );
   }
 

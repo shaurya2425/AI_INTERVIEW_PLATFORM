@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
@@ -155,11 +156,5 @@ async function DashboardContent() {
 }
 
 function DashboardLoading() {
-  return (
-    <main className="min-h-screen w-full bg-background flex items-center justify-center">
-      <p className="text-muted-foreground">
-        Loading your dashboard...
-      </p>
-    </main>
-  );
+  return <PageLoader label="Loading your dashboard" className="min-h-screen" />;
 }

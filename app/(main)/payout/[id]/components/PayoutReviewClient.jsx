@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,6 +103,7 @@ export default function PayoutReviewClient({ payout }) {
         onClick={handleApprove}
         className="w-full"
       >
+        {loading && <LoadingSpinner className="size-4 text-current" />}
         {loading ? "Approving…" : `Approve $${payout.netAmount.toFixed(2)} →`}
       </Button>
     </div>

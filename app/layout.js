@@ -10,6 +10,7 @@ import Header from "@/components/header";
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -46,7 +47,7 @@ export default function RootLayout({ children }) {
             enableSystem
             disableTransitionOnChange
           >
-            <Suspense fallback={<div className="h-16" />}>
+            <Suspense fallback={<div className="h-16 flex items-center justify-center"><LoadingSpinner label="Loading navigation" /></div>}>
               <Header />
             </Suspense>
 

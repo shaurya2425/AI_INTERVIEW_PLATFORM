@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -281,7 +283,8 @@ export default function SlotPicker({
                 disabled={loading}
                 onClick={handleConfirm}
               >
-                {loading ? "Creating call…" : "Confirm →"}
+                {loading && <LoadingSpinner className="size-4 text-current" />}
+        {loading ? "Creating call…" : "Confirm →"}
               </Button>
             </div>
           </div>

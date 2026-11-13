@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -153,6 +155,7 @@ export default function AvailabilitySection({ initial }) {
         onClick={handleSave}
         className="self-start"
       >
+        {loading && <LoadingSpinner className="size-4 text-current" />}
         {loading
           ? "Saving…"
           : saved
