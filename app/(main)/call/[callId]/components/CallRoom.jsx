@@ -10,6 +10,7 @@ import {
   StreamVideoClient,
   StreamVideo,
   StreamCall,
+  CallingState,
 } from "@stream-io/video-react-sdk";
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import "stream-chat-react/dist/css/v2/index.css";
@@ -61,7 +62,9 @@ export default function CallRoom({
       // Wait for a pending join before cleaning up, without notifying users
       // about expected teardown failures after navigation.
       void connection.then(async () => {
-        await callInstance?.leave().catch(() => {});
+        if (callInstance && callInstance.state.callingState !== CallingState.LEFT) {
+          await callInstance.leave().catch(() => {});
+        }
         await client?.disconnectUser().catch(() => {});
       });
     };

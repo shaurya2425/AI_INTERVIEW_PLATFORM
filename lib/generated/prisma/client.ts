@@ -57,6 +57,11 @@ export type Availability = Prisma.AvailabilityModel
  */
 export type Booking = Prisma.BookingModel
 /**
+ * Model InterviewReminder
+ * 
+ */
+export type InterviewReminder = Prisma.InterviewReminderModel
+/**
  * Model Feedback
  * 
  */

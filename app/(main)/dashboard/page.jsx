@@ -1,8 +1,7 @@
 import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
 import PageHeader from "@/components/reusables";
 
@@ -43,9 +42,7 @@ export default function InterviewerDashboardPage() {
 
 // All request-dependent operations happen inside Suspense
 async function DashboardContent() {
-  const user = await currentUser();
-
-  if (!user) redirect("/");
+  await auth.protect();
 
   const dbUser = await getCurrentUser();
 

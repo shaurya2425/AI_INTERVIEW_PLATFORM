@@ -138,6 +138,7 @@ export const bookSlot = async ({ interviewerId, startTime, endTime }) => runActi
           },
           transcription: {
             mode: "auto-on", // starts when first user joins, stops when all leave
+            language: "auto", // detect the spoken language without a language picker
           },
         },
       },

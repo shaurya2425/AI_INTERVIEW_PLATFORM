@@ -1,8 +1,7 @@
 import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
 import { getIntervieweeAppointments } from "@/actions/appointments";
@@ -31,9 +30,7 @@ export default function MyAppointmentsPage() {
 }
 
 async function AppointmentsContent() {
-  const user = await currentUser();
-
-  if (!user) redirect("/");
+  await auth.protect();
 
   const appointments = await getIntervieweeAppointments();
   const now = new Date();
@@ -41,7 +38,7 @@ async function AppointmentsContent() {
   const scheduled = appointments.filter(
     (a) =>
       a.status === "SCHEDULED" &&
-      new Date(a.startTime) > now
+      new Date(a.endTime) > now
   );
 
   const past = appointments.filter(

@@ -8,6 +8,7 @@ import { checkUser } from "@/lib/checkUser";
 import { CalendarDays, Users } from "lucide-react";
 import CreditButton from "./CreditButton";
 import RoleRedirect from "./RoleRedirect";
+import ClerkProfileSync from "./ClerkProfileSync";
 import ThemeToggle from "./theme-toggle";
 import { LoadingSpinner } from "./ui/loading-spinner";
 
@@ -23,11 +24,13 @@ export default async function Header() {
           alt="Prept"
           width={100}
           height={100}
+          style={{ width: "auto" }}
           className="h-9 sm:h-11 w-auto brightness-0 dark:brightness-100"
         />
       </Link>
 
       {user && <RoleRedirect role={user.role} />}
+      {user && <ClerkProfileSync clerkUserId={user.clerkUserId} name={user.name} imageUrl={user.imageUrl} />}
 
       {/* AUTHENTICATION */}
       <Suspense fallback={<div className="h-9 w-24 flex items-center justify-center"><LoadingSpinner label="Loading account" /></div>}>

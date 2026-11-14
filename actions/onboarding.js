@@ -3,6 +3,7 @@
 import { actionFailure, runAction } from "@/lib/action-result";
 
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/prisma";
 
 export const completeOnboarding = async (data) => runAction(async () => {
@@ -39,6 +40,9 @@ export const completeOnboarding = async (data) => runAction(async () => {
       },
     });
 
+    // Header's RoleRedirect lives in the shared root layout. Refresh its role
+    // before navigating so an old UNASSIGNED value cannot send users back.
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     console.error("Onboarding error:", error);
