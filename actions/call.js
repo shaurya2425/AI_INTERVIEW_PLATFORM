@@ -74,6 +74,20 @@ export const getCallData = async (callId) => {
     apiSecret
   );
 
+  // Upgrade existing bookings as well as newly created calls before joining.
+  if (booking.status === "SCHEDULED") {
+    const call = streamClient.video.call("default", callId);
+    const { call: details } = await call.get();
+    if (details.settings.transcription.language !== "auto" ||
+        details.settings.transcription.mode !== "auto-on") {
+      await call.update({
+        settings_override: {
+          transcription: { mode: "auto-on", language: "auto" },
+        },
+      });
+    }
+  }
+
   const token = streamClient.generateUserToken({
     user_id: user.id,
     validity_in_seconds: 60 * 60,

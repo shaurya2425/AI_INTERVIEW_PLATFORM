@@ -1,18 +1,11 @@
 import arcjet, { detectBot, shield } from "@arcjet/next";
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import { arcjetDevelopmentLogger } from "@/lib/arcjet-logger";
 import { NextResponse } from "next/server";
-
-const isProtectedRoute = createRouteMatcher([
-  "/appointments(.*)",
-  "/explore(.*)",
-  "/dashboard(.*)",
-  "/onboarding(.*)",
-]);
-
-const isWebhookRoute = createRouteMatcher(["/api/webhooks/stream(.*)"]);
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
+  log: arcjetDevelopmentLogger,
   rules: [
     shield({ mode: "LIVE" }),
     detectBot({
@@ -22,21 +15,19 @@ const aj = arcjet({
   ],
 });
 
-export default clerkMiddleware(async (auth, req) => {
+export default clerkMiddleware(async (_auth, req) => {
+  const pathname = req.nextUrl.pathname;
+  const isWebhookRoute = pathname === "/api/webhooks/stream" ||
+    pathname.startsWith("/api/webhooks/stream/");
 
-  if(!isWebhookRoute(req)){
+  // This machine endpoint validates its own scheduler secret in the route.
+  const isReminderJob = pathname === "/api/cron/interview-reminders";
+  if(!isWebhookRoute && !isReminderJob){
     const decision = await aj.protect(req);
 
     if(decision.isDenied()){
       return NextResponse.json({error:"Forbidden"},{status:403});
     }
-  }
-
-  const { userId } = await auth();
-
-  if (!userId && isProtectedRoute(req)) {
-    const { redirectToSignIn } = await auth();
-    return redirectToSignIn();
   }
 
   return NextResponse.next();

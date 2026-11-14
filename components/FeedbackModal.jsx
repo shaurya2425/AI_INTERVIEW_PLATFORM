@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Sparkles,
   TrendingUp,
@@ -25,8 +26,23 @@ export function FeedbackModal({
   onOpenChange,
   feedback,
   intervieweeName,
+  message,
+  loading = false,
+  onRetry,
 }) {
-  if (!feedback) return null;
+  if (!feedback) return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-background border-border text-foreground sm:max-w-lg">
+        <DialogHeader><DialogTitle>Meeting feedback</DialogTitle></DialogHeader>
+        <p role="status" className="text-sm text-muted-foreground leading-relaxed">
+          {loading ? "Checking the meeting and preparing available feedback..." : message}
+        </p>
+        {onRetry && <Button variant="outline" disabled={loading} onClick={onRetry}>
+          {loading ? "Checking..." : "Check again"}
+        </Button>}
+      </DialogContent>
+    </Dialog>
+  );
 
   const rating = RATING_CONFIG[feedback.overallRating];
 

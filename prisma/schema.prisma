@@ -120,12 +120,31 @@ model Booking {
   recordingUrl   String?
   feedback       Feedback?
   transactions   CreditTransaction[]
+  reminders      InterviewReminder[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
   @@index([status, createdAt])
+  @@index([status, startTime])
   @@index([interviewerId, status])
   @@index([intervieweeId, status])
+}
+
+model InterviewReminder {
+  id             String   @id
+  bookingId      String
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  recipientId    String
+  scheduledStart DateTime
+  minutesBefore  Int
+  payload        Json
+  sentAt         DateTime?
+  providerId     String?
+  attempts       Int      @default(0)
+  lastError      String?
+  createdAt      DateTime @default(now())
+
+  @@index([bookingId])
 }
 
 // ─── FEEDBACK ────────────────────────────────────────────

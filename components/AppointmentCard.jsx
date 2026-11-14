@@ -8,12 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Video, Sparkles } from "lucide-react";
 import { FeedbackModal } from "./FeedbackModal";
+import { getMeetingFeedback } from "@/actions/feedback";
+import useFetch from "@/hooks/use-fetch";
 import { formatDate, formatDuration, formatTime } from "@/lib/helpers";
 import { RATING_LABEL, RATING_STYLES, STATUS_STYLES } from "@/lib/data";
 
 export function AppointmentCard({ booking, mode, isPast = false }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const { has } = useAuth();
+  const { data: feedbackResult, loading: feedbackLoading, error: feedbackError, fn: loadFeedback } = useFetch(getMeetingFeedback);
 
   const {
     startTime,
@@ -22,8 +25,19 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
     creditsCharged,
     streamCallId,
     recordingUrl,
-    feedback,
+    feedback: savedFeedback,
   } = booking;
+  const feedback = feedbackResult?.feedback ?? savedFeedback;
+  const canViewFeedback = Boolean(isPast || feedback || status !== "SCHEDULED");
+  const feedbackMessage = feedbackError || feedbackResult?.message || (status === "CANCELLED"
+    ? "This meeting was cancelled. No interview feedback is available."
+    : "Feedback is not available yet. View feedback to check the meeting status and retrieve its report.");
+  const statusLabel = feedback ? "Completed" : feedbackResult?.state === "missed"
+    ? "Not held" : isPast && status === "SCHEDULED" ? "Ended" : status.charAt(0) + status.slice(1).toLowerCase();
+  const openFeedback = () => {
+    setFeedbackOpen(true);
+    if (!feedback && !feedbackLoading) loadFeedback(booking.id);
+  };
 
   const person =
     mode === "interviewer" ? booking.interviewee : booking.interviewer;
@@ -46,6 +60,9 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
         open={feedbackOpen}
         onOpenChange={setFeedbackOpen}
         feedback={feedback}
+        message={feedbackMessage}
+        loading={feedbackLoading}
+        onRetry={() => loadFeedback(booking.id)}
         intervieweeName={
           mode === "interviewer" ? booking.interviewee?.name : undefined
         }
@@ -97,7 +114,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
 
           <div className="flex flex-col items-end gap-2 shrink-0">
             <Badge variant="outline" className={STATUS_STYLES[status]}>
-              {status.charAt(0) + status.slice(1).toLowerCase()}
+              {statusLabel}
             </Badge>
             <Badge variant="outline" className={creditsStyle}>
               {creditsLabel}
@@ -145,18 +162,18 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
           </div>
         </div>
 
-        {feedback?.summary && (
+        {(feedback?.summary || canViewFeedback) && (
           <div className="rounded-xl border border-border bg-surface px-4 py-3 flex flex-col gap-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
-              AI Feedback
+              {feedback ? "AI Feedback" : "Meeting feedback"}
             </p>
             <p className="text-xs text-muted-foreground font-light leading-relaxed line-clamp-2">
-              {feedback.summary}
+              {feedback?.summary || feedbackMessage}
             </p>
           </div>
         )}
 
-        {(streamCallId || recordingUrl || feedback) && (
+        {(streamCallId || recordingUrl || canViewFeedback) && (
           <div className="flex items-center gap-2 flex-wrap pt-1">
             {!isPast && streamCallId && isUpcoming && (
               <Button variant="gold" size="sm" className="gap-2" asChild>
@@ -179,24 +196,23 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
               </Button>
             )}
 
-            {feedback &&
-              (has?.({ plan: "starter" }) || has?.({ plan: "pro" })) && (
+            {canViewFeedback && (
                 <>
                   <Button
                     variant="outline"
                     size="sm"
                     className="gap-1.5 border-amber-400/20 text-brand hover:bg-amber-400/10 hover:border-amber-400/40"
-                    onClick={() => setFeedbackOpen(true)}
+                    onClick={openFeedback}
                   >
                     <Sparkles size={12} />
-                    Full Feedback
+                    {feedback ? "Full Feedback" : "View feedback"}
                   </Button>
-                  <Badge
+                  {feedback && <Badge
                     variant="outline"
                     className={RATING_STYLES[feedback.overallRating]}
                   >
                     ✦ {RATING_LABEL[feedback.overallRating]} performance
-                  </Badge>
+                  </Badge>}
                 </>
               )}
           </div>

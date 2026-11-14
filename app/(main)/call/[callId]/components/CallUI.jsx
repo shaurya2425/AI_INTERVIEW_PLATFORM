@@ -49,23 +49,13 @@ export default function CallUI({
 
   const [activeTab, setActiveTab] = useState("chat");
 
-  // Auto-stop recording before leaving
-  const handleLeave = useCallback(async () => {
-    try {
-      if (call) {
-        const isRecording = call.state?.recording;
-        if (isRecording) {
-          await call.stopRecording().catch(() => {
-            toast.error("Could not stop the recording before leaving the call.");
-          });
-        }
-        await call.leave().catch(() => {
-          toast.error("Could not confirm that the call ended. Close the call tab if your camera or microphone remains active.");
-        });
-      }
-    } finally {
-      onLeave();
+  // CallControls invokes this AFTER its leave attempt; do not leave again.
+  const handleLeave = useCallback((error) => {
+    if (error && call?.state.callingState !== CallingState.LEFT) {
+      console.error("Stream could not leave the call:", error);
+      toast.error("Could not confirm that you left the call. Close the call tab if your camera or microphone remains active.");
     }
+    onLeave();
   }, [call, onLeave]);
 
   // ── Chat client — same token works for both Video + Chat SDKs ──

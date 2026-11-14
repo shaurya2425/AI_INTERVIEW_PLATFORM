@@ -7,6 +7,7 @@ import { withDisplayName } from "@/lib/user-name";
 
 export const getInterviewers = async () => {
   const user = await currentUser();
+  if (!user) throw new Error("Unauthorized");
 
   const interviewers = await db.user.findMany({
     where: {

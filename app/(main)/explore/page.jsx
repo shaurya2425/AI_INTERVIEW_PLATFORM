@@ -1,6 +1,7 @@
 import { PageLoader } from "@/components/ui/loading-spinner";
 
 import { Suspense } from "react";
+import { auth } from "@clerk/nextjs/server";
 
 import { getInterviewers } from "@/actions/explore";
 import PageHeader from "@/components/reusables";
@@ -28,6 +29,7 @@ export default function ExplorePage() {
 }
 
 async function ExploreContent() {
+  await auth.protect();
   const interviewers = await getInterviewers();
 
   return <ExploreGrid interviewers={interviewers} />;
