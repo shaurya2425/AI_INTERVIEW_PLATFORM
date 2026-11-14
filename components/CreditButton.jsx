@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Coins } from "lucide-react";
 import UpgradeModal from "./UpgradeModal";
 import { Button } from "./ui/button";
 
 export default function CreditButton({ role, credits }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const handleClick = () => {
     if (role === "INTERVIEWER") {
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     } else {
       setOpen(true);
     }
