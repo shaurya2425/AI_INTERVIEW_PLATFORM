@@ -25,6 +25,7 @@ export const getMeetingFeedback = async (bookingId) => runAction(async () => {
   });
   if (!booking) return actionFailure("Meeting not found");
   if (booking.feedback) return { feedback: booking.feedback, state: "ready" };
+  if (booking.feedbackRequestedAt) return { state: "pending", message: "Preparing Feedback. Your interview is completed; evaluation and interview evidence are saved for the comprehensive report." };
   if (booking.status === "CANCELLED") return getMeetingOutcome(booking, {}, []);
   if (!booking.streamCallId) return {
     state: "unavailable", message: "No call record is available for this meeting, so attendance and feedback cannot be verified.",

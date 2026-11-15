@@ -514,7 +514,7 @@ ADMIN_PAYOUT_PASSWORD="your_private_payout_approval_password"
 
 | Variable group | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Runtime database pool and Prisma CLI connection |
+| `DATABASE_URL` | Runtime and Prisma CLI connection; use a direct database or Supabase session pooler connection (port 5432) |
 | Clerk keys and route URLs | Identity provider and authentication routes |
 | Stream public key and server secret | Browser SDK, call creation, user token generation |
 | `GEMINI_API_KEY` | Both AI workflows |
@@ -525,7 +525,7 @@ ADMIN_PAYOUT_PASSWORD="your_private_payout_approval_password"
 | `NEXT_PUBLIC_APP_URL` | Base URL for payout review and interview join links |
 | `ADMIN_PAYOUT_PASSWORD` | Payout approval password |
 
-`NEXT_PUBLIC_*` values are public configuration. Keep other credentials server-side. Environment files are ignored by Git. Prisma reads `DATABASE_URL`; it does not currently use a separate `DIRECT_URL` variable.
+`NEXT_PUBLIC_*` values are public configuration. Keep other credentials server-side. Environment files are ignored by Git. Prisma CLI and runtime both use `DATABASE_URL`. For Supabase migrations, set it to the direct connection or session pooler on port 5432, not the transaction pooler on port 6543. No separate `DIRECT_URL` is used.
 
 For same-day email reminders at 6 hours and 30 minutes before interviews, follow [the Vercel Hobby + Supabase Cron setup](docs/interview-reminders.md).
 

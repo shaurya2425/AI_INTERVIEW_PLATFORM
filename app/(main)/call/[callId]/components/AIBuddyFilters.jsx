@@ -15,6 +15,7 @@ import {
   WEB_OPTIONS,
   getTopicOptions,
   getQuestionTypeOptions,
+  makeDefaultPreferences,
 } from "@/lib/interviewCatalog";
 
 const selectClass = `
@@ -77,7 +78,7 @@ export default function AIBuddyFilters({
   }
 
   function changeSubject(subject) {
-    if (!INTERVIEW_CATALOG[subject]) return;
+    if (subject !== "ALL" && !INTERVIEW_CATALOG[subject]) return;
 
     patch({
       subject,
@@ -88,7 +89,7 @@ export default function AIBuddyFilters({
 
   const subjectLabel =
     INTERVIEW_CATALOG[value.subject]?.label ||
-    value.subject;
+    "All subjects";
 
   const topicLabel =
     value.topic === "ALL"
@@ -156,7 +157,7 @@ export default function AIBuddyFilters({
         <div
           id="ai-buddy-curation"
           className="
-            mt-3 space-y-3 rounded-xl
+            mt-3 max-h-[32vh] overflow-y-auto space-y-3 rounded-xl
             border border-border bg-surface
             p-3
           "
@@ -231,6 +232,11 @@ export default function AIBuddyFilters({
           <p className="text-xs leading-5 text-muted-foreground">
             {subjectLabel} · {topicLabel} · {typeLabel}
           </p>
+
+          <p className="text-xs leading-5 text-muted-foreground">
+            Selected filters take priority over conflicting text. Your requested count overrides the default (1–5). Grill follows its parent question.
+          </p>
+          <button type="button" disabled={disabled} onClick={() => onChange(makeDefaultPreferences())} className="text-xs text-brand underline">Reset filters</button>
 
           <button
             type="button"

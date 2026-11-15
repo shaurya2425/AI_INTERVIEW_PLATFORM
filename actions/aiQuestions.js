@@ -1,10 +1,11 @@
 
 "use server";
 
-import { actionFailure, runAction } from "@/lib/action-result";
+import { db } from "@/lib/prisma";
+import { actionFailure } from "@/lib/action-result";
 import { GoogleGenAI } from "@google/genai";
 import { randomUUID } from "node:crypto";
-import { getCallData } from "@/actions/call";
+import { currentUser } from "@clerk/nextjs/server";
 import { QUESTION_BANK } from "@/lib/questionBank";
 import {
   INTERVIEW_CATALOG,
@@ -23,6 +24,47 @@ const DIFFICULTIES = ["EASY", "MEDIUM", "HARD", "MIXED"];
 const MAX_HISTORY = 100;
 const MAX_MESSAGES = 24;
 const MAX_GRILL_DEPTH = 8;
+
+function invalidResponse(reasons = []) {
+  return Object.assign(new Error("Invalid AI response"), { code: "INVALID_AI_RESPONSE", validationReasons: reasons });
+}
+
+function aiFailure(error) {
+  const status = Number(error?.status || error?.code);
+  const message = String(error?.message || "");
+  let code = "AI_NETWORK_ERROR";
+  let text = "AI service could not be reached. Please retry shortly; video and chat are still available.";
+  if (error?.code === "INTERVIEW_CONTEXT_ERROR") {
+    code = "INTERVIEW_CONTEXT_ERROR";
+    text = "Saved interview history could not be loaded. Retry shortly. If this persists after an update, restart the dev server and check the database migration.";
+  } else if (error?.code === "INTERVIEW_AUTH_ERROR") {
+    code = "INTERVIEW_AUTH_ERROR";
+    text = "Your interview access could not be verified. Refresh the page and sign in again if needed.";
+  } else if (error?.code === "INVALID_AI_RESPONSE" || error instanceof SyntaxError) {
+    code = "INVALID_AI_RESPONSE";
+    text = "AI returned an incomplete or invalid response. Retry to generate a fresh response.";
+  } else if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate.limit/i.test(message)) {
+    code = "AI_QUOTA_EXCEEDED";
+    text = "AI quota is exhausted or requests are rate limited. Wait before retrying. The operator may need to review server-side Gemini quota and billing.";
+  } else if (status === 401 || status === 403 || /API_KEY_INVALID|API key|permission.denied/i.test(message)) {
+    code = "AI_INVALID_KEY";
+    text = "AI credentials are missing, invalid, or lack permission. Ask the operator to update server-side GEMINI_API_KEY or its permissions, then retry.";
+  } else if (status === 404 || /model.*(not found|unavailable|not supported)/i.test(message)) {
+    code = "AI_MODEL_UNAVAILABLE";
+    text = "The configured AI model is unavailable. Ask the operator to check server-side PREPT_GEMINI_MODEL and model access, then retry.";
+  }
+  return { success: false, error: text, code, retryable: true };
+}
+
+async function runAIAction(operation) {
+  try { return await operation(); } catch (error) {
+    const failure = aiFailure(error);
+    // Log identifiers only: no provider bodies, credentials, prompts or candidate answers.
+    console.error("AI Buddy request failed", { code: failure.code, type: error?.name || "Error",
+      status: Number(error?.status) || undefined, validationReasons: error?.validationReasons || error?.cause?.validationReasons });
+    return failure;
+  }
+}
 
 // ============================================================
 // TEXT UTILITIES
@@ -76,8 +118,11 @@ function repeated(question, previous) {
 // VALIDATE INTERVIEW PREFERENCES
 // ============================================================
 
-function validPreferences(raw) {
-  const catalog = INTERVIEW_CATALOG[raw?.subject];
+function validPreferences(raw = {}) {
+  const subject = raw.subject || "ALL";
+  const catalog = subject === "ALL"
+    ? { topics: Object.values(INTERVIEW_CATALOG).flatMap((item) => item.topics) }
+    : INTERVIEW_CATALOG[subject];
 
   if (!catalog) {
     throw new Error("Invalid interview subject");
@@ -98,7 +143,7 @@ function validPreferences(raw) {
 
   if (
     questionType !== "ANY" &&
-    !catalog.types.includes(questionType)
+    !Object.hasOwn(QUESTION_TYPES, questionType)
   ) {
     throw new Error("Invalid question type");
   }
@@ -122,7 +167,7 @@ function validPreferences(raw) {
   }
 
   return {
-    subject: raw.subject,
+    subject,
     topic,
     questionType,
     difficulty,
@@ -136,109 +181,56 @@ function validPreferences(raw) {
 }
 
 // ============================================================
-// FREE FLOW SUBJECT DETECTION
-// ============================================================
-
-function detectSubject(instruction, fallback) {
-  const value = instruction.toLowerCase();
-
-  if (/\b(mern|full[\s-]?stack)\b/.test(value)) {
-    return "FULLSTACK";
+// Explicit filters win; natural language fills unrestricted fields.
+function resolveRequest(pref, instruction, active, mode, grillLevel) {
+  const result = { ...pref };
+  const count = /\b([1-5]|one|two|three|four|five)\s+(?:[\w.+/-]+\s+){0,4}(?:questions?|mcqs?|problems?)\b/i.exec(instruction);
+  if (count) result.questionCount = Number(count[1]) || ["one", "two", "three", "four", "five"].indexOf(count[1].toLowerCase()) + 1;
+  // These quick actions request one next question, not the configured batch size.
+  if (/^(next question|harder|easier)[.!?]?$/i.test(instruction.trim())) result.questionCount = 1;
+  const types = [
+    ["MCQ", /\b(mcqs?|multiple.choice)\b/i], ["SQL_QUERY", /\b(sql quer(?:y|ies)|write sql)\b/i],
+    ["COMPLEXITY", /\bcomplexity\b/i], ["DEBUGGING", /\b(debugging|debug)\b/i],
+    ["CODING", /\bcoding (?:questions?|problems?)\b/i], ["SCENARIO", /\bscenario\b/i],
+    ["DESIGN", /\bdesign questions?\b/i], ["CONCEPTUAL", /\b(theoretical|conceptual)\b/i],
+  ];
+  if (result.questionType === "ANY") result.questionType = types.find(([, pattern]) => pattern.test(instruction))?.[0] || "ANY";
+  if (result.difficulty === "MIXED") {
+    if (/\b(hard|harder|advanced)\b/i.test(instruction)) result.difficulty = "HARD";
+    else if (/\b(easy|easier|beginner)\b/i.test(instruction)) result.difficulty = "EASY";
+    else if (/\bmedium\b/i.test(instruction)) result.difficulty = "MEDIUM";
   }
-
-  if (
-    /\b(system design|distributed systems|load balancing)\b/.test(
-      value
-    )
-  ) {
-    return "SYSTEM_DESIGN";
+  // The dedicated difficulty shortcuts explicitly change difficulty for this request.
+  // Keeping an EASY filter here conflicts with Harder and makes valid harder output fail.
+  if (/^(harder|easier)[.!?]?$/i.test(instruction.trim())) {
+    const levels = ["EASY", "MEDIUM", "HARD"];
+    const previous = levels.indexOf(active?.difficulty || pref.difficulty);
+    const base = previous < 0 ? 1 : previous;
+    const step = /^harder/i.test(instruction.trim()) ? 1 : -1;
+    result.difficulty = levels[Math.max(0, Math.min(2, base + step))];
   }
-
-  if (
-    /\b(machine coding|low.level design|lld)\b/.test(value)
-  ) {
-    return "MACHINE_CODING";
+  if (mode === "GRILL" && active) {
+    result.subject = INTERVIEW_CATALOG[active.category] ? active.category : result.subject;
+    result.topic = "ALL"; result.questionType = "ANY"; result.questionCount = 1;
+    const levels = ["EASY", "MEDIUM", "HARD"];
+    const base = Math.max(0, levels.indexOf(active.difficulty));
+    result.difficulty = levels[grillLevel === "CLARIFY" ? Math.max(0, base - 1) : grillLevel === "CHALLENGE" ? 2 : Math.min(2, base + 1)];
   }
-
-  if (
-    /\b(dsa|algorithms?|leetcode|sliding window|binary tree|dynamic programming)\b/.test(
-      value
-    )
-  ) {
-    return "DSA";
-  }
-
-  if (
-    /\b(dbms|sql|operating systems?|computer networks?|oops|oop)\b/.test(
-      value
-    )
-  ) {
-    return "CORE_CS";
-  }
-
-  if (
-    /\b(rag|mcp|llms?|machine learning|deep learning|ai agents?|embeddings|vector database|transformers)\b/.test(
-      value
-    )
-  ) {
-    return "AI_ML";
-  }
-
-  if (
-    /\b(devops|docker|kubernetes|ci\/cd|terraform)\b/.test(
-      value
-    )
-  ) {
-    return "DEVOPS";
-  }
-
-  if (
-    /\b(react native|android|ios|mobile development)\b/.test(
-      value
-    )
-  ) {
-    return "MOBILE";
-  }
-
-  if (
-    /\b(react|next\.?js|javascript|typescript|html|css|frontend)\b/.test(
-      value
-    )
-  ) {
-    return "FRONTEND";
-  }
-
-  if (
-    /\b(node\.?js|express|backend|rest api|graphql)\b/.test(
-      value
-    )
-  ) {
-    return "BACKEND";
-  }
-
-  if (
-    /\b(behavioral|leadership|teamwork|conflict resolution)\b/.test(
-      value
-    )
-  ) {
-    return "BEHAVIORAL";
-  }
-
-  return fallback;
+  return result;
 }
 
-// ============================================================
 // SANITIZE CONVERSATION MEMORY
 // ============================================================
 
 function sanitizeHistory(history) {
   if (!Array.isArray(history)) return [];
 
-  return history.slice(-MAX_HISTORY).map((q) => ({
+  return history.filter((q) => q && typeof q === "object").slice(-MAX_HISTORY).map((q) => ({
     id: clean(q.id, 100),
     question: clean(q.question, 750),
     topic: clean(q.topic, 100),
     category: clean(q.category, 50),
+    difficulty: clean(q.difficulty, 20),
     type: clean(q.type, 30),
     status: clean(q.status, 30),
 
@@ -260,7 +252,7 @@ function sanitizeHistory(history) {
 function sanitizeMessages(messages) {
   if (!Array.isArray(messages)) return [];
 
-  return messages.slice(-MAX_MESSAGES).map((m) => ({
+  return messages.filter((m) => m && typeof m === "object").slice(-MAX_MESSAGES).map((m) => ({
     role:
       m.role === "assistant"
         ? "assistant"
@@ -276,6 +268,7 @@ function sanitizeActive(q) {
   return {
     id: clean(q.id, 100),
     category: clean(q.category, 50),
+    difficulty: clean(q.difficulty, 20),
     topic: clean(q.topic, 100),
     type: clean(q.type, 30),
     question: clean(q.question, 1200),
@@ -308,7 +301,7 @@ function getBankCandidates(pref, history, instruction) {
 
   return QUESTION_BANK.filter((q) => {
     // Match subject.
-    if (q.category !== pref.subject) {
+    if (pref.subject !== "ALL" && q.category !== pref.subject) {
       return false;
     }
 
@@ -316,6 +309,7 @@ function getBankCandidates(pref, history, instruction) {
     // Untyped bank questions are treated as CONCEPTUAL.
     // Do not mislabel them as Coding, MCQ, or Scenario.
     const bankType = q.type || "CONCEPTUAL";
+    if (pref.difficulty !== "MIXED" && q.difficulty !== pref.difficulty) return false;
 
     if (
       pref.questionType !== "ANY" &&
@@ -395,6 +389,7 @@ function makeBankQuestion(q) {
     options: Array.isArray(q.options)
       ? q.options.slice(0, 4)
       : [],
+    correctOptionIndex: Number.isInteger(q.correctOptionIndex) ? q.correctOptionIndex : -1,
 
     source: "CURATED",
     parentId: null,
@@ -406,7 +401,7 @@ function makeBankQuestion(q) {
 // VALIDATE AI-GENERATED QUESTIONS
 // ============================================================
 
-function createAIQuestions(raw, pref, seen, limit) {
+function createAIQuestions(raw, pref, seen, limit, issues = []) {
   const result = [];
   const compared = [...seen];
 
@@ -416,21 +411,21 @@ function createAIQuestions(raw, pref, seen, limit) {
     const question = clean(item?.question, 1500);
     const answer = clean(item?.answer, 5000);
 
-    if (!question || !answer) continue;
-    if (repeated(question, compared)) continue;
+    if (!question || !answer || !INTERVIEW_CATALOG[item.category]) { issues.push("Missing question/reference answer or invalid category"); continue; }
+    if (pref.subject !== "ALL" && item.category !== pref.subject) { issues.push("Category must match CONFIGURATION subject"); continue; }
+    if (repeated(question, compared)) { issues.push("Question repeats history; provide a distinct problem, not a paraphrase"); continue; }
 
-    const type =
-      Object.hasOwn(QUESTION_TYPES, item?.type)
-        ? item.type
-        : pref.questionType !== "ANY"
-          ? pref.questionType
-          : "CONCEPTUAL";
+    if (!Object.hasOwn(QUESTION_TYPES, item.type)) { issues.push("Unsupported question type"); continue; }
+    if (!["EASY", "MEDIUM", "HARD"].includes(item.difficulty)) { issues.push("Difficulty must be EASY, MEDIUM or HARD"); continue; }
+    if (pref.topic !== "ALL" && normalized(item.topic) !== normalized(pref.topic)) { issues.push("Topic must exactly match CONFIGURATION topic"); continue; }
+    const type = item.type;
 
     // Respect a specific requested question type.
     if (
       pref.questionType !== "ANY" &&
       type !== pref.questionType
     ) {
+      issues.push("Type must match CONFIGURATION questionType");
       continue;
     }
 
@@ -439,17 +434,20 @@ function createAIQuestions(raw, pref, seen, limit) {
           .filter((option) => typeof option === "string")
           .map((option) => clean(option, 500))
           .filter(Boolean)
-          .slice(0, 4)
       : [];
 
     // MCQs must have exactly four choices.
-    if (type === "MCQ" && options.length !== 4) {
+    if (type === "MCQ" && (options.length !== 4 ||
+      new Set(options.map((option) => option.trim().toLowerCase())).size !== 4 ||
+      !Number.isInteger(item.correctOptionIndex) || item.correctOptionIndex < 0 || item.correctOptionIndex > 3)) {
+      issues.push("MCQ requires four distinct options and integer correctOptionIndex from 0 to 3");
       continue;
     }
+    if (pref.difficulty !== "MIXED" && item.difficulty !== pref.difficulty) { issues.push("Difficulty must exactly match CONFIGURATION difficulty"); continue; }
 
     const q = {
       id: `AI-${randomUUID()}`,
-      category: pref.subject,
+      category: pref.subject === "ALL" ? item.category : pref.subject,
 
       topic:
         clean(item.topic, 100) ||
@@ -466,8 +464,9 @@ function createAIQuestions(raw, pref, seen, limit) {
         : "MEDIUM",
 
       question,
-      answer,
+      answer: type === "MCQ" ? `Correct answer: ${String.fromCharCode(65 + item.correctOptionIndex)}. ${options[item.correctOptionIndex]}\n\n${answer}` : answer,
       options,
+      correctOptionIndex: type === "MCQ" ? item.correctOptionIndex : -1,
 
       source: "GENERATED",
       parentId: null,
@@ -512,6 +511,8 @@ const RESPONSE_SCHEMA = {
         type: "OBJECT",
 
         properties: {
+          category: { type: "STRING", enum: Object.keys(INTERVIEW_CATALOG) },
+          correctOptionIndex: { type: "INTEGER", description: "MCQ: zero-based correct option index 0-3; otherwise -1" },
           question: {
             type: "STRING",
           },
@@ -526,10 +527,12 @@ const RESPONSE_SCHEMA = {
 
           difficulty: {
             type: "STRING",
+            enum: ["EASY", "MEDIUM", "HARD"],
           },
 
           type: {
             type: "STRING",
+            enum: Object.keys(QUESTION_TYPES),
           },
 
           options: {
@@ -541,6 +544,8 @@ const RESPONSE_SCHEMA = {
         },
 
         required: [
+          "category",
+          "correctOptionIndex",
           "question",
           "answer",
           "topic",
@@ -560,25 +565,37 @@ const RESPONSE_SCHEMA = {
   ],
 };
 
-async function generateStructured(ai, prompt) {
+function schemaForRequest(pref, questionsOnly) {
+  const schema = JSON.parse(JSON.stringify(RESPONSE_SCHEMA));
+  const fields = schema.properties.generated.items.properties;
+  if (pref.subject !== "ALL") fields.category.enum = [pref.subject];
+  if (pref.topic !== "ALL") fields.topic.enum = [pref.topic];
+  if (pref.questionType !== "ANY") fields.type.enum = [pref.questionType];
+  if (pref.difficulty !== "MIXED") fields.difficulty.enum = [pref.difficulty];
+  if (questionsOnly) schema.properties.intent.enum = ["QUESTIONS"];
+  return schema;
+}
+
+async function generateStructured(ai, prompt, validate, responseSchema = RESPONSE_SCHEMA) {
   let lastError;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const response = await ai.models.generateContent({
         model: MODEL,
-        contents: prompt,
+        contents: attempt === 0 ? prompt : `${prompt}\nVALIDATION CORRECTION: The previous response was rejected. ${lastError?.validationReasons?.join("; ") || "Return the complete required JSON object."} Return a fresh complete response matching CONFIGURATION and the required question count.`,
 
         config: {
           temperature: 0.5,
           responseMimeType: "application/json",
-          responseSchema: RESPONSE_SCHEMA,
+          responseSchema,
         },
       });
 
       const data = JSON.parse(response.text || "");
 
       if (
+        !data ||
         !["MESSAGE", "QUESTIONS"].includes(data.intent) ||
         typeof data.message !== "string" ||
         !Array.isArray(data.bankIds) ||
@@ -587,18 +604,15 @@ async function generateStructured(ai, prompt) {
         throw new Error("Invalid AI response structure");
       }
 
+      validate?.(data);
       return data;
     } catch (error) {
+      if (!(error instanceof SyntaxError) && error?.code !== "INVALID_AI_RESPONSE" && error?.message !== "Invalid AI response structure") throw error;
       lastError = error;
     }
   }
 
-  console.error(
-    "AI Buddy structured generation error:",
-    lastError
-  );
-
-  throw new Error("Could not create a valid AI response");
+  throw Object.assign(invalidResponse(lastError?.validationReasons), { cause: lastError });
 }
 
 // ============================================================
@@ -769,9 +783,15 @@ IMPORTANT BEHAVIOR:
 
 6. Never assume that a suggested question was asked.
 
-7. Use candidate grades and notes only when recorded.
+7. Use only database-approved grades as actual performance. Poor/Average: probe missing fundamentals with a simpler focused question. Good/Excellent: explore harder edge cases or a related deeper concept. Explain the recommended direction briefly. Respect explicit interviewer filters. Unapproved answers are evidence only, not approved grades. PENDING and local SUGGESTED questions were not delivered and are not performance evidence. Poor on EASY means revisit fundamentals; Average on MEDIUM means clarify. Failure on HARD or a Grill follow-up is an advanced diagnostic gap, not a reason to over-penalize overall ability. Avoid unnecessary follow-up chains and vary covered subjects when appropriate.
 
-8. Respect the latest topic and question-type request.
+8. Explicit subject/topic/type/difficulty filters in CONFIGURATION take precedence
+   over conflicting request text. ALL, ANY and MIXED are unrestricted. Explain
+   any conflict briefly. The request's explicit count overrides the default count.
+   Preserve intent: filters do not turn a solution request into questions.
+   For ALL subjects, follow the request and recent conversation, not a fixed subject.
+   OS/CN/DBMS/OOP/SQL belong to Core CS; JS/React/Next.js/HTML/CSS to Frontend;
+   MERN to Full Stack; RAG/MCP/agents/embeddings to AI_ML.
 
 9. Do not fabricate candidate responses or performance.
 
@@ -779,16 +799,16 @@ IMPORTANT BEHAVIOR:
 
 QUESTION GENERATION:
 
-Requested maximum: ${pref.questionCount}
+Required question count: ${pref.questionCount}
 Curated question target: ${bankTarget}
 Original question target: ${generateTarget}
 
-- Choose only valid bank IDs from supplied candidates.
-- Generate up to ${generateTarget} original questions.
-- Prefer relevant questions over simply filling quotas.
+- Choose only valid bank IDs from supplied candidates. If curated target is 0, bankIds MUST be [] and all requested questions MUST be in generated.
+- Use curated IDs only when relevant. Generate the remainder for exactly ${pref.questionCount} total. If none fit, generate all yourself.
 - Never intentionally repeat previous questions.
 - Avoid trivial paraphrases of earlier questions.
 - Match the selected subject, topic, and question type.
+- If a topic filter is selected, set each generated item's topic to that exact value.
 - Include accurate reference answers.
 - Respect difficulty preferences.
 
@@ -806,7 +826,7 @@ the candidate to reason about it.
 
 MCQ:
 Provide exactly four plausible options.
-Include the correct choice and reasoning in answer.
+Include correctOptionIndex (0-3), four distinct options, and matching choice/reasoning in answer. Non-MCQ correctOptionIndex must be -1.
 
 COMPLEXITY:
 Test time complexity, space complexity and optimization.
@@ -870,6 +890,8 @@ Return ONLY valid JSON:
   "bankIds": [],
   "generated": [
     {
+      "category": "DSA",
+      "correctOptionIndex": -1,
       "question": "Question text",
       "answer": "Reference answer",
       "topic": "Technical topic",
@@ -907,8 +929,9 @@ export const generateInterviewQuestions = async ({
   history = [],
   messages = [],
   activeQuestion = null,
+  grillLevel = "DEEPER",
 } = {}) =>
-  runAction(
+  runAIAction(
     async () => {
       // ------------------------------------------------------
       // AUTHORIZATION
@@ -921,18 +944,16 @@ export const generateInterviewQuestions = async ({
         return actionFailure("Missing call ID");
       }
 
-      const access = await getCallData(callId);
-
-      if (access?.error === "Unauthorized") {
-        return actionFailure("Unauthorized");
-      }
-
-      if (
-        access?.error ||
-        !access?.isInterviewer
-      ) {
-        return actionFailure("Forbidden");
-      }
+      let user;
+      try { user = await currentUser(); }
+      catch { throw Object.assign(new Error("Authentication unavailable"), { code: "INTERVIEW_AUTH_ERROR" }); }
+      if (!user) return actionFailure("Unauthorized");
+      let booking;
+      try {
+        booking = await db.booking.findUnique({ where: { streamCallId: callId },
+          select: { id: true, interviewer: { select: { clerkUserId: true } } } });
+      } catch { throw Object.assign(new Error("Booking unavailable"), { code: "INTERVIEW_CONTEXT_ERROR" }); }
+      if (!booking || booking.interviewer.clerkUserId !== user.id) return actionFailure("Forbidden");
 
       // ------------------------------------------------------
       // VALIDATE INPUT
@@ -957,48 +978,47 @@ export const generateInterviewQuestions = async ({
         return actionFailure("Invalid request");
       }
 
+      if (/^(next question|harder|easier)[.!?]?$/i.test(instruction.trim())) {
+        forceQuestions = true;
+      }
+
       // ------------------------------------------------------
       // FIX B: FREE FLOW SUBJECT DETECTION
       // ------------------------------------------------------
-
-      if (
-        pref.mode === "FREE_FLOW" &&
-        mode !== "GRILL" &&
-        instruction.trim()
-      ) {
-        const detected = detectSubject(
-          instruction,
-          pref.subject
-        );
-
-        if (detected !== pref.subject) {
-          pref.subject = detected;
-          pref.topic = "ALL";
-          pref.questionType = "ANY";
-        }
-      }
 
       // ------------------------------------------------------
       // CHECK AI CONFIGURATION
       // ------------------------------------------------------
 
       if (!process.env.GEMINI_API_KEY) {
-        return actionFailure(
-          "AI service is not configured"
-        );
+        return aiFailure({ status: 401 });
       }
 
       // ------------------------------------------------------
       // BUILD INTERVIEW CONTEXT
       // ------------------------------------------------------
 
-      const past = sanitizeHistory(history);
+      let records;
+      try { records = await db.interviewQuestion.findMany({
+        where: { booking: { streamCallId: callId } }, include: { submission: true, parent: { select: { sourceId: true } } },
+        orderBy: { createdAt: "asc" },
+      }); } catch { throw Object.assign(new Error("History unavailable"), { code: "INTERVIEW_CONTEXT_ERROR" }); }
+      const durable = records.map(q => ({ ...q, id: q.sourceId, answer: q.referenceAnswer,
+        parentId: q.parent?.sourceId || null, candidateAnswer: q.submission?.answer || "",
+        status: !q.sentAt ? "PENDING" : q.submission?.approvedGrade ? "EVALUATED" : q.submission ? "ANSWERED" : "SENT",
+        grade: ["POOR", "AVERAGE", "GOOD", "EXCELLENT"].indexOf(q.submission?.approvedGrade) + 1 || null,
+        notes: [q.submission?.interviewerNotes || "", q.submission?.approvedGrade && q.submission?.evaluation ?
+          JSON.stringify({ missingConcepts: q.submission.evaluation.missingConcepts, mistakes: q.submission.evaluation.mistakes,
+            recommendedFollowUp: q.submission.evaluation.recommendedFollowUp }) : ""].filter(Boolean).join("\n"),
+      }));
+      const local = sanitizeHistory(history).filter(q => !durable.some(d => d.id === q.id)).map(q => ({ ...q, grade: null, candidateAnswer: "", notes: "" }));
+      const past = [...local, ...sanitizeHistory(durable)];
 
       const conversation =
         sanitizeMessages(messages);
 
       const active =
-        sanitizeActive(activeQuestion);
+        sanitizeActive(durable.find(q => q.id === activeQuestion?.id) || (activeQuestion ? { ...activeQuestion, grade: null, candidateAnswer: "", notes: "" } : null));
 
       if (mode === "GRILL" && !active) {
         return actionFailure(
@@ -1026,8 +1046,11 @@ export const generateInterviewQuestions = async ({
         pref.questionType = "ANY";
       }
 
+      pref = resolveRequest(pref, instruction, active, mode, grillLevel);
+
       const ai = new GoogleGenAI({
         apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: { timeout: 30000, retryOptions: { attempts: 1 } },
       });
 
       const started = performance.now();
@@ -1048,6 +1071,7 @@ export const generateInterviewQuestions = async ({
       // OPTIONAL WEB RESEARCH
       // ------------------------------------------------------
 
+      let researchWarning = null;
       let research = {
         context: "",
         sources: [],
@@ -1060,10 +1084,7 @@ export const generateInterviewQuestions = async ({
           pref
         );
       } catch (error) {
-        console.warn(
-          "AI Buddy web research unavailable:",
-          error
-        );
+        researchWarning = `Web research unavailable. ${aiFailure(error).error} This response uses existing model knowledge.`;
       }
 
       // ------------------------------------------------------
@@ -1104,7 +1125,7 @@ export const generateInterviewQuestions = async ({
         pref,
         instruction: clean(instruction, 1200),
         context,
-        candidates: bank,
+        candidates: bankTarget > 0 ? bank : [],
         bankTarget,
         generateTarget,
         forceQuestions:
@@ -1114,8 +1135,20 @@ export const generateInterviewQuestions = async ({
         mode,
       });
 
-      const output =
-        await generateStructured(ai, prompt);
+      let validatedQuestions = [];
+      const output = await generateStructured(ai, prompt, (data) => {
+        if (data.intent === "MESSAGE" && mode !== "GRILL" && !forceQuestions) {
+          if (!clean(data.message, 16000)) throw invalidResponse();
+          return;
+        }
+        if (data.intent !== "QUESTIONS") throw invalidResponse(["intent must be QUESTIONS for this request"]);
+        const ids = new Set(data.bankIds);
+        const selected = bank.filter((q) => ids.has(q.id)).slice(0, bankTarget).map(makeBankQuestion);
+        const issues = [];
+        const generated = createAIQuestions(data.generated, pref, [...past, ...selected], count - selected.length, issues);
+        validatedQuestions = [...selected, ...generated];
+        if (validatedQuestions.length !== count) throw invalidResponse([...issues, `Need ${count} valid questions in total; accepted ${validatedQuestions.length}. Generate ${count - selected.length} original questions; bankIds may contain at most ${bankTarget} supplied IDs.`]);
+      }, schemaForRequest(pref, mode === "GRILL" || Boolean(forceQuestions)));
 
       const latencyMs = () =>
         Math.round(
@@ -1139,6 +1172,7 @@ export const generateInterviewQuestions = async ({
           ),
           questions: [],
           sources: research.sources,
+          warning: researchWarning,
 
           metadata: {
             latencyMs: latencyMs(),
@@ -1152,67 +1186,8 @@ export const generateInterviewQuestions = async ({
       // CURATED BANK QUESTION SELECTION
       // ------------------------------------------------------
 
-      const bankMap = new Map(
-        bank.map((q) => [q.id, q])
-      );
-
-      const selected = [];
-      const usedIds = new Set();
-
-      if (mode !== "GRILL") {
-        for (const id of output.bankIds) {
-          const q = bankMap.get(id);
-
-          if (!q || usedIds.has(id)) {
-            continue;
-          }
-
-          if (selected.length >= bankTarget) {
-            break;
-          }
-
-          selected.push(
-            makeBankQuestion(q)
-          );
-
-          usedIds.add(id);
-        }
-      }
-
-      // Fill missing curated selections only when
-      // no specific topic or type was requested.
-      if (
-        mode !== "GRILL" &&
-        pref.topic === "ALL" &&
-        pref.questionType === "ANY"
-      ) {
-        for (const q of bank) {
-          if (selected.length >= bankTarget) {
-            break;
-          }
-
-          if (usedIds.has(q.id)) {
-            continue;
-          }
-
-          selected.push(
-            makeBankQuestion(q)
-          );
-
-          usedIds.add(q.id);
-        }
-      }
-
-      // ------------------------------------------------------
-      // AI-GENERATED QUESTIONS
-      // ------------------------------------------------------
-
-      const generated = createAIQuestions(
-        output.generated,
-        pref,
-        [...past, ...selected],
-        count - selected.length
-      );
+      const selected = validatedQuestions.filter((q) => q.source === "CURATED");
+      const generated = validatedQuestions.filter((q) => q.source === "GENERATED");
 
       // Link Grill follow-ups to their parent question.
       if (mode === "GRILL") {
@@ -1242,6 +1217,7 @@ export const generateInterviewQuestions = async ({
 
         questions,
         sources: research.sources,
+          warning: researchWarning,
 
         metadata: {
           latencyMs: latencyMs(),
@@ -1249,6 +1225,5 @@ export const generateInterviewQuestions = async ({
           generatedCount: generated.length,
         },
       };
-    },
-    "AI Buddy couldn't process the request. Please try again."
+    }
   );

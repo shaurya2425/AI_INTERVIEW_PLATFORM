@@ -1,5 +1,6 @@
 import { StreamClient } from "@stream-io/node-sdk";
 import { revalidatePath } from "next/cache";
+import { getMeetingOutcome } from "@/lib/meeting-outcome";
 import { db } from "@/lib/prisma";
 import { feedbackBookingInclude, generateMeetingFeedback } from "@/lib/meeting-feedback";
 
@@ -25,14 +26,17 @@ export async function POST(request) {
     const call = client.video.call("default", streamCallId);
     if (body.type === "call.recording_ready") {
       if (!body.call_recording?.url) throw new Error("Missing recording URL");
-      await db.booking.update({ where: { id: booking.id }, data: { recordingUrl: body.call_recording.url } });
+      const { recordings } = await call.listRecordings();
+      await db.booking.update({ where: { id: booking.id }, data: { recordingUrl: body.call_recording.url, recordingArtifacts: JSON.parse(JSON.stringify(recordings)) } });
     } else if (!booking.feedback) {
       // Use URLs returned by Stream, including transcripts from earlier sessions.
       const { transcriptions } = await call.listTranscriptions();
       const originals = transcriptions.filter((item) => !item.translated)
         .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
       if (!originals.length) throw new Error("Transcript is not yet available");
-      await generateMeetingFeedback(booking, originals);
+      await db.booking.update({ where: { id: booking.id }, data: { transcriptArtifacts: JSON.parse(JSON.stringify(originals)) } });
+      const { call: details } = await call.get();
+      if (getMeetingOutcome(booking, details, originals).state === "transcript") await generateMeetingFeedback(booking, originals);
     }
     revalidatePath("/appointments");
     revalidatePath("/dashboard");

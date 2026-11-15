@@ -1,33 +1,41 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Copy, Check } from "lucide-react";
 import "katex/dist/katex.min.css";
 
+const subscribe = () => () => {};
+
 function CodeView({ code, language = "text" }) {
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const { resolvedTheme } = useTheme();
+  const dark = mounted && resolvedTheme === "dark";
+  const [copyError, setCopyError] = useState(false);
   const [copied, setCopied] = useState(false);
 
   async function copyCode() {
     try {
+      setCopyError(false);
       await navigator.clipboard.writeText(code);
       setCopied(true);
 
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard permission may be unavailable.
+      setCopyError(true);
     }
   }
 
   return (
     <div className="my-3 w-full min-w-0 overflow-hidden rounded-xl border border-border">
-      <div className="flex items-center justify-between bg-zinc-800 px-3 py-2 text-zinc-200">
+      <div className="flex items-center justify-between bg-muted px-3 py-2 text-foreground">
         <span className="text-xs font-medium">
           {language.toUpperCase()}
         </span>
@@ -35,23 +43,23 @@ function CodeView({ code, language = "text" }) {
         <button
           type="button"
           onClick={copyCode}
-          className="flex items-center gap-1.5 text-xs hover:text-white"
+          className="flex items-center gap-1.5 text-xs hover:text-brand"
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? "Copied" : "Copy"}
+          {copied ? "Copied" : copyError ? "Copy failed ? retry" : "Copy"}
         </button>
       </div>
 
       <div className="w-full overflow-x-auto">
         <SyntaxHighlighter
           language={language}
-          style={oneDark}
+          style={dark ? oneDark : oneLight}
           PreTag="div"
           wrapLongLines={false}
           customStyle={{
             margin: 0,
             padding: 14,
-            background: "#18181b",
+            background: "var(--surface)",
             borderRadius: 0,
             fontSize: 13,
             lineHeight: 1.65,
@@ -66,7 +74,7 @@ function CodeView({ code, language = "text" }) {
 
 export default function AIResponse({ content = "" }) {
   return (
-    <div className="min-w-0 max-w-full break-words text-sm leading-6 text-foreground">
+    <div className="min-w-0 max-w-full break-words text-[14px] leading-7 text-foreground">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

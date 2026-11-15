@@ -55,6 +55,8 @@ export const ModelName = {
   Availability: 'Availability',
   Booking: 'Booking',
   InterviewReminder: 'InterviewReminder',
+  InterviewQuestion: 'InterviewQuestion',
+  InterviewSubmission: 'InterviewSubmission',
   Feedback: 'Feedback',
   CreditTransaction: 'CreditTransaction',
   Payout: 'Payout'
@@ -121,6 +123,19 @@ export const BookingScalarFieldEnum = {
   creditsCharged: 'creditsCharged',
   streamCallId: 'streamCallId',
   recordingUrl: 'recordingUrl',
+  completedAt: 'completedAt',
+  completedBy: 'completedBy',
+  completionState: 'completionState',
+  completionToken: 'completionToken',
+  completionStartedAt: 'completionStartedAt',
+  completionError: 'completionError',
+  streamEndedAt: 'streamEndedAt',
+  feedbackState: 'feedbackState',
+  feedbackRequestedAt: 'feedbackRequestedAt',
+  transcriptArtifacts: 'transcriptArtifacts',
+  recordingArtifacts: 'recordingArtifacts',
+  scoringSummary: 'scoringSummary',
+  scoringPolicyVersion: 'scoringPolicyVersion',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -143,6 +158,62 @@ export const InterviewReminderScalarFieldEnum = {
 } as const
 
 export type InterviewReminderScalarFieldEnum = (typeof InterviewReminderScalarFieldEnum)[keyof typeof InterviewReminderScalarFieldEnum]
+
+
+export const InterviewQuestionScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  sourceId: 'sourceId',
+  authorId: 'authorId',
+  recipientId: 'recipientId',
+  question: 'question',
+  topic: 'topic',
+  category: 'category',
+  type: 'type',
+  difficulty: 'difficulty',
+  options: 'options',
+  referenceAnswer: 'referenceAnswer',
+  correctOptionIndex: 'correctOptionIndex',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  parentId: 'parentId',
+  depth: 'depth',
+  responseStatus: 'responseStatus'
+} as const
+
+export type InterviewQuestionScalarFieldEnum = (typeof InterviewQuestionScalarFieldEnum)[keyof typeof InterviewQuestionScalarFieldEnum]
+
+
+export const InterviewSubmissionScalarFieldEnum = {
+  id: 'id',
+  questionId: 'questionId',
+  candidateId: 'candidateId',
+  answer: 'answer',
+  optionIndex: 'optionIndex',
+  language: 'language',
+  submittedAt: 'submittedAt',
+  notifiedAt: 'notifiedAt',
+  evaluationStatus: 'evaluationStatus',
+  evaluation: 'evaluation',
+  evaluationError: 'evaluationError',
+  evaluationStartedAt: 'evaluationStartedAt',
+  evaluationToken: 'evaluationToken',
+  evaluationAttempts: 'evaluationAttempts',
+  approvedGrade: 'approvedGrade',
+  interviewerNotes: 'interviewerNotes',
+  approvedAt: 'approvedAt',
+  approvedBy: 'approvedBy',
+  evaluationCompletedAt: 'evaluationCompletedAt',
+  suggestedScore: 'suggestedScore',
+  approvedScore: 'approvedScore',
+  scoringPolicyVersion: 'scoringPolicyVersion',
+  difficultyWeight: 'difficultyWeight',
+  followUpMultiplier: 'followUpMultiplier',
+  questionWeight: 'questionWeight',
+  weightedScore: 'weightedScore'
+} as const
+
+export type InterviewSubmissionScalarFieldEnum = (typeof InterviewSubmissionScalarFieldEnum)[keyof typeof InterviewSubmissionScalarFieldEnum]
 
 
 export const FeedbackScalarFieldEnum = {
@@ -201,6 +272,14 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const JsonNullValueInput = {

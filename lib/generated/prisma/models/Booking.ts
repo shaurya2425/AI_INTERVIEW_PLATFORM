@@ -44,6 +44,16 @@ export type BookingMinAggregateOutputType = {
   creditsCharged: number | null
   streamCallId: string | null
   recordingUrl: string | null
+  completedAt: Date | null
+  completedBy: string | null
+  completionState: string | null
+  completionToken: string | null
+  completionStartedAt: Date | null
+  completionError: string | null
+  streamEndedAt: Date | null
+  feedbackState: string | null
+  feedbackRequestedAt: Date | null
+  scoringPolicyVersion: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -58,6 +68,16 @@ export type BookingMaxAggregateOutputType = {
   creditsCharged: number | null
   streamCallId: string | null
   recordingUrl: string | null
+  completedAt: Date | null
+  completedBy: string | null
+  completionState: string | null
+  completionToken: string | null
+  completionStartedAt: Date | null
+  completionError: string | null
+  streamEndedAt: Date | null
+  feedbackState: string | null
+  feedbackRequestedAt: Date | null
+  scoringPolicyVersion: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -72,6 +92,19 @@ export type BookingCountAggregateOutputType = {
   creditsCharged: number
   streamCallId: number
   recordingUrl: number
+  completedAt: number
+  completedBy: number
+  completionState: number
+  completionToken: number
+  completionStartedAt: number
+  completionError: number
+  streamEndedAt: number
+  feedbackState: number
+  feedbackRequestedAt: number
+  transcriptArtifacts: number
+  recordingArtifacts: number
+  scoringSummary: number
+  scoringPolicyVersion: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -96,6 +129,16 @@ export type BookingMinAggregateInputType = {
   creditsCharged?: true
   streamCallId?: true
   recordingUrl?: true
+  completedAt?: true
+  completedBy?: true
+  completionState?: true
+  completionToken?: true
+  completionStartedAt?: true
+  completionError?: true
+  streamEndedAt?: true
+  feedbackState?: true
+  feedbackRequestedAt?: true
+  scoringPolicyVersion?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -110,6 +153,16 @@ export type BookingMaxAggregateInputType = {
   creditsCharged?: true
   streamCallId?: true
   recordingUrl?: true
+  completedAt?: true
+  completedBy?: true
+  completionState?: true
+  completionToken?: true
+  completionStartedAt?: true
+  completionError?: true
+  streamEndedAt?: true
+  feedbackState?: true
+  feedbackRequestedAt?: true
+  scoringPolicyVersion?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -124,6 +177,19 @@ export type BookingCountAggregateInputType = {
   creditsCharged?: true
   streamCallId?: true
   recordingUrl?: true
+  completedAt?: true
+  completedBy?: true
+  completionState?: true
+  completionToken?: true
+  completionStartedAt?: true
+  completionError?: true
+  streamEndedAt?: true
+  feedbackState?: true
+  feedbackRequestedAt?: true
+  transcriptArtifacts?: true
+  recordingArtifacts?: true
+  scoringSummary?: true
+  scoringPolicyVersion?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -225,6 +291,19 @@ export type BookingGroupByOutputType = {
   creditsCharged: number
   streamCallId: string | null
   recordingUrl: string | null
+  completedAt: Date | null
+  completedBy: string | null
+  completionState: string
+  completionToken: string | null
+  completionStartedAt: Date | null
+  completionError: string | null
+  streamEndedAt: Date | null
+  feedbackState: string
+  feedbackRequestedAt: Date | null
+  transcriptArtifacts: runtime.JsonValue | null
+  recordingArtifacts: runtime.JsonValue | null
+  scoringSummary: runtime.JsonValue | null
+  scoringPolicyVersion: string | null
   createdAt: Date
   updatedAt: Date
   _count: BookingCountAggregateOutputType | null
@@ -262,6 +341,19 @@ export type BookingWhereInput = {
   creditsCharged?: Prisma.IntFilter<"Booking"> | number
   streamCallId?: Prisma.StringNullableFilter<"Booking"> | string | null
   recordingUrl?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  completedBy?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completionState?: Prisma.StringFilter<"Booking"> | string
+  completionToken?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completionStartedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  completionError?: Prisma.StringNullableFilter<"Booking"> | string | null
+  streamEndedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  feedbackState?: Prisma.StringFilter<"Booking"> | string
+  feedbackRequestedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  transcriptArtifacts?: Prisma.JsonNullableFilter<"Booking">
+  recordingArtifacts?: Prisma.JsonNullableFilter<"Booking">
+  scoringSummary?: Prisma.JsonNullableFilter<"Booking">
+  scoringPolicyVersion?: Prisma.StringNullableFilter<"Booking"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
   interviewee?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -269,6 +361,7 @@ export type BookingWhereInput = {
   feedback?: Prisma.XOR<Prisma.FeedbackNullableScalarRelationFilter, Prisma.FeedbackWhereInput> | null
   transactions?: Prisma.CreditTransactionListRelationFilter
   reminders?: Prisma.InterviewReminderListRelationFilter
+  questions?: Prisma.InterviewQuestionListRelationFilter
 }
 
 export type BookingOrderByWithRelationInput = {
@@ -281,6 +374,19 @@ export type BookingOrderByWithRelationInput = {
   creditsCharged?: Prisma.SortOrder
   streamCallId?: Prisma.SortOrderInput | Prisma.SortOrder
   recordingUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionState?: Prisma.SortOrder
+  completionToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionError?: Prisma.SortOrderInput | Prisma.SortOrder
+  streamEndedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  feedbackState?: Prisma.SortOrder
+  feedbackRequestedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  transcriptArtifacts?: Prisma.SortOrderInput | Prisma.SortOrder
+  recordingArtifacts?: Prisma.SortOrderInput | Prisma.SortOrder
+  scoringSummary?: Prisma.SortOrderInput | Prisma.SortOrder
+  scoringPolicyVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   interviewee?: Prisma.UserOrderByWithRelationInput
@@ -288,6 +394,7 @@ export type BookingOrderByWithRelationInput = {
   feedback?: Prisma.FeedbackOrderByWithRelationInput
   transactions?: Prisma.CreditTransactionOrderByRelationAggregateInput
   reminders?: Prisma.InterviewReminderOrderByRelationAggregateInput
+  questions?: Prisma.InterviewQuestionOrderByRelationAggregateInput
 }
 
 export type BookingWhereUniqueInput = Prisma.AtLeast<{
@@ -303,6 +410,19 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumBookingStatusFilter<"Booking"> | $Enums.BookingStatus
   creditsCharged?: Prisma.IntFilter<"Booking"> | number
   recordingUrl?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  completedBy?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completionState?: Prisma.StringFilter<"Booking"> | string
+  completionToken?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completionStartedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  completionError?: Prisma.StringNullableFilter<"Booking"> | string | null
+  streamEndedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  feedbackState?: Prisma.StringFilter<"Booking"> | string
+  feedbackRequestedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  transcriptArtifacts?: Prisma.JsonNullableFilter<"Booking">
+  recordingArtifacts?: Prisma.JsonNullableFilter<"Booking">
+  scoringSummary?: Prisma.JsonNullableFilter<"Booking">
+  scoringPolicyVersion?: Prisma.StringNullableFilter<"Booking"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
   interviewee?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -310,6 +430,7 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
   feedback?: Prisma.XOR<Prisma.FeedbackNullableScalarRelationFilter, Prisma.FeedbackWhereInput> | null
   transactions?: Prisma.CreditTransactionListRelationFilter
   reminders?: Prisma.InterviewReminderListRelationFilter
+  questions?: Prisma.InterviewQuestionListRelationFilter
 }, "id" | "streamCallId">
 
 export type BookingOrderByWithAggregationInput = {
@@ -322,6 +443,19 @@ export type BookingOrderByWithAggregationInput = {
   creditsCharged?: Prisma.SortOrder
   streamCallId?: Prisma.SortOrderInput | Prisma.SortOrder
   recordingUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionState?: Prisma.SortOrder
+  completionToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionError?: Prisma.SortOrderInput | Prisma.SortOrder
+  streamEndedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  feedbackState?: Prisma.SortOrder
+  feedbackRequestedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  transcriptArtifacts?: Prisma.SortOrderInput | Prisma.SortOrder
+  recordingArtifacts?: Prisma.SortOrderInput | Prisma.SortOrder
+  scoringSummary?: Prisma.SortOrderInput | Prisma.SortOrder
+  scoringPolicyVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BookingCountOrderByAggregateInput
@@ -344,6 +478,19 @@ export type BookingScalarWhereWithAggregatesInput = {
   creditsCharged?: Prisma.IntWithAggregatesFilter<"Booking"> | number
   streamCallId?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
   recordingUrl?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
+  completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Booking"> | Date | string | null
+  completedBy?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
+  completionState?: Prisma.StringWithAggregatesFilter<"Booking"> | string
+  completionToken?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
+  completionStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Booking"> | Date | string | null
+  completionError?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
+  streamEndedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Booking"> | Date | string | null
+  feedbackState?: Prisma.StringWithAggregatesFilter<"Booking"> | string
+  feedbackRequestedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Booking"> | Date | string | null
+  transcriptArtifacts?: Prisma.JsonNullableWithAggregatesFilter<"Booking">
+  recordingArtifacts?: Prisma.JsonNullableWithAggregatesFilter<"Booking">
+  scoringSummary?: Prisma.JsonNullableWithAggregatesFilter<"Booking">
+  scoringPolicyVersion?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Booking"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Booking"> | Date | string
 }
@@ -356,6 +503,19 @@ export type BookingCreateInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
@@ -363,6 +523,7 @@ export type BookingCreateInput = {
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateInput = {
@@ -375,11 +536,25 @@ export type BookingUncheckedCreateInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUpdateInput = {
@@ -390,6 +565,19 @@ export type BookingUpdateInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
@@ -397,6 +585,7 @@ export type BookingUpdateInput = {
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateInput = {
@@ -409,11 +598,25 @@ export type BookingUncheckedUpdateInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateManyInput = {
@@ -426,6 +629,19 @@ export type BookingCreateManyInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -438,6 +654,19 @@ export type BookingUpdateManyMutationInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -452,6 +681,19 @@ export type BookingUncheckedUpdateManyInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -476,6 +718,19 @@ export type BookingCountOrderByAggregateInput = {
   creditsCharged?: Prisma.SortOrder
   streamCallId?: Prisma.SortOrder
   recordingUrl?: Prisma.SortOrder
+  completedAt?: Prisma.SortOrder
+  completedBy?: Prisma.SortOrder
+  completionState?: Prisma.SortOrder
+  completionToken?: Prisma.SortOrder
+  completionStartedAt?: Prisma.SortOrder
+  completionError?: Prisma.SortOrder
+  streamEndedAt?: Prisma.SortOrder
+  feedbackState?: Prisma.SortOrder
+  feedbackRequestedAt?: Prisma.SortOrder
+  transcriptArtifacts?: Prisma.SortOrder
+  recordingArtifacts?: Prisma.SortOrder
+  scoringSummary?: Prisma.SortOrder
+  scoringPolicyVersion?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -494,6 +749,16 @@ export type BookingMaxOrderByAggregateInput = {
   creditsCharged?: Prisma.SortOrder
   streamCallId?: Prisma.SortOrder
   recordingUrl?: Prisma.SortOrder
+  completedAt?: Prisma.SortOrder
+  completedBy?: Prisma.SortOrder
+  completionState?: Prisma.SortOrder
+  completionToken?: Prisma.SortOrder
+  completionStartedAt?: Prisma.SortOrder
+  completionError?: Prisma.SortOrder
+  streamEndedAt?: Prisma.SortOrder
+  feedbackState?: Prisma.SortOrder
+  feedbackRequestedAt?: Prisma.SortOrder
+  scoringPolicyVersion?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -508,6 +773,16 @@ export type BookingMinOrderByAggregateInput = {
   creditsCharged?: Prisma.SortOrder
   streamCallId?: Prisma.SortOrder
   recordingUrl?: Prisma.SortOrder
+  completedAt?: Prisma.SortOrder
+  completedBy?: Prisma.SortOrder
+  completionState?: Prisma.SortOrder
+  completionToken?: Prisma.SortOrder
+  completionStartedAt?: Prisma.SortOrder
+  completionError?: Prisma.SortOrder
+  streamEndedAt?: Prisma.SortOrder
+  feedbackState?: Prisma.SortOrder
+  feedbackRequestedAt?: Prisma.SortOrder
+  scoringPolicyVersion?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -628,6 +903,20 @@ export type BookingUpdateOneRequiredWithoutRemindersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BookingUpdateToOneWithWhereWithoutRemindersInput, Prisma.BookingUpdateWithoutRemindersInput>, Prisma.BookingUncheckedUpdateWithoutRemindersInput>
 }
 
+export type BookingCreateNestedOneWithoutQuestionsInput = {
+  create?: Prisma.XOR<Prisma.BookingCreateWithoutQuestionsInput, Prisma.BookingUncheckedCreateWithoutQuestionsInput>
+  connectOrCreate?: Prisma.BookingCreateOrConnectWithoutQuestionsInput
+  connect?: Prisma.BookingWhereUniqueInput
+}
+
+export type BookingUpdateOneRequiredWithoutQuestionsNestedInput = {
+  create?: Prisma.XOR<Prisma.BookingCreateWithoutQuestionsInput, Prisma.BookingUncheckedCreateWithoutQuestionsInput>
+  connectOrCreate?: Prisma.BookingCreateOrConnectWithoutQuestionsInput
+  upsert?: Prisma.BookingUpsertWithoutQuestionsInput
+  connect?: Prisma.BookingWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BookingUpdateToOneWithWhereWithoutQuestionsInput, Prisma.BookingUpdateWithoutQuestionsInput>, Prisma.BookingUncheckedUpdateWithoutQuestionsInput>
+}
+
 export type BookingCreateNestedOneWithoutFeedbackInput = {
   create?: Prisma.XOR<Prisma.BookingCreateWithoutFeedbackInput, Prisma.BookingUncheckedCreateWithoutFeedbackInput>
   connectOrCreate?: Prisma.BookingCreateOrConnectWithoutFeedbackInput
@@ -666,12 +955,26 @@ export type BookingCreateWithoutIntervieweeInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   interviewer: Prisma.UserCreateNestedOneWithoutBookingsAsInterviewerInput
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutIntervieweeInput = {
@@ -683,11 +986,25 @@ export type BookingUncheckedCreateWithoutIntervieweeInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutIntervieweeInput = {
@@ -708,12 +1025,26 @@ export type BookingCreateWithoutInterviewerInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutInterviewerInput = {
@@ -725,11 +1056,25 @@ export type BookingUncheckedCreateWithoutInterviewerInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutInterviewerInput = {
@@ -771,6 +1116,19 @@ export type BookingScalarWhereInput = {
   creditsCharged?: Prisma.IntFilter<"Booking"> | number
   streamCallId?: Prisma.StringNullableFilter<"Booking"> | string | null
   recordingUrl?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  completedBy?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completionState?: Prisma.StringFilter<"Booking"> | string
+  completionToken?: Prisma.StringNullableFilter<"Booking"> | string | null
+  completionStartedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  completionError?: Prisma.StringNullableFilter<"Booking"> | string | null
+  streamEndedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  feedbackState?: Prisma.StringFilter<"Booking"> | string
+  feedbackRequestedAt?: Prisma.DateTimeNullableFilter<"Booking"> | Date | string | null
+  transcriptArtifacts?: Prisma.JsonNullableFilter<"Booking">
+  recordingArtifacts?: Prisma.JsonNullableFilter<"Booking">
+  scoringSummary?: Prisma.JsonNullableFilter<"Booking">
+  scoringPolicyVersion?: Prisma.StringNullableFilter<"Booking"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
 }
@@ -799,12 +1157,26 @@ export type BookingCreateWithoutRemindersInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
   interviewer: Prisma.UserCreateNestedOneWithoutBookingsAsInterviewerInput
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutRemindersInput = {
@@ -817,10 +1189,24 @@ export type BookingUncheckedCreateWithoutRemindersInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutRemindersInput = {
@@ -847,12 +1233,26 @@ export type BookingUpdateWithoutRemindersInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
   interviewer?: Prisma.UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutRemindersInput = {
@@ -865,10 +1265,160 @@ export type BookingUncheckedUpdateWithoutRemindersInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+}
+
+export type BookingCreateWithoutQuestionsInput = {
+  id?: string
+  startTime: Date | string
+  endTime: Date | string
+  status?: $Enums.BookingStatus
+  creditsCharged: number
+  streamCallId?: string | null
+  recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
+  interviewer: Prisma.UserCreateNestedOneWithoutBookingsAsInterviewerInput
+  feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
+  transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
+  reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+}
+
+export type BookingUncheckedCreateWithoutQuestionsInput = {
+  id?: string
+  intervieweeId: string
+  interviewerId: string
+  startTime: Date | string
+  endTime: Date | string
+  status?: $Enums.BookingStatus
+  creditsCharged: number
+  streamCallId?: string | null
+  recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
+  transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
+  reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+}
+
+export type BookingCreateOrConnectWithoutQuestionsInput = {
+  where: Prisma.BookingWhereUniqueInput
+  create: Prisma.XOR<Prisma.BookingCreateWithoutQuestionsInput, Prisma.BookingUncheckedCreateWithoutQuestionsInput>
+}
+
+export type BookingUpsertWithoutQuestionsInput = {
+  update: Prisma.XOR<Prisma.BookingUpdateWithoutQuestionsInput, Prisma.BookingUncheckedUpdateWithoutQuestionsInput>
+  create: Prisma.XOR<Prisma.BookingCreateWithoutQuestionsInput, Prisma.BookingUncheckedCreateWithoutQuestionsInput>
+  where?: Prisma.BookingWhereInput
+}
+
+export type BookingUpdateToOneWithWhereWithoutQuestionsInput = {
+  where?: Prisma.BookingWhereInput
+  data: Prisma.XOR<Prisma.BookingUpdateWithoutQuestionsInput, Prisma.BookingUncheckedUpdateWithoutQuestionsInput>
+}
+
+export type BookingUpdateWithoutQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
+  streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
+  interviewer?: Prisma.UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput
+  feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
+  transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
+  reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+}
+
+export type BookingUncheckedUpdateWithoutQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  intervieweeId?: Prisma.StringFieldUpdateOperationsInput | string
+  interviewerId?: Prisma.StringFieldUpdateOperationsInput | string
+  startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
+  streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
+  transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
+  reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateWithoutFeedbackInput = {
@@ -879,12 +1429,26 @@ export type BookingCreateWithoutFeedbackInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
   interviewer: Prisma.UserCreateNestedOneWithoutBookingsAsInterviewerInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutFeedbackInput = {
@@ -897,10 +1461,24 @@ export type BookingUncheckedCreateWithoutFeedbackInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutFeedbackInput = {
@@ -927,12 +1505,26 @@ export type BookingUpdateWithoutFeedbackInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
   interviewer?: Prisma.UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutFeedbackInput = {
@@ -945,10 +1537,24 @@ export type BookingUncheckedUpdateWithoutFeedbackInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateWithoutTransactionsInput = {
@@ -959,12 +1565,26 @@ export type BookingCreateWithoutTransactionsInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
   interviewer: Prisma.UserCreateNestedOneWithoutBookingsAsInterviewerInput
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutTransactionsInput = {
@@ -977,10 +1597,24 @@ export type BookingUncheckedCreateWithoutTransactionsInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutTransactionsInput = {
@@ -1007,12 +1641,26 @@ export type BookingUpdateWithoutTransactionsInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
   interviewer?: Prisma.UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutTransactionsInput = {
@@ -1025,10 +1673,24 @@ export type BookingUncheckedUpdateWithoutTransactionsInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateManyIntervieweeInput = {
@@ -1040,6 +1702,19 @@ export type BookingCreateManyIntervieweeInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1053,6 +1728,19 @@ export type BookingCreateManyInterviewerInput = {
   creditsCharged: number
   streamCallId?: string | null
   recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1065,12 +1753,26 @@ export type BookingUpdateWithoutIntervieweeInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   interviewer?: Prisma.UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutIntervieweeInput = {
@@ -1082,11 +1784,25 @@ export type BookingUncheckedUpdateWithoutIntervieweeInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateManyWithoutIntervieweeInput = {
@@ -1098,6 +1814,19 @@ export type BookingUncheckedUpdateManyWithoutIntervieweeInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1110,12 +1839,26 @@ export type BookingUpdateWithoutInterviewerInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutInterviewerInput = {
@@ -1127,11 +1870,25 @@ export type BookingUncheckedUpdateWithoutInterviewerInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateManyWithoutInterviewerInput = {
@@ -1143,6 +1900,19 @@ export type BookingUncheckedUpdateManyWithoutInterviewerInput = {
   creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
   streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1155,11 +1925,13 @@ export type BookingUncheckedUpdateManyWithoutInterviewerInput = {
 export type BookingCountOutputType = {
   transactions: number
   reminders: number
+  questions: number
 }
 
 export type BookingCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactions?: boolean | BookingCountOutputTypeCountTransactionsArgs
   reminders?: boolean | BookingCountOutputTypeCountRemindersArgs
+  questions?: boolean | BookingCountOutputTypeCountQuestionsArgs
 }
 
 /**
@@ -1186,6 +1958,13 @@ export type BookingCountOutputTypeCountRemindersArgs<ExtArgs extends runtime.Typ
   where?: Prisma.InterviewReminderWhereInput
 }
 
+/**
+ * BookingCountOutputType without action
+ */
+export type BookingCountOutputTypeCountQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InterviewQuestionWhereInput
+}
+
 
 export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1197,6 +1976,19 @@ export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   creditsCharged?: boolean
   streamCallId?: boolean
   recordingUrl?: boolean
+  completedAt?: boolean
+  completedBy?: boolean
+  completionState?: boolean
+  completionToken?: boolean
+  completionStartedAt?: boolean
+  completionError?: boolean
+  streamEndedAt?: boolean
+  feedbackState?: boolean
+  feedbackRequestedAt?: boolean
+  transcriptArtifacts?: boolean
+  recordingArtifacts?: boolean
+  scoringSummary?: boolean
+  scoringPolicyVersion?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   interviewee?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1204,6 +1996,7 @@ export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   feedback?: boolean | Prisma.Booking$feedbackArgs<ExtArgs>
   transactions?: boolean | Prisma.Booking$transactionsArgs<ExtArgs>
   reminders?: boolean | Prisma.Booking$remindersArgs<ExtArgs>
+  questions?: boolean | Prisma.Booking$questionsArgs<ExtArgs>
   _count?: boolean | Prisma.BookingCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["booking"]>
 
@@ -1217,6 +2010,19 @@ export type BookingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   creditsCharged?: boolean
   streamCallId?: boolean
   recordingUrl?: boolean
+  completedAt?: boolean
+  completedBy?: boolean
+  completionState?: boolean
+  completionToken?: boolean
+  completionStartedAt?: boolean
+  completionError?: boolean
+  streamEndedAt?: boolean
+  feedbackState?: boolean
+  feedbackRequestedAt?: boolean
+  transcriptArtifacts?: boolean
+  recordingArtifacts?: boolean
+  scoringSummary?: boolean
+  scoringPolicyVersion?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   interviewee?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1233,6 +2039,19 @@ export type BookingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   creditsCharged?: boolean
   streamCallId?: boolean
   recordingUrl?: boolean
+  completedAt?: boolean
+  completedBy?: boolean
+  completionState?: boolean
+  completionToken?: boolean
+  completionStartedAt?: boolean
+  completionError?: boolean
+  streamEndedAt?: boolean
+  feedbackState?: boolean
+  feedbackRequestedAt?: boolean
+  transcriptArtifacts?: boolean
+  recordingArtifacts?: boolean
+  scoringSummary?: boolean
+  scoringPolicyVersion?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   interviewee?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1249,17 +2068,31 @@ export type BookingSelectScalar = {
   creditsCharged?: boolean
   streamCallId?: boolean
   recordingUrl?: boolean
+  completedAt?: boolean
+  completedBy?: boolean
+  completionState?: boolean
+  completionToken?: boolean
+  completionStartedAt?: boolean
+  completionError?: boolean
+  streamEndedAt?: boolean
+  feedbackState?: boolean
+  feedbackRequestedAt?: boolean
+  transcriptArtifacts?: boolean
+  recordingArtifacts?: boolean
+  scoringSummary?: boolean
+  scoringPolicyVersion?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "intervieweeId" | "interviewerId" | "startTime" | "endTime" | "status" | "creditsCharged" | "streamCallId" | "recordingUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["booking"]>
+export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "intervieweeId" | "interviewerId" | "startTime" | "endTime" | "status" | "creditsCharged" | "streamCallId" | "recordingUrl" | "completedAt" | "completedBy" | "completionState" | "completionToken" | "completionStartedAt" | "completionError" | "streamEndedAt" | "feedbackState" | "feedbackRequestedAt" | "transcriptArtifacts" | "recordingArtifacts" | "scoringSummary" | "scoringPolicyVersion" | "createdAt" | "updatedAt", ExtArgs["result"]["booking"]>
 export type BookingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   interviewee?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   interviewer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   feedback?: boolean | Prisma.Booking$feedbackArgs<ExtArgs>
   transactions?: boolean | Prisma.Booking$transactionsArgs<ExtArgs>
   reminders?: boolean | Prisma.Booking$remindersArgs<ExtArgs>
+  questions?: boolean | Prisma.Booking$questionsArgs<ExtArgs>
   _count?: boolean | Prisma.BookingCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BookingIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1279,6 +2112,7 @@ export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     feedback: Prisma.$FeedbackPayload<ExtArgs> | null
     transactions: Prisma.$CreditTransactionPayload<ExtArgs>[]
     reminders: Prisma.$InterviewReminderPayload<ExtArgs>[]
+    questions: Prisma.$InterviewQuestionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1290,6 +2124,19 @@ export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     creditsCharged: number
     streamCallId: string | null
     recordingUrl: string | null
+    completedAt: Date | null
+    completedBy: string | null
+    completionState: string
+    completionToken: string | null
+    completionStartedAt: Date | null
+    completionError: string | null
+    streamEndedAt: Date | null
+    feedbackState: string
+    feedbackRequestedAt: Date | null
+    transcriptArtifacts: runtime.JsonValue | null
+    recordingArtifacts: runtime.JsonValue | null
+    scoringSummary: runtime.JsonValue | null
+    scoringPolicyVersion: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["booking"]>
@@ -1691,6 +2538,7 @@ export interface Prisma__BookingClient<T, Null = never, ExtArgs extends runtime.
   feedback<T extends Prisma.Booking$feedbackArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$feedbackArgs<ExtArgs>>): Prisma.Prisma__FeedbackClient<runtime.Types.Result.GetResult<Prisma.$FeedbackPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   transactions<T extends Prisma.Booking$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CreditTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reminders<T extends Prisma.Booking$remindersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$remindersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewReminderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  questions<T extends Prisma.Booking$questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1729,6 +2577,19 @@ export interface BookingFieldRefs {
   readonly creditsCharged: Prisma.FieldRef<"Booking", 'Int'>
   readonly streamCallId: Prisma.FieldRef<"Booking", 'String'>
   readonly recordingUrl: Prisma.FieldRef<"Booking", 'String'>
+  readonly completedAt: Prisma.FieldRef<"Booking", 'DateTime'>
+  readonly completedBy: Prisma.FieldRef<"Booking", 'String'>
+  readonly completionState: Prisma.FieldRef<"Booking", 'String'>
+  readonly completionToken: Prisma.FieldRef<"Booking", 'String'>
+  readonly completionStartedAt: Prisma.FieldRef<"Booking", 'DateTime'>
+  readonly completionError: Prisma.FieldRef<"Booking", 'String'>
+  readonly streamEndedAt: Prisma.FieldRef<"Booking", 'DateTime'>
+  readonly feedbackState: Prisma.FieldRef<"Booking", 'String'>
+  readonly feedbackRequestedAt: Prisma.FieldRef<"Booking", 'DateTime'>
+  readonly transcriptArtifacts: Prisma.FieldRef<"Booking", 'Json'>
+  readonly recordingArtifacts: Prisma.FieldRef<"Booking", 'Json'>
+  readonly scoringSummary: Prisma.FieldRef<"Booking", 'Json'>
+  readonly scoringPolicyVersion: Prisma.FieldRef<"Booking", 'String'>
   readonly createdAt: Prisma.FieldRef<"Booking", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Booking", 'DateTime'>
 }
@@ -2191,6 +3052,30 @@ export type Booking$remindersArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.InterviewReminderScalarFieldEnum | Prisma.InterviewReminderScalarFieldEnum[]
+}
+
+/**
+ * Booking.questions
+ */
+export type Booking$questionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InterviewQuestion
+   */
+  select?: Prisma.InterviewQuestionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InterviewQuestion
+   */
+  omit?: Prisma.InterviewQuestionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterviewQuestionInclude<ExtArgs> | null
+  where?: Prisma.InterviewQuestionWhereInput
+  orderBy?: Prisma.InterviewQuestionOrderByWithRelationInput | Prisma.InterviewQuestionOrderByWithRelationInput[]
+  cursor?: Prisma.InterviewQuestionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InterviewQuestionScalarFieldEnum | Prisma.InterviewQuestionScalarFieldEnum[]
 }
 
 /**

@@ -89,6 +89,9 @@ model User {
   bookingsAsInterviewer Booking[]           @relation("InterviewerBookings")
   transactions          CreditTransaction[]
   payouts               Payout[]
+  authoredQuestions     InterviewQuestion[] @relation("QuestionAuthor")
+  assignedQuestions     InterviewQuestion[] @relation("QuestionRecipient")
+  interviewSubmissions  InterviewSubmission[]
 }
 
 // ─── AVAILABILITY ────────────────────────────────────────
@@ -118,9 +121,23 @@ model Booking {
   creditsCharged Int
   streamCallId   String?       @unique
   recordingUrl   String?
+  completedAt    DateTime?
+  completedBy    String?
+  completionState String @default("NONE")
+  completionToken String?
+  completionStartedAt DateTime?
+  completionError String?
+  streamEndedAt DateTime?
+  feedbackState String @default("NONE")
+  feedbackRequestedAt DateTime?
+  transcriptArtifacts Json?
+  recordingArtifacts Json?
+  scoringSummary Json?
+  scoringPolicyVersion String?
   feedback       Feedback?
   transactions   CreditTransaction[]
   reminders      InterviewReminder[]
+  questions      InterviewQuestion[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -145,6 +162,70 @@ model InterviewReminder {
   createdAt      DateTime @default(now())
 
   @@index([bookingId])
+}
+
+model InterviewQuestion {
+  id                 String @id
+  bookingId          String
+  booking            Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sourceId           String
+  authorId           String
+  author             User @relation("QuestionAuthor", fields: [authorId], references: [id])
+  recipientId        String
+  recipient          User @relation("QuestionRecipient", fields: [recipientId], references: [id])
+  question           String @db.Text
+  topic              String
+  category           String
+  type               String
+  difficulty         String
+  options            String[]
+  referenceAnswer    String @db.Text
+  correctOptionIndex Int?
+  sentAt             DateTime?
+  createdAt          DateTime @default(now())
+  submission         InterviewSubmission?
+  parentId           String?
+  parent             InterviewQuestion? @relation("GrillQuestions", fields: [parentId], references: [id], onDelete: SetNull)
+  followUps          InterviewQuestion[] @relation("GrillQuestions")
+  depth              Int @default(0)
+  responseStatus     String @default("AWAITING_ANSWER")
+
+  @@unique([bookingId, sourceId])
+  @@index([recipientId])
+  @@index([authorId])
+}
+
+model InterviewSubmission {
+  id          String @id
+  questionId  String @unique
+  question    InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  candidateId String
+  candidate   User @relation(fields: [candidateId], references: [id])
+  answer      String @db.Text
+  optionIndex Int?
+  language    String?
+  submittedAt DateTime @default(now())
+  notifiedAt  DateTime?
+  evaluationStatus String @default("PENDING")
+  evaluation Json?
+  evaluationError String?
+  evaluationStartedAt DateTime?
+  evaluationToken String?
+  evaluationAttempts Int @default(0)
+  approvedGrade FeedbackRating?
+  interviewerNotes String? @db.Text
+  approvedAt DateTime?
+  approvedBy String?
+  evaluationCompletedAt DateTime?
+  suggestedScore Int?
+  approvedScore Int?
+  scoringPolicyVersion String?
+  difficultyWeight Float?
+  followUpMultiplier Float?
+  questionWeight Float?
+  weightedScore Float?
+
+  @@index([candidateId])
 }
 
 // ─── FEEDBACK ────────────────────────────────────────────

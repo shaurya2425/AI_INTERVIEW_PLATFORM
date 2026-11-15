@@ -14,9 +14,11 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { generateInterviewQuestions } from "@/actions/aiQuestions";
 import {
   makeDefaultPreferences,
-  INTERVIEW_CATALOG,
 } from "@/lib/interviewCatalog";
 
+import { sendInterviewQuestion } from "@/actions/interviewQuestions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useInterviewQuestions } from "./InterviewQuestionMessage";
 import AIResponse from "./AIResponse";
 import AIQuestionCard from "./AIQuestionCard";
 import AIBuddyFilters from "./AIBuddyFilters";
@@ -26,12 +28,40 @@ const createId = () => crypto.randomUUID();
 export default function AIQuestionsPanel({
   callId,
   sessionId,
-  categories = [],
+  intervieweeName = "Candidate",
 }) {
-  const defaultSubject =
-    categories.find((category) =>
-      Object.hasOwn(INTERVIEW_CATALOG, category)
-    ) || "DSA";
+  const defaultSubject = "ALL";
+  const delivery = useInterviewQuestions();
+  const [pendingQuestion, setPendingQuestion] = useState(null);
+  const [sendingQuestion, setSendingQuestion] = useState(false);
+  const [deliveryError, setDeliveryError] = useState("");
+  const deliveryLock = useRef(false);
+
+  async function confirmQuestion() {
+    if (!pendingQuestion || deliveryLock.current) return;
+    deliveryLock.current = true;
+    setSendingQuestion(true);
+    setDeliveryError("");
+    try {
+      const result = await sendInterviewQuestion({ callId, question: pendingQuestion });
+      if (!result.success) { setDeliveryError(result.error); void delivery?.refresh(); return; }
+      delivery?.acceptQuestion(result.question);
+      updateQuestion(pendingQuestion.id, { status: result.question.status });
+      setActiveQuestionId(pendingQuestion.id);
+      setPendingQuestion(null);
+    } catch { setDeliveryError("Delivery could not be confirmed. Retry safely without creating a duplicate."); }
+    finally { deliveryLock.current = false; setSendingQuestion(false); }
+  }
+
+  function withDelivery(question) {
+    const saved = delivery?.questions.find(item => item.sourceId === question.id);
+    if (!saved || saved.status === "PENDING") return question;
+    return { ...question, persistedId: saved.id, review: saved.review, submission: saved.submission,
+      answer: saved.referenceAnswer, correctOptionIndex: saved.correctOptionIndex, depth: saved.depth,
+      status: saved.review?.approvedGrade ? "EVALUATED" : saved.status,
+      grade: ["POOR", "AVERAGE", "GOOD", "EXCELLENT"].indexOf(saved.review?.approvedGrade) + 1 || null,
+      notes: saved.review?.notes || "", candidateAnswer: saved.submission?.answer || "" };
+  }
 
   const storageKey = `prept-ai-buddy:${sessionId || callId}`;
 
@@ -52,6 +82,10 @@ export default function AIQuestionsPanel({
     useState(false);
 
   const busyRef = useRef(false);
+  const retryRef = useRef(null);
+  const [canRetry, setCanRetry] = useState(false);
+  const followLatestRef = useRef(true);
+  const [warning, setWarning] = useState("");
   const scrollRef = useRef(null);
   const composerRef = useRef(null);
 
@@ -134,7 +168,7 @@ export default function AIQuestionsPanel({
   // ==============================================
 
   const questions = messages.flatMap(
-    (message) => message.cards || []
+    (message) => (message.cards || []).map(withDelivery)
   );
 
   const activeQuestion =
@@ -144,7 +178,7 @@ export default function AIQuestionsPanel({
 
   const askedCount = questions.filter(
     (question) =>
-      question.status === "ASKED" ||
+      ["ASKED", "SENT", "ANSWERED"].includes(question.status) ||
       question.status === "EVALUATED"
   ).length;
 
@@ -203,13 +237,15 @@ export default function AIQuestionsPanel({
     parent = null,
     forceQuestions = false,
     guided = false,
+    grillLevel = "DEEPER",
+    retry = false,
   } = {}) {
     if (!ready || busyRef.current) return;
 
     const instruction = text.trim();
 
     if (
-      !instruction &&
+      !retry && !instruction &&
       !forceQuestions &&
       mode !== "GRILL"
     ) {
@@ -225,6 +261,9 @@ export default function AIQuestionsPanel({
 
     busyRef.current = true;
     setLoading(true);
+    setCanRetry(false);
+    followLatestRef.current = true;
+    setWarning("");
     setError("");
 
     const focusedQuestion =
@@ -233,13 +272,6 @@ export default function AIQuestionsPanel({
     const requestPreferences = {
       ...preferences,
       mode: guided ? "GUIDED" : "FREE_FLOW",
-      ...(guided
-        ? {}
-        : {
-            topic: "ALL",
-            questionType: "ANY",
-            difficulty: "MIXED",
-          }),
     };
 
     // Explicit Grill always retains parent context.
@@ -248,7 +280,7 @@ export default function AIQuestionsPanel({
         ? `Grill: ${focusedQuestion?.question || "Question"}${
             instruction ? `\nFocus: ${instruction}` : ""
           }`
-        : guided
+        : guided && !instruction
           ? `Suggest ${requestPreferences.questionCount} ${
               requestPreferences.difficulty.toLowerCase()
             } ${
@@ -269,25 +301,19 @@ export default function AIQuestionsPanel({
       cards: [],
     };
 
-    const nextMessages = [
-      ...messages,
-      userMessage,
-    ];
+    const nextMessages = retry ? messages : [...messages, userMessage];
 
     setMessages(nextMessages);
 
-    if (!guided && mode !== "GRILL") {
+    if (!retry && mode !== "GRILL") {
       setInput("");
     }
 
     try {
-      const result =
-        await generateInterviewQuestions({
+      const request = retry ? retryRef.current : {
           callId,
           preferences: requestPreferences,
-          instruction: guided
-            ? displayText
-            : instruction,
+          instruction: instruction || displayText,
           mode,
           forceQuestions,
           history: buildHistory(),
@@ -296,7 +322,10 @@ export default function AIQuestionsPanel({
             text: message.text,
           })),
           activeQuestion: focusedQuestion,
-        });
+          grillLevel,
+        };
+      retryRef.current = request;
+      const result = await generateInterviewQuestions(request);
 
       if (!result || result.error) {
         throw new Error(
@@ -305,6 +334,8 @@ export default function AIQuestionsPanel({
         );
       }
 
+      retryRef.current = null;
+      setWarning(result.warning || "");
       const cards = Array.isArray(result.questions)
         ? result.questions.map((question) => ({
             ...question,
@@ -331,6 +362,7 @@ export default function AIQuestionsPanel({
         },
       ]);
     } catch (err) {
+      setCanRetry(Boolean(retryRef.current));
       setError(
         err?.message ||
           "AI Buddy couldn't complete the request."
@@ -359,33 +391,10 @@ export default function AIQuestionsPanel({
 
     send({
       mode: "GRILL",
+      grillLevel: depth,
       parent: question,
       text: `${depthPrompt} ${hint}`.trim(),
     });
-  }
-
-  function handleGrade(question, evaluation) {
-    if (
-      !["ASKED", "EVALUATED"].includes(
-        question.status
-      )
-    ) {
-      setError(
-        "Mark the question as asked before grading."
-      );
-      return;
-    }
-
-    updateQuestion(question.id, {
-      status: "EVALUATED",
-      grade: evaluation.grade,
-      candidateAnswer:
-        evaluation.candidateAnswer,
-      notes: evaluation.notes,
-    });
-
-    setActiveQuestionId(question.id);
-    setError("");
   }
 
   function clearChat() {
@@ -393,12 +402,14 @@ export default function AIQuestionsPanel({
 
     if (
       !window.confirm(
-        "Clear AI Buddy's conversation and evaluations for this interview?"
+        "Clear local AI Buddy conversation? Saved questions and approved grades will remain."
       )
     ) {
       return;
     }
 
+    retryRef.current = null;
+    setWarning("");
     setMessages([]);
     setActiveQuestionId(null);
     setInput("");
@@ -428,6 +439,7 @@ export default function AIQuestionsPanel({
   // ==============================================
 
   function scrollToBottom() {
+    followLatestRef.current = true;
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
@@ -442,14 +454,13 @@ export default function AIQuestionsPanel({
       element.scrollTop -
       element.clientHeight;
 
-    setShowScrollBottom(
-      remaining > 180
-    );
+    followLatestRef.current = remaining <= 180;
+    setShowScrollBottom(remaining > 180);
   }
 
   useEffect(() => {
     const container = scrollRef.current;
-    if (!container) return;
+    if (!container || !followLatestRef.current) return;
 
     container.scrollTo({
       top: container.scrollHeight,
@@ -464,6 +475,29 @@ export default function AIQuestionsPanel({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
 
+      <Dialog open={!!pendingQuestion} onOpenChange={(open) => { if (!open && !deliveryLock.current) setPendingQuestion(null); }}>
+        <DialogContent showCloseButton={!sendingQuestion} className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Send question to {intervieweeName}?</DialogTitle>
+            <DialogDescription>Confirm to save this question and deliver it in the interview Chat. The reference answer and private notes stay hidden.</DialogDescription>
+          </DialogHeader>
+          {pendingQuestion && <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{pendingQuestion.topic} · {pendingQuestion.difficulty} · {pendingQuestion.type}</p>
+            <AIResponse content={pendingQuestion.question} />
+            {pendingQuestion.options?.map((option, index) => <p key={index} className="rounded border border-border p-2 text-sm">{String.fromCharCode(65 + index)}. {option}</p>)}
+          </div>}
+          {deliveryError && <p role="alert" className="text-sm text-danger">{deliveryError}</p>}
+          <DialogFooter>
+            <button type="button" disabled={sendingQuestion} onClick={() => setPendingQuestion(null)} className="rounded-lg border border-border px-4 py-2 disabled:opacity-50">Cancel</button>
+            <button type="button" disabled={sendingQuestion} onClick={confirmQuestion} className="rounded-lg bg-amber-400 px-4 py-2 font-semibold text-zinc-950 disabled:opacity-50">{sendingQuestion ? "Sending?" : deliveryError ? "Retry send" : "Confirm and send"}</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {delivery?.scoring && <div className="mb-3 rounded-lg border border-border p-3 text-xs" role="status">
+        <p className="font-semibold">Interview score: {delivery.scoring.overallScore == null ? "Unavailable ? no approved main answers" : delivery.scoring.overallScore.toFixed(1) + "/100"} {delivery.scoring.state === "PROVISIONAL" ? "(provisional)" : ""}</p>
+        <p>Main: {delivery.scoring.mainScore?.toFixed(1) ?? "?"} ? Grill: {delivery.scoring.grillScore?.toFixed(1) ?? "?"} ? Approved main answers: {delivery.scoring.mainCount}</p>
+        <p>Grill is bonus-only. Unanswered or unapproved questions are not scored as zero.</p>
+      </div>}
       {/* Compact header */}
       <header className="flex shrink-0 items-center justify-between gap-3 pb-3">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -507,13 +541,29 @@ export default function AIQuestionsPanel({
         </button>
       </header>
 
+      {delivery?.questions.some(q => q.status !== "PENDING") && <details className="mb-3 max-h-[65vh] shrink-0 overflow-y-auto rounded-lg border border-border p-3">
+        <summary className="cursor-pointer font-semibold">Saved questions & private reviews ({delivery.questions.filter(q => q.status !== "PENDING").length})</summary>
+        <div className="mt-3 space-y-3">{delivery.questions.filter(q => q.status !== "PENDING").map(q =>
+          <AIQuestionCard key={q.id} question={withDelivery({ ...q, id: q.sourceId })} loading={loading} onGrill={handleGrill} />
+        )}</div>
+      </details>}
       {/* Collapsible question curation */}
+      {delivery?.questions.some(question => question.status === "PENDING") && <div className="mb-3 space-y-2 rounded-lg border border-border p-3 text-sm">
+        <p>Saved questions awaiting chat delivery:</p>
+        {delivery.questions.filter(question => question.status === "PENDING").map(question => <button
+          key={question.id} type="button" disabled={sendingQuestion}
+          className="block w-full truncate text-left text-brand underline"
+          onClick={() => { setDeliveryError(""); setPendingQuestion({ ...question, id: question.sourceId }); }}>
+          Review and retry: {question.question}
+        </button>)}
+      </div>}
       <AIBuddyFilters
         value={preferences}
         onChange={setPreferences}
         disabled={loading}
         onGenerate={() =>
           send({
+            text: input,
             forceQuestions: true,
             guided: true,
           })
@@ -559,8 +609,11 @@ export default function AIQuestionsPanel({
           "
         >
           {error}
+          {canRetry && <button type="button" disabled={loading} onClick={() => send({ retry: true })} className="mt-2 block font-semibold underline disabled:opacity-50">Retry request</button>}
         </div>
       )}
+
+      {warning && <p role="status" className="mb-2 text-xs text-muted-foreground">{warning}</p>}
 
       {/* Chat: takes remaining available height */}
       <div className="relative min-h-0 flex-1">
@@ -642,24 +695,14 @@ export default function AIQuestionsPanel({
               {message.cards?.map((question) => (
                 <AIQuestionCard
                   key={question.id}
-                  question={question}
+                  question={withDelivery(question)}
                   isActive={
                     activeQuestionId === question.id
                   }
                   loading={loading}
                   onSelect={(q) => {
-                    updateQuestion(q.id, {
-                      status: "SELECTED",
-                    });
-
-                    setActiveQuestionId(q.id);
-                  }}
-                  onAsked={(q) => {
-                    updateQuestion(q.id, {
-                      status: "ASKED",
-                    });
-
-                    setActiveQuestionId(q.id);
+                    setDeliveryError("");
+                    setPendingQuestion(q);
                   }}
                   onSkip={(q) => {
                     updateQuestion(q.id, {
@@ -672,11 +715,7 @@ export default function AIQuestionsPanel({
                       setActiveQuestionId(null);
                     }
                   }}
-                  onFocus={(q) =>
-                    setActiveQuestionId(q.id)
-                  }
                   onGrill={handleGrill}
-                  onGrade={handleGrade}
                 />
               ))}
 
@@ -807,7 +846,8 @@ export default function AIQuestionsPanel({
               setInput(event.target.value)
             }
             onKeyDown={onMessageKeyDown}
-            placeholder="Message AI Buddy..."
+            aria-label="Message AI Buddy"
+            placeholder="Ask for questions, explanations, or code..."
             className="
               max-h-36 min-h-12 w-full
               resize-none bg-transparent

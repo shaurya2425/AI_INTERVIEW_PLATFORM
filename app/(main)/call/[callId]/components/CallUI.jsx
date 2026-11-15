@@ -12,7 +12,8 @@ import {
   useCallStateHooks,
   useCall,
   CallingState,
-  CallControls,
+  ToggleAudioPublishingButton, ToggleVideoPublishingButton, ScreenShareButton,
+  ReactionsButton, RecordCallButton, CancelCallButton, Restricted, OwnCapability,
 } from "@stream-io/video-react-sdk";
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 
@@ -35,7 +36,10 @@ import {
   PageLoader,
 } from "@/components/ui/loading-spinner";
 
+import EndInterviewButton from "@/components/EndInterviewButton";
+import { getInterviewLifecycle } from "@/actions/interviewCompletion";
 import AIQuestionsPanel from "./AIQuestions";
+import { InterviewQuestionProvider, InterviewQuestionStatus, InterviewChatMessage } from "./InterviewQuestionMessage";
 
 export default function CallUI({
   callId,
@@ -64,6 +68,22 @@ export default function CallUI({
     }
     onLeave();
   }, [call, onLeave]);
+
+  const [lifecycle, setLifecycle] = useState(null);
+  useEffect(() => {
+    if (callingState === CallingState.LEFT) onLeave();
+  }, [callingState, onLeave]);
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const result = await getInterviewLifecycle(callId);
+        if (!cancelled && result.success) setLifecycle(result);
+      } catch { /* Stream remains the primary disconnect mechanism. */ }
+    };
+    const timer = setInterval(check, 4000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [callId]);
 
   // Chat client
   const chatClient = useCreateChatClient({
@@ -158,6 +178,7 @@ export default function CallUI({
         </div>
       </div>
 
+      <InterviewQuestionProvider callId={callId} userId={currentUser.id} isInterviewer={isInterviewer} channel={chatChannel} client={chatClient}>
       {/* Call content */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
 
@@ -168,7 +189,19 @@ export default function CallUI({
               participantBarPosition="bottom"
             />
 
-            <CallControls onLeave={handleLeave} />
+            <div className="str-video__call-controls">
+              <Restricted requiredGrants={[OwnCapability.SEND_AUDIO]}><ToggleAudioPublishingButton /></Restricted>
+              <Restricted requiredGrants={[OwnCapability.SEND_VIDEO]}><ToggleVideoPublishingButton /></Restricted>
+              <Restricted requiredGrants={[OwnCapability.CREATE_REACTION]}><ReactionsButton /></Restricted>
+              <Restricted requiredGrants={[OwnCapability.SCREENSHARE]}><ScreenShareButton /></Restricted>
+              <Restricted requiredGrants={[OwnCapability.START_RECORD_CALL, OwnCapability.STOP_RECORD_CALL]}><RecordCallButton /></Restricted>
+              <div className="flex flex-col items-center gap-1"><CancelCallButton caption="Leave Meeting" onLeave={handleLeave} /><span className="text-xs">Leave Meeting</span></div>
+            </div>
+            <div className="space-y-2 px-4 pb-4 text-center">
+              <p className="text-xs text-muted-foreground">Leave Meeting disconnects only you and allows rejoining while the interview is active.</p>
+              {lifecycle?.status === "COMPLETED" && <p role="status" className="text-sm">Interview completed. Preparing Feedback. {lifecycle.completionState !== "COMPLETE" ? "Finishing the shared call? You may leave safely." : "The shared call has ended."}</p>}
+              {isInterviewer && <EndInterviewButton bookingId={booking.id} retry={lifecycle?.status === "COMPLETED"} />}
+            </div>
           </StreamTheme>
         </div>
 
@@ -235,8 +268,9 @@ export default function CallUI({
                       : "str-chat__theme-light"
                   }
                 >
-                  <Channel channel={chatChannel}>
+                  <Channel channel={chatChannel} Message={InterviewChatMessage}>
                     <Window>
+                      <InterviewQuestionStatus />
                       <MessageList />
                       <MessageInput focus />
                     </Window>
@@ -272,13 +306,14 @@ export default function CallUI({
                 <AIQuestionsPanel
                   callId={callId}
                   sessionId={booking.id}
-                  categories={booking.categories || []}
+                  intervieweeName={booking.interviewee.name || "Candidate"}
                 />
               </div>
             )}
           </div>
         </div>
       </div>
+      </InterviewQuestionProvider>
     </div>
   );
 }

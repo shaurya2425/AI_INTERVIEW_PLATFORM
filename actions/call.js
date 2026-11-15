@@ -4,6 +4,7 @@ import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { getClerkDisplayName, withDisplayName } from "@/lib/user-name";
+import { secureInterviewCall } from "@/lib/interviewCompletion";
 import { StreamClient } from "@stream-io/node-sdk";
 
 export const getCallData = async (callId) => {
@@ -60,6 +61,8 @@ export const getCallData = async (callId) => {
     return { error: "Forbidden" };
   }
 
+  if (booking.status !== "SCHEDULED") return { error: "Interview closed" };
+
   // 5. Validate Stream credentials
   const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
   const apiSecret = process.env.STREAM_SECRET_KEY;
@@ -77,6 +80,7 @@ export const getCallData = async (callId) => {
   // Upgrade existing bookings as well as newly created calls before joining.
   if (booking.status === "SCHEDULED") {
     const call = streamClient.video.call("default", callId);
+    await secureInterviewCall(streamClient, call, [booking.interviewer.clerkUserId, booking.interviewee.clerkUserId]);
     const { call: details } = await call.get();
     if (details.settings.transcription.language !== "auto" ||
         details.settings.transcription.mode !== "auto-on") {
@@ -92,6 +96,9 @@ export const getCallData = async (callId) => {
     user_id: user.id,
     validity_in_seconds: 60 * 60,
   });
+
+  const latest = await db.booking.findUnique({ where: { id: booking.id }, select: { status: true } });
+  if (latest?.status !== "SCHEDULED") return { error: "Interview closed" };
 
   // 7. Return only the required data
   return {

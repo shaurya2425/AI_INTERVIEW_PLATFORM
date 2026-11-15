@@ -79,6 +79,7 @@ export default function CallRoom({
 
   const handleLeave = useCallback(() => {
     router.push(isInterviewer ? "/dashboard" : "/appointments");
+    router.refresh();
   }, [isInterviewer, router]);
 
   if (connectionError) {

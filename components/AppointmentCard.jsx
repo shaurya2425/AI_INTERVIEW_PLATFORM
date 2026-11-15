@@ -7,6 +7,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Video, Sparkles } from "lucide-react";
+import InterviewReviewDialog from "./InterviewReviewDialog";
+import EndInterviewButton from "./EndInterviewButton";
 import { FeedbackModal } from "./FeedbackModal";
 import { getMeetingFeedback } from "@/actions/feedback";
 import useFetch from "@/hooks/use-fetch";
@@ -28,8 +30,9 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
     feedback: savedFeedback,
   } = booking;
   const feedback = feedbackResult?.feedback ?? savedFeedback;
+  const preparing = status === "COMPLETED" && !feedback;
   const canViewFeedback = Boolean(isPast || feedback || status !== "SCHEDULED");
-  const feedbackMessage = feedbackError || feedbackResult?.message || (status === "CANCELLED"
+  const feedbackMessage = feedbackError || feedbackResult?.message || (preparing ? "Preparing Feedback. Your interview is completed and its evidence is saved." : status === "CANCELLED"
     ? "This meeting was cancelled. No interview feedback is available."
     : "Feedback is not available yet. View feedback to check the meeting status and retrieve its report.");
   const statusLabel = feedback ? "Completed" : feedbackResult?.state === "missed"
@@ -165,7 +168,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
         {(feedback?.summary || canViewFeedback) && (
           <div className="rounded-xl border border-border bg-surface px-4 py-3 flex flex-col gap-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
-              {feedback ? "AI Feedback" : "Meeting feedback"}
+              {feedback ? "AI Feedback" : preparing ? "Preparing Feedback" : "Meeting feedback"}
             </p>
             <p className="text-xs text-muted-foreground font-light leading-relaxed line-clamp-2">
               {feedback?.summary || feedbackMessage}
@@ -196,6 +199,8 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
               </Button>
             )}
 
+            {mode === "interviewer" && isPast && streamCallId && <InterviewReviewDialog callId={streamCallId} />}
+            {mode === "interviewer" && booking.completedAt && booking.completionState !== "COMPLETE" && <EndInterviewButton bookingId={booking.id} retry />}
             {canViewFeedback && (
                 <>
                   <Button
@@ -205,7 +210,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
                     onClick={openFeedback}
                   >
                     <Sparkles size={12} />
-                    {feedback ? "Full Feedback" : "View feedback"}
+                    {feedback ? "Full Feedback" : preparing ? "Preparing Feedback" : "View feedback"}
                   </Button>
                   {feedback && <Badge
                     variant="outline"

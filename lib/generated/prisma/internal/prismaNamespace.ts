@@ -388,6 +388,8 @@ export const ModelName = {
   Availability: 'Availability',
   Booking: 'Booking',
   InterviewReminder: 'InterviewReminder',
+  InterviewQuestion: 'InterviewQuestion',
+  InterviewSubmission: 'InterviewSubmission',
   Feedback: 'Feedback',
   CreditTransaction: 'CreditTransaction',
   Payout: 'Payout'
@@ -406,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "availability" | "booking" | "interviewReminder" | "feedback" | "creditTransaction" | "payout"
+    modelProps: "user" | "availability" | "booking" | "interviewReminder" | "interviewQuestion" | "interviewSubmission" | "feedback" | "creditTransaction" | "payout"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -703,6 +705,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.InterviewReminderCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.InterviewReminderCountAggregateOutputType> | number
+        }
+      }
+    }
+    InterviewQuestion: {
+      payload: Prisma.$InterviewQuestionPayload<ExtArgs>
+      fields: Prisma.InterviewQuestionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InterviewQuestionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InterviewQuestionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>
+        }
+        findFirst: {
+          args: Prisma.InterviewQuestionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InterviewQuestionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>
+        }
+        findMany: {
+          args: Prisma.InterviewQuestionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>[]
+        }
+        create: {
+          args: Prisma.InterviewQuestionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>
+        }
+        createMany: {
+          args: Prisma.InterviewQuestionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InterviewQuestionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>[]
+        }
+        delete: {
+          args: Prisma.InterviewQuestionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>
+        }
+        update: {
+          args: Prisma.InterviewQuestionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>
+        }
+        deleteMany: {
+          args: Prisma.InterviewQuestionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InterviewQuestionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InterviewQuestionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>[]
+        }
+        upsert: {
+          args: Prisma.InterviewQuestionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewQuestionPayload>
+        }
+        aggregate: {
+          args: Prisma.InterviewQuestionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInterviewQuestion>
+        }
+        groupBy: {
+          args: Prisma.InterviewQuestionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InterviewQuestionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InterviewQuestionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InterviewQuestionCountAggregateOutputType> | number
+        }
+      }
+    }
+    InterviewSubmission: {
+      payload: Prisma.$InterviewSubmissionPayload<ExtArgs>
+      fields: Prisma.InterviewSubmissionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InterviewSubmissionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InterviewSubmissionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>
+        }
+        findFirst: {
+          args: Prisma.InterviewSubmissionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InterviewSubmissionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>
+        }
+        findMany: {
+          args: Prisma.InterviewSubmissionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>[]
+        }
+        create: {
+          args: Prisma.InterviewSubmissionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>
+        }
+        createMany: {
+          args: Prisma.InterviewSubmissionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InterviewSubmissionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>[]
+        }
+        delete: {
+          args: Prisma.InterviewSubmissionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>
+        }
+        update: {
+          args: Prisma.InterviewSubmissionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>
+        }
+        deleteMany: {
+          args: Prisma.InterviewSubmissionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InterviewSubmissionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InterviewSubmissionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>[]
+        }
+        upsert: {
+          args: Prisma.InterviewSubmissionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InterviewSubmissionPayload>
+        }
+        aggregate: {
+          args: Prisma.InterviewSubmissionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInterviewSubmission>
+        }
+        groupBy: {
+          args: Prisma.InterviewSubmissionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InterviewSubmissionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InterviewSubmissionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InterviewSubmissionCountAggregateOutputType> | number
         }
       }
     }
@@ -1012,6 +1162,19 @@ export const BookingScalarFieldEnum = {
   creditsCharged: 'creditsCharged',
   streamCallId: 'streamCallId',
   recordingUrl: 'recordingUrl',
+  completedAt: 'completedAt',
+  completedBy: 'completedBy',
+  completionState: 'completionState',
+  completionToken: 'completionToken',
+  completionStartedAt: 'completionStartedAt',
+  completionError: 'completionError',
+  streamEndedAt: 'streamEndedAt',
+  feedbackState: 'feedbackState',
+  feedbackRequestedAt: 'feedbackRequestedAt',
+  transcriptArtifacts: 'transcriptArtifacts',
+  recordingArtifacts: 'recordingArtifacts',
+  scoringSummary: 'scoringSummary',
+  scoringPolicyVersion: 'scoringPolicyVersion',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1034,6 +1197,62 @@ export const InterviewReminderScalarFieldEnum = {
 } as const
 
 export type InterviewReminderScalarFieldEnum = (typeof InterviewReminderScalarFieldEnum)[keyof typeof InterviewReminderScalarFieldEnum]
+
+
+export const InterviewQuestionScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  sourceId: 'sourceId',
+  authorId: 'authorId',
+  recipientId: 'recipientId',
+  question: 'question',
+  topic: 'topic',
+  category: 'category',
+  type: 'type',
+  difficulty: 'difficulty',
+  options: 'options',
+  referenceAnswer: 'referenceAnswer',
+  correctOptionIndex: 'correctOptionIndex',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  parentId: 'parentId',
+  depth: 'depth',
+  responseStatus: 'responseStatus'
+} as const
+
+export type InterviewQuestionScalarFieldEnum = (typeof InterviewQuestionScalarFieldEnum)[keyof typeof InterviewQuestionScalarFieldEnum]
+
+
+export const InterviewSubmissionScalarFieldEnum = {
+  id: 'id',
+  questionId: 'questionId',
+  candidateId: 'candidateId',
+  answer: 'answer',
+  optionIndex: 'optionIndex',
+  language: 'language',
+  submittedAt: 'submittedAt',
+  notifiedAt: 'notifiedAt',
+  evaluationStatus: 'evaluationStatus',
+  evaluation: 'evaluation',
+  evaluationError: 'evaluationError',
+  evaluationStartedAt: 'evaluationStartedAt',
+  evaluationToken: 'evaluationToken',
+  evaluationAttempts: 'evaluationAttempts',
+  approvedGrade: 'approvedGrade',
+  interviewerNotes: 'interviewerNotes',
+  approvedAt: 'approvedAt',
+  approvedBy: 'approvedBy',
+  evaluationCompletedAt: 'evaluationCompletedAt',
+  suggestedScore: 'suggestedScore',
+  approvedScore: 'approvedScore',
+  scoringPolicyVersion: 'scoringPolicyVersion',
+  difficultyWeight: 'difficultyWeight',
+  followUpMultiplier: 'followUpMultiplier',
+  questionWeight: 'questionWeight',
+  weightedScore: 'weightedScore'
+} as const
+
+export type InterviewSubmissionScalarFieldEnum = (typeof InterviewSubmissionScalarFieldEnum)[keyof typeof InterviewSubmissionScalarFieldEnum]
 
 
 export const FeedbackScalarFieldEnum = {
@@ -1092,6 +1311,14 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const JsonNullValueInput = {
@@ -1259,20 +1486,6 @@ export type ListEnumFeedbackRatingFieldRefInput<$PrismaModel> = FieldRefInputTyp
 
 
 /**
- * Reference to a field of type 'TransactionType'
- */
-export type EnumTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionType'>
-    
-
-
-/**
- * Reference to a field of type 'TransactionType[]'
- */
-export type ListEnumTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionType[]'>
-    
-
-
-/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -1283,6 +1496,20 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TransactionType'
+ */
+export type EnumTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionType'>
+    
+
+
+/**
+ * Reference to a field of type 'TransactionType[]'
+ */
+export type ListEnumTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionType[]'>
     
 
 
@@ -1398,6 +1625,8 @@ export type GlobalOmitConfig = {
   availability?: Prisma.AvailabilityOmit
   booking?: Prisma.BookingOmit
   interviewReminder?: Prisma.InterviewReminderOmit
+  interviewQuestion?: Prisma.InterviewQuestionOmit
+  interviewSubmission?: Prisma.InterviewSubmissionOmit
   feedback?: Prisma.FeedbackOmit
   creditTransaction?: Prisma.CreditTransactionOmit
   payout?: Prisma.PayoutOmit

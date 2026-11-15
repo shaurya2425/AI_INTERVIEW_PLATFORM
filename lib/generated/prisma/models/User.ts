@@ -333,6 +333,9 @@ export type UserWhereInput = {
   bookingsAsInterviewer?: Prisma.BookingListRelationFilter
   transactions?: Prisma.CreditTransactionListRelationFilter
   payouts?: Prisma.PayoutListRelationFilter
+  authoredQuestions?: Prisma.InterviewQuestionListRelationFilter
+  assignedQuestions?: Prisma.InterviewQuestionListRelationFilter
+  interviewSubmissions?: Prisma.InterviewSubmissionListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -359,6 +362,9 @@ export type UserOrderByWithRelationInput = {
   bookingsAsInterviewer?: Prisma.BookingOrderByRelationAggregateInput
   transactions?: Prisma.CreditTransactionOrderByRelationAggregateInput
   payouts?: Prisma.PayoutOrderByRelationAggregateInput
+  authoredQuestions?: Prisma.InterviewQuestionOrderByRelationAggregateInput
+  assignedQuestions?: Prisma.InterviewQuestionOrderByRelationAggregateInput
+  interviewSubmissions?: Prisma.InterviewSubmissionOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -388,6 +394,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   bookingsAsInterviewer?: Prisma.BookingListRelationFilter
   transactions?: Prisma.CreditTransactionListRelationFilter
   payouts?: Prisma.PayoutListRelationFilter
+  authoredQuestions?: Prisma.InterviewQuestionListRelationFilter
+  assignedQuestions?: Prisma.InterviewQuestionListRelationFilter
+  interviewSubmissions?: Prisma.InterviewSubmissionListRelationFilter
 }, "id" | "clerkUserId" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -464,6 +473,9 @@ export type UserCreateInput = {
   bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -490,6 +502,9 @@ export type UserUncheckedCreateInput = {
   bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUpdateInput = {
@@ -516,6 +531,9 @@ export type UserUpdateInput = {
   bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -542,6 +560,9 @@ export type UserUncheckedUpdateInput = {
   bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -782,6 +803,48 @@ export type UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBookingsAsInterviewerInput, Prisma.UserUpdateWithoutBookingsAsInterviewerInput>, Prisma.UserUncheckedUpdateWithoutBookingsAsInterviewerInput>
 }
 
+export type UserCreateNestedOneWithoutAuthoredQuestionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuthoredQuestionsInput, Prisma.UserUncheckedCreateWithoutAuthoredQuestionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuthoredQuestionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutAssignedQuestionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedQuestionsInput, Prisma.UserUncheckedCreateWithoutAssignedQuestionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedQuestionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAuthoredQuestionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuthoredQuestionsInput, Prisma.UserUncheckedCreateWithoutAuthoredQuestionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuthoredQuestionsInput
+  upsert?: Prisma.UserUpsertWithoutAuthoredQuestionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAuthoredQuestionsInput, Prisma.UserUpdateWithoutAuthoredQuestionsInput>, Prisma.UserUncheckedUpdateWithoutAuthoredQuestionsInput>
+}
+
+export type UserUpdateOneRequiredWithoutAssignedQuestionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedQuestionsInput, Prisma.UserUncheckedCreateWithoutAssignedQuestionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedQuestionsInput
+  upsert?: Prisma.UserUpsertWithoutAssignedQuestionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAssignedQuestionsInput, Prisma.UserUpdateWithoutAssignedQuestionsInput>, Prisma.UserUncheckedUpdateWithoutAssignedQuestionsInput>
+}
+
+export type UserCreateNestedOneWithoutInterviewSubmissionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutInterviewSubmissionsInput, Prisma.UserUncheckedCreateWithoutInterviewSubmissionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutInterviewSubmissionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutInterviewSubmissionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutInterviewSubmissionsInput, Prisma.UserUncheckedCreateWithoutInterviewSubmissionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutInterviewSubmissionsInput
+  upsert?: Prisma.UserUpsertWithoutInterviewSubmissionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutInterviewSubmissionsInput, Prisma.UserUpdateWithoutInterviewSubmissionsInput>, Prisma.UserUncheckedUpdateWithoutInterviewSubmissionsInput>
+}
+
 export type UserCreateNestedOneWithoutTransactionsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutTransactionsInput, Prisma.UserUncheckedCreateWithoutTransactionsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutTransactionsInput
@@ -833,6 +896,9 @@ export type UserCreateWithoutAvailabilitiesInput = {
   bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUncheckedCreateWithoutAvailabilitiesInput = {
@@ -858,6 +924,9 @@ export type UserUncheckedCreateWithoutAvailabilitiesInput = {
   bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type UserCreateOrConnectWithoutAvailabilitiesInput = {
@@ -899,6 +968,9 @@ export type UserUpdateWithoutAvailabilitiesInput = {
   bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAvailabilitiesInput = {
@@ -924,6 +996,9 @@ export type UserUncheckedUpdateWithoutAvailabilitiesInput = {
   bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserCreateWithoutBookingsAsIntervieweeInput = {
@@ -949,6 +1024,9 @@ export type UserCreateWithoutBookingsAsIntervieweeInput = {
   bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUncheckedCreateWithoutBookingsAsIntervieweeInput = {
@@ -974,6 +1052,9 @@ export type UserUncheckedCreateWithoutBookingsAsIntervieweeInput = {
   bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type UserCreateOrConnectWithoutBookingsAsIntervieweeInput = {
@@ -1004,6 +1085,9 @@ export type UserCreateWithoutBookingsAsInterviewerInput = {
   bookingsAsInterviewee?: Prisma.BookingCreateNestedManyWithoutIntervieweeInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUncheckedCreateWithoutBookingsAsInterviewerInput = {
@@ -1029,6 +1113,9 @@ export type UserUncheckedCreateWithoutBookingsAsInterviewerInput = {
   bookingsAsInterviewee?: Prisma.BookingUncheckedCreateNestedManyWithoutIntervieweeInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
   payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type UserCreateOrConnectWithoutBookingsAsInterviewerInput = {
@@ -1070,6 +1157,9 @@ export type UserUpdateWithoutBookingsAsIntervieweeInput = {
   bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBookingsAsIntervieweeInput = {
@@ -1095,6 +1185,9 @@ export type UserUncheckedUpdateWithoutBookingsAsIntervieweeInput = {
   bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUpsertWithoutBookingsAsInterviewerInput = {
@@ -1131,6 +1224,9 @@ export type UserUpdateWithoutBookingsAsInterviewerInput = {
   bookingsAsInterviewee?: Prisma.BookingUpdateManyWithoutIntervieweeNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBookingsAsInterviewerInput = {
@@ -1156,6 +1252,393 @@ export type UserUncheckedUpdateWithoutBookingsAsInterviewerInput = {
   bookingsAsInterviewee?: Prisma.BookingUncheckedUpdateManyWithoutIntervieweeNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
   payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
+}
+
+export type UserCreateWithoutAuthoredQuestionsInput = {
+  id?: string
+  clerkUserId: string
+  email: string
+  name?: string | null
+  imageUrl?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  credits?: number
+  currentPlan?: string
+  creditsLastAllocatedAt?: Date | string | null
+  bio?: string | null
+  title?: string | null
+  company?: string | null
+  yearsExp?: number | null
+  categories?: Prisma.UserCreatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: number
+  creditBalance?: number
+  availabilities?: Prisma.AvailabilityCreateNestedManyWithoutInterviewerInput
+  bookingsAsInterviewee?: Prisma.BookingCreateNestedManyWithoutIntervieweeInput
+  bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
+  transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
+  payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
+}
+
+export type UserUncheckedCreateWithoutAuthoredQuestionsInput = {
+  id?: string
+  clerkUserId: string
+  email: string
+  name?: string | null
+  imageUrl?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  credits?: number
+  currentPlan?: string
+  creditsLastAllocatedAt?: Date | string | null
+  bio?: string | null
+  title?: string | null
+  company?: string | null
+  yearsExp?: number | null
+  categories?: Prisma.UserCreatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: number
+  creditBalance?: number
+  availabilities?: Prisma.AvailabilityUncheckedCreateNestedManyWithoutInterviewerInput
+  bookingsAsInterviewee?: Prisma.BookingUncheckedCreateNestedManyWithoutIntervieweeInput
+  bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
+  transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
+  payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
+}
+
+export type UserCreateOrConnectWithoutAuthoredQuestionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuthoredQuestionsInput, Prisma.UserUncheckedCreateWithoutAuthoredQuestionsInput>
+}
+
+export type UserCreateWithoutAssignedQuestionsInput = {
+  id?: string
+  clerkUserId: string
+  email: string
+  name?: string | null
+  imageUrl?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  credits?: number
+  currentPlan?: string
+  creditsLastAllocatedAt?: Date | string | null
+  bio?: string | null
+  title?: string | null
+  company?: string | null
+  yearsExp?: number | null
+  categories?: Prisma.UserCreatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: number
+  creditBalance?: number
+  availabilities?: Prisma.AvailabilityCreateNestedManyWithoutInterviewerInput
+  bookingsAsInterviewee?: Prisma.BookingCreateNestedManyWithoutIntervieweeInput
+  bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
+  transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
+  payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
+}
+
+export type UserUncheckedCreateWithoutAssignedQuestionsInput = {
+  id?: string
+  clerkUserId: string
+  email: string
+  name?: string | null
+  imageUrl?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  credits?: number
+  currentPlan?: string
+  creditsLastAllocatedAt?: Date | string | null
+  bio?: string | null
+  title?: string | null
+  company?: string | null
+  yearsExp?: number | null
+  categories?: Prisma.UserCreatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: number
+  creditBalance?: number
+  availabilities?: Prisma.AvailabilityUncheckedCreateNestedManyWithoutInterviewerInput
+  bookingsAsInterviewee?: Prisma.BookingUncheckedCreateNestedManyWithoutIntervieweeInput
+  bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
+  transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
+  payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
+}
+
+export type UserCreateOrConnectWithoutAssignedQuestionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedQuestionsInput, Prisma.UserUncheckedCreateWithoutAssignedQuestionsInput>
+}
+
+export type UserUpsertWithoutAuthoredQuestionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAuthoredQuestionsInput, Prisma.UserUncheckedUpdateWithoutAuthoredQuestionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuthoredQuestionsInput, Prisma.UserUncheckedCreateWithoutAuthoredQuestionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAuthoredQuestionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAuthoredQuestionsInput, Prisma.UserUncheckedUpdateWithoutAuthoredQuestionsInput>
+}
+
+export type UserUpdateWithoutAuthoredQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  credits?: Prisma.IntFieldUpdateOperationsInput | number
+  currentPlan?: Prisma.StringFieldUpdateOperationsInput | string
+  creditsLastAllocatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  yearsExp?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  categories?: Prisma.UserUpdatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: Prisma.IntFieldUpdateOperationsInput | number
+  creditBalance?: Prisma.IntFieldUpdateOperationsInput | number
+  availabilities?: Prisma.AvailabilityUpdateManyWithoutInterviewerNestedInput
+  bookingsAsInterviewee?: Prisma.BookingUpdateManyWithoutIntervieweeNestedInput
+  bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
+  transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
+  payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAuthoredQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  credits?: Prisma.IntFieldUpdateOperationsInput | number
+  currentPlan?: Prisma.StringFieldUpdateOperationsInput | string
+  creditsLastAllocatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  yearsExp?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  categories?: Prisma.UserUpdatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: Prisma.IntFieldUpdateOperationsInput | number
+  creditBalance?: Prisma.IntFieldUpdateOperationsInput | number
+  availabilities?: Prisma.AvailabilityUncheckedUpdateManyWithoutInterviewerNestedInput
+  bookingsAsInterviewee?: Prisma.BookingUncheckedUpdateManyWithoutIntervieweeNestedInput
+  bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
+  transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
+  payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
+}
+
+export type UserUpsertWithoutAssignedQuestionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAssignedQuestionsInput, Prisma.UserUncheckedUpdateWithoutAssignedQuestionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedQuestionsInput, Prisma.UserUncheckedCreateWithoutAssignedQuestionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAssignedQuestionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAssignedQuestionsInput, Prisma.UserUncheckedUpdateWithoutAssignedQuestionsInput>
+}
+
+export type UserUpdateWithoutAssignedQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  credits?: Prisma.IntFieldUpdateOperationsInput | number
+  currentPlan?: Prisma.StringFieldUpdateOperationsInput | string
+  creditsLastAllocatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  yearsExp?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  categories?: Prisma.UserUpdatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: Prisma.IntFieldUpdateOperationsInput | number
+  creditBalance?: Prisma.IntFieldUpdateOperationsInput | number
+  availabilities?: Prisma.AvailabilityUpdateManyWithoutInterviewerNestedInput
+  bookingsAsInterviewee?: Prisma.BookingUpdateManyWithoutIntervieweeNestedInput
+  bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
+  transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
+  payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAssignedQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  credits?: Prisma.IntFieldUpdateOperationsInput | number
+  currentPlan?: Prisma.StringFieldUpdateOperationsInput | string
+  creditsLastAllocatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  yearsExp?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  categories?: Prisma.UserUpdatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: Prisma.IntFieldUpdateOperationsInput | number
+  creditBalance?: Prisma.IntFieldUpdateOperationsInput | number
+  availabilities?: Prisma.AvailabilityUncheckedUpdateManyWithoutInterviewerNestedInput
+  bookingsAsInterviewee?: Prisma.BookingUncheckedUpdateManyWithoutIntervieweeNestedInput
+  bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
+  transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
+  payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
+}
+
+export type UserCreateWithoutInterviewSubmissionsInput = {
+  id?: string
+  clerkUserId: string
+  email: string
+  name?: string | null
+  imageUrl?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  credits?: number
+  currentPlan?: string
+  creditsLastAllocatedAt?: Date | string | null
+  bio?: string | null
+  title?: string | null
+  company?: string | null
+  yearsExp?: number | null
+  categories?: Prisma.UserCreatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: number
+  creditBalance?: number
+  availabilities?: Prisma.AvailabilityCreateNestedManyWithoutInterviewerInput
+  bookingsAsInterviewee?: Prisma.BookingCreateNestedManyWithoutIntervieweeInput
+  bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
+  transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
+  payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutInterviewSubmissionsInput = {
+  id?: string
+  clerkUserId: string
+  email: string
+  name?: string | null
+  imageUrl?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  credits?: number
+  currentPlan?: string
+  creditsLastAllocatedAt?: Date | string | null
+  bio?: string | null
+  title?: string | null
+  company?: string | null
+  yearsExp?: number | null
+  categories?: Prisma.UserCreatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: number
+  creditBalance?: number
+  availabilities?: Prisma.AvailabilityUncheckedCreateNestedManyWithoutInterviewerInput
+  bookingsAsInterviewee?: Prisma.BookingUncheckedCreateNestedManyWithoutIntervieweeInput
+  bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
+  transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
+  payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutInterviewSubmissionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutInterviewSubmissionsInput, Prisma.UserUncheckedCreateWithoutInterviewSubmissionsInput>
+}
+
+export type UserUpsertWithoutInterviewSubmissionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutInterviewSubmissionsInput, Prisma.UserUncheckedUpdateWithoutInterviewSubmissionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutInterviewSubmissionsInput, Prisma.UserUncheckedCreateWithoutInterviewSubmissionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutInterviewSubmissionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutInterviewSubmissionsInput, Prisma.UserUncheckedUpdateWithoutInterviewSubmissionsInput>
+}
+
+export type UserUpdateWithoutInterviewSubmissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  credits?: Prisma.IntFieldUpdateOperationsInput | number
+  currentPlan?: Prisma.StringFieldUpdateOperationsInput | string
+  creditsLastAllocatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  yearsExp?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  categories?: Prisma.UserUpdatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: Prisma.IntFieldUpdateOperationsInput | number
+  creditBalance?: Prisma.IntFieldUpdateOperationsInput | number
+  availabilities?: Prisma.AvailabilityUpdateManyWithoutInterviewerNestedInput
+  bookingsAsInterviewee?: Prisma.BookingUpdateManyWithoutIntervieweeNestedInput
+  bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
+  transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
+  payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutInterviewSubmissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  credits?: Prisma.IntFieldUpdateOperationsInput | number
+  currentPlan?: Prisma.StringFieldUpdateOperationsInput | string
+  creditsLastAllocatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  yearsExp?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  categories?: Prisma.UserUpdatecategoriesInput | $Enums.InterviewCategory[]
+  creditRate?: Prisma.IntFieldUpdateOperationsInput | number
+  creditBalance?: Prisma.IntFieldUpdateOperationsInput | number
+  availabilities?: Prisma.AvailabilityUncheckedUpdateManyWithoutInterviewerNestedInput
+  bookingsAsInterviewee?: Prisma.BookingUncheckedUpdateManyWithoutIntervieweeNestedInput
+  bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
+  transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
+  payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutTransactionsInput = {
@@ -1181,6 +1664,9 @@ export type UserCreateWithoutTransactionsInput = {
   bookingsAsInterviewee?: Prisma.BookingCreateNestedManyWithoutIntervieweeInput
   bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
   payouts?: Prisma.PayoutCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUncheckedCreateWithoutTransactionsInput = {
@@ -1206,6 +1692,9 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   bookingsAsInterviewee?: Prisma.BookingUncheckedCreateNestedManyWithoutIntervieweeInput
   bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
   payouts?: Prisma.PayoutUncheckedCreateNestedManyWithoutInterviewerInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type UserCreateOrConnectWithoutTransactionsInput = {
@@ -1247,6 +1736,9 @@ export type UserUpdateWithoutTransactionsInput = {
   bookingsAsInterviewee?: Prisma.BookingUpdateManyWithoutIntervieweeNestedInput
   bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
   payouts?: Prisma.PayoutUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransactionsInput = {
@@ -1272,6 +1764,9 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   bookingsAsInterviewee?: Prisma.BookingUncheckedUpdateManyWithoutIntervieweeNestedInput
   bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
   payouts?: Prisma.PayoutUncheckedUpdateManyWithoutInterviewerNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserCreateWithoutPayoutsInput = {
@@ -1297,6 +1792,9 @@ export type UserCreateWithoutPayoutsInput = {
   bookingsAsInterviewee?: Prisma.BookingCreateNestedManyWithoutIntervieweeInput
   bookingsAsInterviewer?: Prisma.BookingCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutUserInput
+  authoredQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionCreateNestedManyWithoutCandidateInput
 }
 
 export type UserUncheckedCreateWithoutPayoutsInput = {
@@ -1322,6 +1820,9 @@ export type UserUncheckedCreateWithoutPayoutsInput = {
   bookingsAsInterviewee?: Prisma.BookingUncheckedCreateNestedManyWithoutIntervieweeInput
   bookingsAsInterviewer?: Prisma.BookingUncheckedCreateNestedManyWithoutInterviewerInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutUserInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutAuthorInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutRecipientInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type UserCreateOrConnectWithoutPayoutsInput = {
@@ -1363,6 +1864,9 @@ export type UserUpdateWithoutPayoutsInput = {
   bookingsAsInterviewee?: Prisma.BookingUpdateManyWithoutIntervieweeNestedInput
   bookingsAsInterviewer?: Prisma.BookingUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutUserNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUpdateManyWithoutCandidateNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPayoutsInput = {
@@ -1388,6 +1892,9 @@ export type UserUncheckedUpdateWithoutPayoutsInput = {
   bookingsAsInterviewee?: Prisma.BookingUncheckedUpdateManyWithoutIntervieweeNestedInput
   bookingsAsInterviewer?: Prisma.BookingUncheckedUpdateManyWithoutInterviewerNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutUserNestedInput
+  authoredQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutAuthorNestedInput
+  assignedQuestions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutRecipientNestedInput
+  interviewSubmissions?: Prisma.InterviewSubmissionUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 
@@ -1401,6 +1908,9 @@ export type UserCountOutputType = {
   bookingsAsInterviewer: number
   transactions: number
   payouts: number
+  authoredQuestions: number
+  assignedQuestions: number
+  interviewSubmissions: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1409,6 +1919,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   bookingsAsInterviewer?: boolean | UserCountOutputTypeCountBookingsAsInterviewerArgs
   transactions?: boolean | UserCountOutputTypeCountTransactionsArgs
   payouts?: boolean | UserCountOutputTypeCountPayoutsArgs
+  authoredQuestions?: boolean | UserCountOutputTypeCountAuthoredQuestionsArgs
+  assignedQuestions?: boolean | UserCountOutputTypeCountAssignedQuestionsArgs
+  interviewSubmissions?: boolean | UserCountOutputTypeCountInterviewSubmissionsArgs
 }
 
 /**
@@ -1456,6 +1969,27 @@ export type UserCountOutputTypeCountPayoutsArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.PayoutWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAuthoredQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InterviewQuestionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAssignedQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InterviewQuestionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountInterviewSubmissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InterviewSubmissionWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1481,6 +2015,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   bookingsAsInterviewer?: boolean | Prisma.User$bookingsAsInterviewerArgs<ExtArgs>
   transactions?: boolean | Prisma.User$transactionsArgs<ExtArgs>
   payouts?: boolean | Prisma.User$payoutsArgs<ExtArgs>
+  authoredQuestions?: boolean | Prisma.User$authoredQuestionsArgs<ExtArgs>
+  assignedQuestions?: boolean | Prisma.User$assignedQuestionsArgs<ExtArgs>
+  interviewSubmissions?: boolean | Prisma.User$interviewSubmissionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1554,6 +2091,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   bookingsAsInterviewer?: boolean | Prisma.User$bookingsAsInterviewerArgs<ExtArgs>
   transactions?: boolean | Prisma.User$transactionsArgs<ExtArgs>
   payouts?: boolean | Prisma.User$payoutsArgs<ExtArgs>
+  authoredQuestions?: boolean | Prisma.User$authoredQuestionsArgs<ExtArgs>
+  assignedQuestions?: boolean | Prisma.User$assignedQuestionsArgs<ExtArgs>
+  interviewSubmissions?: boolean | Prisma.User$interviewSubmissionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1567,6 +2107,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     bookingsAsInterviewer: Prisma.$BookingPayload<ExtArgs>[]
     transactions: Prisma.$CreditTransactionPayload<ExtArgs>[]
     payouts: Prisma.$PayoutPayload<ExtArgs>[]
+    authoredQuestions: Prisma.$InterviewQuestionPayload<ExtArgs>[]
+    assignedQuestions: Prisma.$InterviewQuestionPayload<ExtArgs>[]
+    interviewSubmissions: Prisma.$InterviewSubmissionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1986,6 +2529,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   bookingsAsInterviewer<T extends Prisma.User$bookingsAsInterviewerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$bookingsAsInterviewerArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transactions<T extends Prisma.User$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CreditTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   payouts<T extends Prisma.User$payoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  authoredQuestions<T extends Prisma.User$authoredQuestionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$authoredQuestionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assignedQuestions<T extends Prisma.User$assignedQuestionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedQuestionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  interviewSubmissions<T extends Prisma.User$interviewSubmissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$interviewSubmissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewSubmissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2538,6 +3084,78 @@ export type User$payoutsArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.PayoutScalarFieldEnum | Prisma.PayoutScalarFieldEnum[]
+}
+
+/**
+ * User.authoredQuestions
+ */
+export type User$authoredQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InterviewQuestion
+   */
+  select?: Prisma.InterviewQuestionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InterviewQuestion
+   */
+  omit?: Prisma.InterviewQuestionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterviewQuestionInclude<ExtArgs> | null
+  where?: Prisma.InterviewQuestionWhereInput
+  orderBy?: Prisma.InterviewQuestionOrderByWithRelationInput | Prisma.InterviewQuestionOrderByWithRelationInput[]
+  cursor?: Prisma.InterviewQuestionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InterviewQuestionScalarFieldEnum | Prisma.InterviewQuestionScalarFieldEnum[]
+}
+
+/**
+ * User.assignedQuestions
+ */
+export type User$assignedQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InterviewQuestion
+   */
+  select?: Prisma.InterviewQuestionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InterviewQuestion
+   */
+  omit?: Prisma.InterviewQuestionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterviewQuestionInclude<ExtArgs> | null
+  where?: Prisma.InterviewQuestionWhereInput
+  orderBy?: Prisma.InterviewQuestionOrderByWithRelationInput | Prisma.InterviewQuestionOrderByWithRelationInput[]
+  cursor?: Prisma.InterviewQuestionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InterviewQuestionScalarFieldEnum | Prisma.InterviewQuestionScalarFieldEnum[]
+}
+
+/**
+ * User.interviewSubmissions
+ */
+export type User$interviewSubmissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InterviewSubmission
+   */
+  select?: Prisma.InterviewSubmissionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InterviewSubmission
+   */
+  omit?: Prisma.InterviewSubmissionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterviewSubmissionInclude<ExtArgs> | null
+  where?: Prisma.InterviewSubmissionWhereInput
+  orderBy?: Prisma.InterviewSubmissionOrderByWithRelationInput | Prisma.InterviewSubmissionOrderByWithRelationInput[]
+  cursor?: Prisma.InterviewSubmissionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InterviewSubmissionScalarFieldEnum | Prisma.InterviewSubmissionScalarFieldEnum[]
 }
 
 /**

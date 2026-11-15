@@ -9,6 +9,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import AnswerReview from "./AnswerReview";
 import AIResponse from "./AIResponse";
 import AIGrillComposer from "./AIGrillComposer";
 
@@ -24,30 +25,10 @@ export default function AIQuestionCard({
   isActive,
   loading,
   onSelect,
-  onAsked,
   onSkip,
-  onFocus,
   onGrill,
-  onGrade,
 }) {
   const [showGrill, setShowGrill] = useState(false);
-  const [showGrade, setShowGrade] = useState(false);
-
-  const [grade, setGrade] = useState(
-    question.grade || null
-  );
-
-  const [candidateAnswer, setCandidateAnswer] = useState(
-    question.candidateAnswer || ""
-  );
-
-  const [notes, setNotes] = useState(
-    question.notes || ""
-  );
-
-  const canGrade =
-    question.status === "ASKED" ||
-    question.status === "EVALUATED";
 
   return (
     <article
@@ -111,16 +92,18 @@ export default function AIQuestionCard({
         </summary>
 
         <div className="mt-3 border-t border-border pt-3">
+          {question.type === "MCQ" && Number.isInteger(question.correctOptionIndex) && question.correctOptionIndex >= 0 && <p className="mb-2 text-sm font-semibold">Correct answer: {String.fromCharCode(65 + question.correctOptionIndex)}</p>}
           <AIResponse content={question.answer} />
         </div>
       </details>
 
+      {question.review && <AnswerReview question={question} />}
       {/* State */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>
           {question.status === "EVALUATED"
             ? "Graded"
-            : question.status?.toLowerCase()}
+            : question.status === "SENT" ? "Sent / Awaiting answer" : question.status?.toLowerCase()}
         </span>
 
         {question.depth > 0 && (
@@ -138,7 +121,7 @@ export default function AIQuestionCard({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        {question.status === "SUGGESTED" && (
+        {["SUGGESTED", "SELECTED", "ASKED"].includes(question.status) && (
           <>
             <button
               type="button"
@@ -159,28 +142,6 @@ export default function AIQuestionCard({
           </>
         )}
 
-        {question.status === "SELECTED" && (
-          <button
-            type="button"
-            onClick={() => onAsked(question)}
-            className="h-9 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 text-sm font-medium text-brand"
-          >
-            Mark asked
-          </button>
-        )}
-
-        {!["SKIPPED", "SUGGESTED"].includes(
-          question.status
-        ) && (
-          <button
-            type="button"
-            onClick={() => onFocus(question)}
-            className="h-9 rounded-lg border border-border px-3 text-sm text-foreground"
-          >
-            Focus
-          </button>
-        )}
-
         {question.status !== "SKIPPED" &&
           (question.depth || 0) < 8 && (
             <button
@@ -188,27 +149,15 @@ export default function AIQuestionCard({
               disabled={loading}
               onClick={() => {
                 setShowGrill((old) => !old);
-                setShowGrade(false);
               }}
               className="flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:border-amber-400/40 disabled:opacity-50"
             >
               <Flame size={14} />
-              Grill
+              {question.submission ? "Grill Further" : "Grill"}
             </button>
           )}
 
-        {canGrade && (
-          <button
-            type="button"
-            onClick={() => {
-              setShowGrade((old) => !old);
-              setShowGrill(false);
-            }}
-            className="h-9 rounded-lg border border-border px-3 text-sm text-foreground hover:border-amber-400/40"
-          >
-            Grade
-          </button>
-        )}
+
       </div>
 
       {/* Grill form */}
@@ -223,80 +172,6 @@ export default function AIQuestionCard({
         />
       )}
 
-      {/* Grade form */}
-      {showGrade && canGrade && (
-        <div className="space-y-3 rounded-xl border border-border bg-background p-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Candidate response
-            </label>
-
-            <textarea
-              rows={3}
-              value={candidateAnswer}
-              onChange={(e) =>
-                setCandidateAnswer(e.target.value)
-              }
-              placeholder="Candidate's answer or transcript excerpt..."
-              className="w-full resize-y rounded-lg border border-border bg-surface p-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-amber-400/30"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Interviewer assessment
-            </label>
-
-            <div className="grid grid-cols-2 gap-2">
-              {GRADES.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setGrade(item.value)}
-                  className={`h-10 rounded-lg border px-2 text-sm font-medium ${
-                    grade === item.value
-                      ? "border-amber-400/50 bg-amber-400/10 text-brand"
-                      : "border-border text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Interviewer notes
-            </label>
-
-            <textarea
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Strengths, misconceptions, areas to investigate..."
-              className="w-full resize-y rounded-lg border border-border bg-surface p-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-amber-400/30"
-            />
-          </div>
-
-          <button
-            type="button"
-            disabled={!grade}
-            onClick={() => {
-              onGrade(question, {
-                grade,
-                candidateAnswer,
-                notes,
-              });
-
-              setShowGrade(false);
-            }}
-            className="h-10 w-full rounded-lg bg-amber-400 text-sm font-semibold text-zinc-950 disabled:opacity-50"
-          >
-            Save evaluation
-          </button>
-        </div>
-      )}
     </article>
   );
 }
