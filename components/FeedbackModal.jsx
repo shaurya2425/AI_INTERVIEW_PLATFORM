@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -6,8 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
+
 import {
   Sparkles,
   TrendingUp,
@@ -16,10 +18,73 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import { GrayTitle } from "@/components/reusables";
 
+import { GrayTitle } from "@/components/reusables";
 import { RATING_CONFIG } from "@/lib/data";
 import StarsBackgroundDemo from "./demo-component-stars-background";
+
+function FeedbackSection({ icon, title, children }) {
+  return (
+    <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {title}
+        </p>
+      </div>
+
+      <div className="text-sm text-foreground leading-relaxed">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FeedbackList({
+  items = [],
+  variant = "strength",
+}) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Insufficient evidence to assess this area.
+      </p>
+    );
+  }
+
+  const isStrength = variant === "strength";
+
+  return (
+    <ul className="flex flex-col gap-3">
+      {items.map((item, index) => (
+        <li
+          key={index}
+          className={`flex items-start gap-3 rounded-lg border p-3 text-sm leading-relaxed ${
+            isStrength
+              ? "border-green-500/20 bg-green-500/5"
+              : "border-red-500/20 bg-red-500/5"
+          }`}
+        >
+          {isStrength ? (
+            <CheckCircle2
+              size={16}
+              className="mt-0.5 shrink-0 text-success"
+            />
+          ) : (
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0 text-danger"
+            />
+          )}
+
+          <span className="flex-1 whitespace-pre-wrap break-words text-foreground">
+            {item}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function FeedbackModal({
   open,
@@ -30,21 +95,86 @@ export function FeedbackModal({
   loading = false,
   onRetry,
 }) {
-  if (!feedback) return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background border-border text-foreground sm:max-w-lg">
-        <DialogHeader><DialogTitle>Meeting feedback</DialogTitle></DialogHeader>
-        <p role="status" className="text-sm text-muted-foreground leading-relaxed">
-          {loading ? "Checking the meeting and preparing available feedback..." : message}
-        </p>
-        {onRetry && <Button variant="outline" disabled={loading} onClick={onRetry}>
-          {loading ? "Checking..." : "Check again"}
-        </Button>}
-      </DialogContent>
-    </Dialog>
-  );
+  // ----------------------------------------------------------
+  // NO REPORT AVAILABLE
+  // ----------------------------------------------------------
 
-  const rating = RATING_CONFIG[feedback.overallRating];
+  if (!feedback) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="bg-background border-border text-foreground sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              Meeting feedback
+            </DialogTitle>
+          </DialogHeader>
+
+          <p
+            role="status"
+            className="text-sm text-muted-foreground leading-relaxed"
+          >
+            {loading
+              ? "Checking the meeting and preparing available feedback..."
+              : message || "Feedback is not available yet."}
+          </p>
+
+          {onRetry && (
+            <Button
+              variant="outline"
+              disabled={loading}
+              onClick={onRetry}
+            >
+              {loading ? "Checking..." : "Check again"}
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // ----------------------------------------------------------
+  // REPORT DATA
+  // ----------------------------------------------------------
+
+  const rating = RATING_CONFIG[feedback.overallRating] || {
+    label: "Insufficient Evidence",
+    className: "border-border",
+    bg: "from-surface",
+    emoji: "—",
+  };
+
+  const report = feedback.report;
+
+  const score = report?.scoring?.overallScore;
+
+  const formattedScore =
+    typeof score === "number" && Number.isFinite(score)
+      ? `${score.toFixed(1)} / 100`
+      : "Unavailable";
+
+  const weaknesses = Array.isArray(report?.weaknesses)
+    ? report.weaknesses
+    : [];
+
+  const strengths = Array.isArray(feedback.strengths)
+    ? feedback.strengths
+    : [];
+
+  const improvements = Array.isArray(feedback.improvements)
+    ? feedback.improvements
+    : [];
+
+  const limitations = Array.isArray(report?.limitations)
+    ? report.limitations
+    : [];
+
+  const isIncomplete =
+    report?.state === "INCOMPLETE" ||
+    limitations.length > 0;
+
+  // ----------------------------------------------------------
+  // FEEDBACK MODAL
+  // ----------------------------------------------------------
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,7 +183,9 @@ export function FeedbackModal({
 
         <DialogHeader className="relative">
           <DialogTitle className="font-serif text-2xl tracking-tight">
-            <GrayTitle>AI Feedback Report</GrayTitle>
+            <GrayTitle>
+              AI Feedback Report
+            </GrayTitle>
           </DialogTitle>
 
           {intervieweeName && (
@@ -64,117 +196,261 @@ export function FeedbackModal({
         </DialogHeader>
 
         <div className="relative flex flex-col gap-5 mt-2">
-          {/* Rating */}
+
+          {/* STATUS MESSAGE */}
+
+          {(message || loading) && (
+            <p
+              role="status"
+              className="text-sm text-muted-foreground leading-relaxed"
+            >
+              {loading
+                ? "Checking for updated evidence..."
+                : message}
+            </p>
+          )}
+
+          {/* INCOMPLETE REPORT WARNING */}
+
+          {isIncomplete && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle
+                  size={15}
+                  className="text-amber-500 shrink-0"
+                />
+
+                <p className="text-xs font-medium text-foreground">
+                  Assessment limitations
+                </p>
+              </div>
+
+              {limitations.length > 0 ? (
+                <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground leading-relaxed">
+                  {limitations.map((limitation, index) => (
+                    <li key={index}>
+                      {limitation}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Some assessment evidence is unavailable.
+                  Interpret this report with caution.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* OVERALL RATING */}
+
           <div
-            className={`rounded-2xl border ${rating.className} bg-linear-to-br ${rating.bg} to-transparent p-6 flex items-center justify-between`}
+            className={`rounded-2xl border ${rating.className} bg-linear-to-br ${rating.bg} to-transparent p-6 flex items-center justify-between gap-4`}
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-widest">
                 Overall rating
               </p>
-              <p className="font-serif text-3xl">{rating.label}</p>
-            </div>
 
-            <span className="text-4xl">{rating.emoji}</span>
-          </div>
-
-          {/* Summary */}
-          <div className="bg-surface border border-border rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={13} className="text-brand" />
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Summary
+              <p className="font-serif text-3xl mt-1">
+                {rating.label}
               </p>
+
+              {report && (
+                <p className="mt-2 text-sm">
+                  Approved score: {formattedScore}
+
+                  {report.scoring?.state === "PROVISIONAL"
+                    ? " (provisional)"
+                    : ""}
+                </p>
+              )}
+
+              {report?.assessmentConfidence && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Assessment confidence:{" "}
+                  <span className="font-medium">
+                    {report.assessmentConfidence}
+                  </span>
+                </p>
+              )}
+
+              {report?.ratingPolicy && (
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  {report.ratingPolicy}
+                </p>
+              )}
             </div>
-            <p className="text-sm text-foreground">{feedback.summary}</p>
+
+            <span
+              className="text-4xl shrink-0"
+              aria-hidden="true"
+            >
+              {rating.emoji}
+            </span>
           </div>
 
-          {/* Recommendation */}
-          <div className="bg-surface border border-border rounded-xl p-5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-              Recommendation
+          {/* PERFORMANCE SUMMARY */}
+
+          <FeedbackSection
+            icon={
+              <Sparkles
+                size={15}
+                className="text-brand"
+              />
+            }
+            title="Performance Summary"
+          >
+            <p className="whitespace-pre-wrap">
+              {feedback.summary ||
+                "Insufficient evidence for a performance summary."}
             </p>
-            <p className="text-sm text-foreground">{feedback.recommendation}</p>
-          </div>
+          </FeedbackSection>
 
-          {/* Sections */}
+          {/* RECOMMENDATION */}
+
+          <FeedbackSection
+            icon={
+              <AlertCircle
+                size={15}
+                className="text-brand"
+              />
+            }
+            title="Recommendation"
+          >
+            <p className="whitespace-pre-wrap">
+              {feedback.recommendation ||
+                "Further assessment is recommended."}
+            </p>
+          </FeedbackSection>
+
+          {/* TECHNICAL, COMMUNICATION, PROBLEM SOLVING */}
+
           <div className="grid gap-3">
-            {[
-              {
-                icon: <Brain size={14} className="text-brand" />,
-                label: "Technical",
-                value: feedback.technical,
-              },
-              {
-                icon: <MessageSquare size={14} className="text-brand" />,
-                label: "Communication",
-                value: feedback.communication,
-              },
-              {
-                icon: <TrendingUp size={14} className="text-brand" />,
-                label: "Problem Solving",
-                value: feedback.problemSolving,
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="bg-surface border border-border rounded-xl p-5"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {item.icon}
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {item.label}
-                  </p>
-                </div>
-                <p className="text-sm text-foreground">{item.value}</p>
-              </div>
-            ))}
+
+            <FeedbackSection
+              icon={
+                <Brain
+                  size={15}
+                  className="text-brand"
+                />
+              }
+              title="Technical Assessment"
+            >
+              <p className="whitespace-pre-wrap">
+                {feedback.technical ||
+                  "Not assessed."}
+              </p>
+            </FeedbackSection>
+
+            <FeedbackSection
+              icon={
+                <MessageSquare
+                  size={15}
+                  className="text-brand"
+                />
+              }
+              title="Communication Assessment"
+            >
+              <p className="whitespace-pre-wrap">
+                {feedback.communication ||
+                  "Not assessed."}
+              </p>
+            </FeedbackSection>
+
+            <FeedbackSection
+              icon={
+                <TrendingUp
+                  size={15}
+                  className="text-brand"
+                />
+              }
+              title="Problem-Solving Assessment"
+            >
+              <p className="whitespace-pre-wrap">
+                {feedback.problemSolving ||
+                  "Not assessed."}
+              </p>
+            </FeedbackSection>
+
           </div>
 
-          {/* Strengths & Improvements */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-surface border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 size={13} className="text-success" />
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Strengths
-                </p>
-              </div>
+          {/* STRENGTHS */}
 
-              <div className="flex flex-col gap-2">
-                {feedback.strengths?.map((s, i) => (
-                  <Badge
-                    key={i}
-                    variant="outline"
-                    className="justify-start border-green-500/20 text-success whitespace-normal"
-                  >
-                    ✓ {s}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+          <FeedbackSection
+            icon={
+              <CheckCircle2
+                size={15}
+                className="text-success"
+              />
+            }
+            title="Strengths"
+          >
+            <FeedbackList
+              items={strengths}
+              variant="strength"
+            />
+          </FeedbackSection>
 
-            <div className="bg-surface border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertCircle size={13} className="text-brand" />
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  To improve
-                </p>
-              </div>
+          {/* WEAKNESSES */}
 
-              <div className="flex flex-col gap-2">
-                {feedback.improvements?.map((imp, i) => (
-                  <Badge
-                    key={i}
-                    variant="outline"
-                    className="justify-start border-red-500/20 text-danger whitespace-normal"
-                  >
-                    ✓ {imp}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
+          <FeedbackSection
+            icon={
+              <AlertCircle
+                size={15}
+                className="text-danger"
+              />
+            }
+            title="Weaknesses and Misconceptions"
+          >
+            <FeedbackList
+              items={weaknesses}
+              variant="weakness"
+            />
+          </FeedbackSection>
+
+          {/* AREAS FOR IMPROVEMENT */}
+
+          <FeedbackSection
+            icon={
+              <TrendingUp
+                size={15}
+                className="text-brand"
+              />
+            }
+            title="Areas for Improvement"
+          >
+            <FeedbackList
+              items={improvements}
+              variant="improvement"
+            />
+          </FeedbackSection>
+
+          {/* IMPORTANT ASSESSMENT NOTE */}
+
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            This AI-assisted report summarizes available
+            interview evidence and interviewer-approved
+            grades. Ratings are advisory and do not
+            constitute an automatic hiring decision.
+            Code and SQL execution are not independently
+            verified by this report.
+          </p>
+
+          {/* RETRY FEEDBACK */}
+
+          {onRetry && (
+            <Button
+              variant="outline"
+              disabled={loading}
+              onClick={onRetry}
+            >
+              {loading
+                ? "Checking..."
+                : "Check for updated feedback"}
+            </Button>
+          )}
+
         </div>
       </DialogContent>
     </Dialog>

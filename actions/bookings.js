@@ -6,6 +6,7 @@ import { validateDateRange } from "@/lib/time-validation";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { getDisplayName, withDisplayName } from "@/lib/user-name";
+import { secureInterviewCall } from "@/lib/interviewCompletion";
 import { StreamClient } from "@stream-io/node-sdk";
 import { revalidatePath } from "next/cache";
 import { request } from "@arcjet/next";

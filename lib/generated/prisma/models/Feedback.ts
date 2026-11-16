@@ -73,6 +73,7 @@ export type FeedbackCountAggregateOutputType = {
   strengths: number
   improvements: number
   overallRating: number
+  report: number
   sessionRating: number
   sessionComment: number
   createdAt: number
@@ -127,6 +128,7 @@ export type FeedbackCountAggregateInputType = {
   strengths?: true
   improvements?: true
   overallRating?: true
+  report?: true
   sessionRating?: true
   sessionComment?: true
   createdAt?: true
@@ -229,7 +231,8 @@ export type FeedbackGroupByOutputType = {
   recommendation: string
   strengths: string[]
   improvements: string[]
-  overallRating: $Enums.FeedbackRating
+  overallRating: $Enums.FeedbackRating | null
+  report: runtime.JsonValue | null
   sessionRating: number | null
   sessionComment: string | null
   createdAt: Date
@@ -268,7 +271,8 @@ export type FeedbackWhereInput = {
   recommendation?: Prisma.StringFilter<"Feedback"> | string
   strengths?: Prisma.StringNullableListFilter<"Feedback">
   improvements?: Prisma.StringNullableListFilter<"Feedback">
-  overallRating?: Prisma.EnumFeedbackRatingFilter<"Feedback"> | $Enums.FeedbackRating
+  overallRating?: Prisma.EnumFeedbackRatingNullableFilter<"Feedback"> | $Enums.FeedbackRating | null
+  report?: Prisma.JsonNullableFilter<"Feedback">
   sessionRating?: Prisma.IntNullableFilter<"Feedback"> | number | null
   sessionComment?: Prisma.StringNullableFilter<"Feedback"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Feedback"> | Date | string
@@ -285,7 +289,8 @@ export type FeedbackOrderByWithRelationInput = {
   recommendation?: Prisma.SortOrder
   strengths?: Prisma.SortOrder
   improvements?: Prisma.SortOrder
-  overallRating?: Prisma.SortOrder
+  overallRating?: Prisma.SortOrderInput | Prisma.SortOrder
+  report?: Prisma.SortOrderInput | Prisma.SortOrder
   sessionRating?: Prisma.SortOrderInput | Prisma.SortOrder
   sessionComment?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -305,7 +310,8 @@ export type FeedbackWhereUniqueInput = Prisma.AtLeast<{
   recommendation?: Prisma.StringFilter<"Feedback"> | string
   strengths?: Prisma.StringNullableListFilter<"Feedback">
   improvements?: Prisma.StringNullableListFilter<"Feedback">
-  overallRating?: Prisma.EnumFeedbackRatingFilter<"Feedback"> | $Enums.FeedbackRating
+  overallRating?: Prisma.EnumFeedbackRatingNullableFilter<"Feedback"> | $Enums.FeedbackRating | null
+  report?: Prisma.JsonNullableFilter<"Feedback">
   sessionRating?: Prisma.IntNullableFilter<"Feedback"> | number | null
   sessionComment?: Prisma.StringNullableFilter<"Feedback"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Feedback"> | Date | string
@@ -322,7 +328,8 @@ export type FeedbackOrderByWithAggregationInput = {
   recommendation?: Prisma.SortOrder
   strengths?: Prisma.SortOrder
   improvements?: Prisma.SortOrder
-  overallRating?: Prisma.SortOrder
+  overallRating?: Prisma.SortOrderInput | Prisma.SortOrder
+  report?: Prisma.SortOrderInput | Prisma.SortOrder
   sessionRating?: Prisma.SortOrderInput | Prisma.SortOrder
   sessionComment?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -346,7 +353,8 @@ export type FeedbackScalarWhereWithAggregatesInput = {
   recommendation?: Prisma.StringWithAggregatesFilter<"Feedback"> | string
   strengths?: Prisma.StringNullableListFilter<"Feedback">
   improvements?: Prisma.StringNullableListFilter<"Feedback">
-  overallRating?: Prisma.EnumFeedbackRatingWithAggregatesFilter<"Feedback"> | $Enums.FeedbackRating
+  overallRating?: Prisma.EnumFeedbackRatingNullableWithAggregatesFilter<"Feedback"> | $Enums.FeedbackRating | null
+  report?: Prisma.JsonNullableWithAggregatesFilter<"Feedback">
   sessionRating?: Prisma.IntNullableWithAggregatesFilter<"Feedback"> | number | null
   sessionComment?: Prisma.StringNullableWithAggregatesFilter<"Feedback"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Feedback"> | Date | string
@@ -361,7 +369,8 @@ export type FeedbackCreateInput = {
   recommendation: string
   strengths?: Prisma.FeedbackCreatestrengthsInput | string[]
   improvements?: Prisma.FeedbackCreateimprovementsInput | string[]
-  overallRating: $Enums.FeedbackRating
+  overallRating?: $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: number | null
   sessionComment?: string | null
   createdAt?: Date | string
@@ -378,7 +387,8 @@ export type FeedbackUncheckedCreateInput = {
   recommendation: string
   strengths?: Prisma.FeedbackCreatestrengthsInput | string[]
   improvements?: Prisma.FeedbackCreateimprovementsInput | string[]
-  overallRating: $Enums.FeedbackRating
+  overallRating?: $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: number | null
   sessionComment?: string | null
   createdAt?: Date | string
@@ -393,7 +403,8 @@ export type FeedbackUpdateInput = {
   recommendation?: Prisma.StringFieldUpdateOperationsInput | string
   strengths?: Prisma.FeedbackUpdatestrengthsInput | string[]
   improvements?: Prisma.FeedbackUpdateimprovementsInput | string[]
-  overallRating?: Prisma.EnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating
+  overallRating?: Prisma.NullableEnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sessionComment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -410,7 +421,8 @@ export type FeedbackUncheckedUpdateInput = {
   recommendation?: Prisma.StringFieldUpdateOperationsInput | string
   strengths?: Prisma.FeedbackUpdatestrengthsInput | string[]
   improvements?: Prisma.FeedbackUpdateimprovementsInput | string[]
-  overallRating?: Prisma.EnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating
+  overallRating?: Prisma.NullableEnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sessionComment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -426,7 +438,8 @@ export type FeedbackCreateManyInput = {
   recommendation: string
   strengths?: Prisma.FeedbackCreatestrengthsInput | string[]
   improvements?: Prisma.FeedbackCreateimprovementsInput | string[]
-  overallRating: $Enums.FeedbackRating
+  overallRating?: $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: number | null
   sessionComment?: string | null
   createdAt?: Date | string
@@ -441,7 +454,8 @@ export type FeedbackUpdateManyMutationInput = {
   recommendation?: Prisma.StringFieldUpdateOperationsInput | string
   strengths?: Prisma.FeedbackUpdatestrengthsInput | string[]
   improvements?: Prisma.FeedbackUpdateimprovementsInput | string[]
-  overallRating?: Prisma.EnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating
+  overallRating?: Prisma.NullableEnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sessionComment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -457,7 +471,8 @@ export type FeedbackUncheckedUpdateManyInput = {
   recommendation?: Prisma.StringFieldUpdateOperationsInput | string
   strengths?: Prisma.FeedbackUpdatestrengthsInput | string[]
   improvements?: Prisma.FeedbackUpdateimprovementsInput | string[]
-  overallRating?: Prisma.EnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating
+  overallRating?: Prisma.NullableEnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sessionComment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -466,14 +481,6 @@ export type FeedbackUncheckedUpdateManyInput = {
 export type FeedbackNullableScalarRelationFilter = {
   is?: Prisma.FeedbackWhereInput | null
   isNot?: Prisma.FeedbackWhereInput | null
-}
-
-export type StringNullableListFilter<$PrismaModel = never> = {
-  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
-  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
-  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
-  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
-  isEmpty?: boolean
 }
 
 export type FeedbackCountOrderByAggregateInput = {
@@ -487,6 +494,7 @@ export type FeedbackCountOrderByAggregateInput = {
   strengths?: Prisma.SortOrder
   improvements?: Prisma.SortOrder
   overallRating?: Prisma.SortOrder
+  report?: Prisma.SortOrder
   sessionRating?: Prisma.SortOrder
   sessionComment?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -578,10 +586,6 @@ export type FeedbackUpdateimprovementsInput = {
   push?: string | string[]
 }
 
-export type EnumFeedbackRatingFieldUpdateOperationsInput = {
-  set?: $Enums.FeedbackRating
-}
-
 export type FeedbackCreateWithoutBookingInput = {
   id?: string
   summary: string
@@ -591,7 +595,8 @@ export type FeedbackCreateWithoutBookingInput = {
   recommendation: string
   strengths?: Prisma.FeedbackCreatestrengthsInput | string[]
   improvements?: Prisma.FeedbackCreateimprovementsInput | string[]
-  overallRating: $Enums.FeedbackRating
+  overallRating?: $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: number | null
   sessionComment?: string | null
   createdAt?: Date | string
@@ -606,7 +611,8 @@ export type FeedbackUncheckedCreateWithoutBookingInput = {
   recommendation: string
   strengths?: Prisma.FeedbackCreatestrengthsInput | string[]
   improvements?: Prisma.FeedbackCreateimprovementsInput | string[]
-  overallRating: $Enums.FeedbackRating
+  overallRating?: $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: number | null
   sessionComment?: string | null
   createdAt?: Date | string
@@ -637,7 +643,8 @@ export type FeedbackUpdateWithoutBookingInput = {
   recommendation?: Prisma.StringFieldUpdateOperationsInput | string
   strengths?: Prisma.FeedbackUpdatestrengthsInput | string[]
   improvements?: Prisma.FeedbackUpdateimprovementsInput | string[]
-  overallRating?: Prisma.EnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating
+  overallRating?: Prisma.NullableEnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sessionComment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -652,7 +659,8 @@ export type FeedbackUncheckedUpdateWithoutBookingInput = {
   recommendation?: Prisma.StringFieldUpdateOperationsInput | string
   strengths?: Prisma.FeedbackUpdatestrengthsInput | string[]
   improvements?: Prisma.FeedbackUpdateimprovementsInput | string[]
-  overallRating?: Prisma.EnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating
+  overallRating?: Prisma.NullableEnumFeedbackRatingFieldUpdateOperationsInput | $Enums.FeedbackRating | null
+  report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessionRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sessionComment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -671,6 +679,7 @@ export type FeedbackSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   strengths?: boolean
   improvements?: boolean
   overallRating?: boolean
+  report?: boolean
   sessionRating?: boolean
   sessionComment?: boolean
   createdAt?: boolean
@@ -688,6 +697,7 @@ export type FeedbackSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   strengths?: boolean
   improvements?: boolean
   overallRating?: boolean
+  report?: boolean
   sessionRating?: boolean
   sessionComment?: boolean
   createdAt?: boolean
@@ -705,6 +715,7 @@ export type FeedbackSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   strengths?: boolean
   improvements?: boolean
   overallRating?: boolean
+  report?: boolean
   sessionRating?: boolean
   sessionComment?: boolean
   createdAt?: boolean
@@ -722,12 +733,13 @@ export type FeedbackSelectScalar = {
   strengths?: boolean
   improvements?: boolean
   overallRating?: boolean
+  report?: boolean
   sessionRating?: boolean
   sessionComment?: boolean
   createdAt?: boolean
 }
 
-export type FeedbackOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingId" | "summary" | "technical" | "communication" | "problemSolving" | "recommendation" | "strengths" | "improvements" | "overallRating" | "sessionRating" | "sessionComment" | "createdAt", ExtArgs["result"]["feedback"]>
+export type FeedbackOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingId" | "summary" | "technical" | "communication" | "problemSolving" | "recommendation" | "strengths" | "improvements" | "overallRating" | "report" | "sessionRating" | "sessionComment" | "createdAt", ExtArgs["result"]["feedback"]>
 export type FeedbackInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   booking?: boolean | Prisma.BookingDefaultArgs<ExtArgs>
 }
@@ -753,7 +765,8 @@ export type $FeedbackPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     recommendation: string
     strengths: string[]
     improvements: string[]
-    overallRating: $Enums.FeedbackRating
+    overallRating: $Enums.FeedbackRating | null
+    report: runtime.JsonValue | null
     sessionRating: number | null
     sessionComment: string | null
     createdAt: Date
@@ -1191,6 +1204,7 @@ export interface FeedbackFieldRefs {
   readonly strengths: Prisma.FieldRef<"Feedback", 'String[]'>
   readonly improvements: Prisma.FieldRef<"Feedback", 'String[]'>
   readonly overallRating: Prisma.FieldRef<"Feedback", 'FeedbackRating'>
+  readonly report: Prisma.FieldRef<"Feedback", 'Json'>
   readonly sessionRating: Prisma.FieldRef<"Feedback", 'Int'>
   readonly sessionComment: Prisma.FieldRef<"Feedback", 'String'>
   readonly createdAt: Prisma.FieldRef<"Feedback", 'DateTime'>

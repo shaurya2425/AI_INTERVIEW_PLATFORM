@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { getClerkDisplayName, getDisplayName, withDisplayName } from "../lib/user-name.js";
+import { getClerkProfileUpdates } from "../lib/clerk-profile.js";
 
 test("optional Clerk name fields never become literal null or undefined", () => {
   assert.equal(getClerkDisplayName({ firstName: "Shaurya Rajput", lastName: null }), "Shaurya Rajput");
@@ -33,6 +34,8 @@ const source = readFileSync(new URL("../lib/checkUser.js", import.meta.url), "ut
   .replace("export const checkUser", "const checkUser");
 
 function setup(existing) {
+  // Real Prisma nullable fields are null, not missing properties.
+  if (existing) existing = { imageUrl: null, ...existing };
   const writes = [];
   const db = { user: {
     findUnique: async () => existing,
@@ -42,7 +45,7 @@ function setup(existing) {
   const checkUser = runInNewContext(`${source}\ncheckUser;`, {
     currentUser: async () => ({ id: "test", firstName: "Shaurya Rajput", lastName: null, emailAddresses: [{ emailAddress: "test@example.com" }] }),
     auth: async () => ({ has: () => false }),
-    db, getClerkDisplayName, console, Date,
+    db, getClerkDisplayName, getClerkProfileUpdates, console, Date,
   });
   return { checkUser, writes };
 }

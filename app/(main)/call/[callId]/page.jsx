@@ -29,6 +29,8 @@ async function CallContent({ params }) {
     notFound();
   }
 
+  if (result.error === "Interview closed") redirect("/appointments");
+
   if (result.error === "Forbidden") {
     redirect("/");
   }

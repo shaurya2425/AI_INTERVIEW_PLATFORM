@@ -28,3 +28,12 @@ test("saved transcripts allow recovery after a session ends", () => {
 test("cancelled meetings never generate performance feedback", () => {
   assert.equal(getMeetingOutcome({ ...booking, status: "CANCELLED" }, {}, [{}], now).state, "cancelled");
 });
+
+test('casual leave before expiry cannot trigger feedback even with a ready transcript',()=>{
+ const b={...booking,endTime:'2026-11-15T12:00:00Z'};
+ assert.equal(getMeetingOutcome(b,{session:{started_at:'start',ended_at:'end'}},[{}],now).state,'pending');
+});
+test('explicit early completion stays Preparing Feedback for Task 4, including ready transcripts',()=>{
+ const b={...booking,status:'COMPLETED',endTime:'2026-11-15T12:00:00Z',feedbackRequestedAt:new Date(now)};
+ const outcome=getMeetingOutcome(b,{ended_at:'ended'},[{}],now);assert.equal(outcome.state,'pending');assert.match(outcome.message,/Preparing Feedback/);
+});

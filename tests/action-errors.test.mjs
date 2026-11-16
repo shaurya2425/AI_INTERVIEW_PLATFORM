@@ -4,6 +4,7 @@ import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { actionFailure, runAction, UNEXPECTED_ACTION_ERROR } from "../lib/action-result.js";
 import { validateTimeWindow, validateDateRange } from "../lib/time-validation.js";
+import { INTERVIEW_CATALOG, QUESTION_TYPES } from "../lib/interviewCatalog.js";
 
 function loadAction(file, name, overrides = {}) {
   const source = readFileSync(new URL(`../${file}`, import.meta.url), "utf8")
@@ -11,6 +12,7 @@ function loadAction(file, name, overrides = {}) {
     .replaceAll("export const ", "const ");
   return runInNewContext(`${source}\n${name};`, {
     actionFailure, runAction, validateTimeWindow, validateDateRange,
+    INTERVIEW_CATALOG, QUESTION_TYPES,
     currentUser: async () => null,
     createRateLimiter: () => ({}),
     Resend: class {},

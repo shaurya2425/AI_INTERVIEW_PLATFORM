@@ -21,8 +21,8 @@ export default clerkMiddleware(async (_auth, req) => {
     pathname.startsWith("/api/webhooks/stream/");
 
   // This machine endpoint validates its own scheduler secret in the route.
-  const isReminderJob = pathname === "/api/cron/interview-reminders";
-  if(!isWebhookRoute && !isReminderJob){
+  const isSchedulerJob = pathname === "/api/cron/interview-reminders" || pathname === "/api/cron/meeting-feedback";
+  if(!isWebhookRoute && !isSchedulerJob){
     const decision = await aj.protect(req);
 
     if(decision.isDenied()){

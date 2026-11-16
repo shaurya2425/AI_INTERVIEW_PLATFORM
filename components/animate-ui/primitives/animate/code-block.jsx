@@ -37,15 +37,16 @@ function CodeBlock({
   const [visibleCode, setVisibleCode] = React.useState('');
   const [highlightedCode, setHighlightedCode] = React.useState('');
   const [isDone, setIsDone] = React.useState(false);
+  const displayedCode = writing ? visibleCode : code;
 
   React.useEffect(() => {
-    if (!visibleCode.length || !isInView) return;
+    if (!displayedCode.length || !isInView) return;
 
     const loadHighlightedCode = async () => {
       try {
         const { codeToHtml } = await import('shiki');
 
-        const highlighted = await codeToHtml(visibleCode, {
+        const highlighted = await codeToHtml(displayedCode, {
           lang,
           themes,
           defaultColor: theme,
@@ -58,11 +59,10 @@ function CodeBlock({
     };
 
     loadHighlightedCode();
-  }, [lang, themes, writing, isInView, duration, delay, visibleCode, theme]);
+  }, [lang, themes, writing, isInView, duration, delay, displayedCode, theme]);
 
   React.useEffect(() => {
     if (!writing) {
-      setVisibleCode(code);
       onDone?.();
       onWrite?.({ index: code.length, length: code.length, done: true });
       return;

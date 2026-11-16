@@ -57,10 +57,25 @@ export type Availability = Prisma.AvailabilityModel
  */
 export type Booking = Prisma.BookingModel
 /**
+ * Model AIBuddyMessage
+ * 
+ */
+export type AIBuddyMessage = Prisma.AIBuddyMessageModel
+/**
  * Model InterviewReminder
  * 
  */
 export type InterviewReminder = Prisma.InterviewReminderModel
+/**
+ * Model InterviewQuestion
+ * 
+ */
+export type InterviewQuestion = Prisma.InterviewQuestionModel
+/**
+ * Model InterviewSubmission
+ * 
+ */
+export type InterviewSubmission = Prisma.InterviewSubmissionModel
 /**
  * Model Feedback
  * 

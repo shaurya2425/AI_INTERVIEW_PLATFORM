@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import RoleRedirect from "./RoleRedirect";
 import ClerkProfileSync from "./ClerkProfileSync";
 import ThemeToggle from "./theme-toggle";
 import { LoadingSpinner } from "./ui/loading-spinner";
+import AccountUserButton from "./AccountUserButton";
 
 export default async function Header() {
   const user = await checkUser();
@@ -79,7 +80,7 @@ export default async function Header() {
                   : user?.credits) ?? 0
               }
             />
-            <UserButton />
+            <AccountUserButton />
           </Show>
         </div>
       </Suspense>

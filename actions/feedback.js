@@ -1,13 +1,12 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { StreamClient } from "@stream-io/node-sdk";
 import { revalidatePath } from "next/cache";
 import { request } from "@arcjet/next";
 import { createRateLimiter, checkRateLimit } from "@/lib/arcjet";
 import { actionFailure, runAction } from "@/lib/action-result";
 import { db } from "@/lib/prisma";
-import { feedbackBookingInclude, generateMeetingFeedback } from "@/lib/meeting-feedback";
+import { feedbackBookingInclude, prepareMeetingFeedback } from "@/lib/meeting-feedback";
 import { getMeetingOutcome } from "@/lib/meeting-outcome";
 
 const limiter = createRateLimiter({ refillRate: 10, interval: "1m", capacity: 10 });
@@ -24,25 +23,19 @@ export const getMeetingFeedback = async (bookingId) => runAction(async () => {
     include: feedbackBookingInclude,
   });
   if (!booking) return actionFailure("Meeting not found");
-  if (booking.feedback) return { feedback: booking.feedback, state: "ready" };
   if (booking.status === "CANCELLED") return getMeetingOutcome(booking, {}, []);
-  if (!booking.streamCallId) return {
-    state: "unavailable", message: "No call record is available for this meeting, so attendance and feedback cannot be verified.",
+  if (booking.status !== "COMPLETED") return {
+    state: "pending", message: "The interview is still scheduled or active. Feedback is generated after completion.",
   };
   const limitError = await checkRateLimit(limiter, await request(), user.id);
   if (limitError) return actionFailure(limitError);
-  const client = new StreamClient(process.env.NEXT_PUBLIC_STREAM_API_KEY, process.env.STREAM_SECRET_KEY);
-  const call = client.video.call("default", booking.streamCallId);
-  const [details, transcriptResponse] = await Promise.all([call.get(), call.listTranscriptions()]);
-  const transcriptions = transcriptResponse.transcriptions.filter((item) => !item.translated)
-    .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-  const outcome = getMeetingOutcome(booking, details.call, transcriptions);
-  if (outcome.state !== "transcript") return outcome;
-  const feedback = await generateMeetingFeedback(booking, transcriptions);
-  if (!feedback) return {
-    state: "unavailable", message: "The meeting transcript contains no speech. There is not enough information to generate interview feedback.",
-  };
+  let feedback;
+  try { feedback = await prepareMeetingFeedback(booking); }
+  catch (error) { return { feedback: booking.feedback, state: "failed", message: error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved." }; }
+  const latest = await db.booking.findUnique({ where: { id: booking.id }, select: { feedbackState: true } });
+  const state = latest?.feedbackState === "READY" ? "ready" : latest?.feedbackState === "INCOMPLETE" ? "incomplete" : "pending";
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
-  return { feedback, state: "ready" };
+  return { feedback, state, message: state === "pending" ? "Preparing feedback. Any previous report remains available; check again shortly."
+    : state === "incomplete" ? "Report available with incomplete evidence. Check its limitations and retry after transcripts or approved grades become available." : "" };
 }, "Unable to retrieve feedback right now. Please try again later.");
