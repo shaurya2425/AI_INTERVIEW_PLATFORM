@@ -6,7 +6,7 @@ import { completeInterview } from "@/actions/interviewCompletion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-export default function EndInterviewButton({ bookingId, retry = false }) {
+export default function EndInterviewButton({ bookingId, retry = false, onCompleted }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -20,9 +20,8 @@ export default function EndInterviewButton({ bookingId, retry = false }) {
       if (!result.success) { setMessage(result.error); return; }
       setMessage(result.message);
       setOpen(false);
-      // Stay in the call until Stream disconnects everyone. If termination is pending,
-      // the lifecycle watcher offers a retry and the ordinary Leave control still works.
-      if (retry) router.refresh();
+      if (onCompleted) await onCompleted();
+      else router.refresh();
     } catch { setMessage("Completion could not be confirmed. Retry safely."); }
     finally { lock.current = false; setBusy(false); }
   }

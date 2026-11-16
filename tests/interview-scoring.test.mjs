@@ -28,3 +28,13 @@ test('Grill-only evidence is unavailable; single-main evidence is provisional; o
  const q=question('EASY','POOR');assert.equal(scoreInterview([q]).state,'PROVISIONAL');
  q.submission.approvedGrade='EXCELLENT';assert.equal(scoreInterview([q]).overallScore,100);
 });
+
+test('only confirmed assisted corrections reduce latest score, capped at five points',()=>{
+ const q=question('MEDIUM','EXCELLENT',{type:'CONCEPTUAL',submission:{approvedGrade:'EXCELLENT',previousAttempts:[{approvedGrade:'POOR'}]}});
+ assert.equal(scoreInterview([q]).overallScore,100);
+ q.submission.previousAttempts[0].correctionHintGiven=true;
+ q.submission.previousAttempts.push({correctionHintGiven:true});
+ assert.equal(scoreInterview([q]).overallScore,95);
+ assert.equal(questionCalculation(q,'POOR').approvedScore,0);
+ q.type='MCQ';assert.equal(scoreInterview([q]).overallScore,100);
+});

@@ -28,6 +28,6 @@ export async function getInterviewLifecycle(callId) {
   if (!user || typeof callId !== "string") return { success: false };
   const booking = await db.booking.findUnique({ where: { streamCallId: callId }, include: completionInclude });
   if (!booking || ![booking.interviewer.clerkUserId, booking.interviewee.clerkUserId].includes(user.id)) return { success: false };
-  if (booking.completedAt && ["PENDING", "RUNNING"].includes(booking.completionState)) after(() => finalizeInterviewCompletion(booking.id));
+  if (booking.completedAt && ["PENDING", "RUNNING", "FAILED"].includes(booking.completionState)) after(() => finalizeInterviewCompletion(booking.id));
   return { success: true, status: booking.status, completionState: booking.completionState };
 }

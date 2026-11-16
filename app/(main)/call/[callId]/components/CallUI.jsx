@@ -29,11 +29,11 @@ import {
 import "stream-chat-react/dist/css/v2/index.css";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { MessageSquare, Sparkles, GripVertical, Video } from "lucide-react";
 
 import {
   LoadingSpinner,
-  PageLoader,
 } from "@/components/ui/loading-spinner";
 
 import EndInterviewButton from "@/components/EndInterviewButton";
@@ -57,6 +57,7 @@ export default function CallUI({
   const callingState = useCallCallingState();
 
   const [activeTab, setActiveTab] = useState(isInterviewer ? "ai" : "chat");
+  const [curationTarget, setCurationTarget] = useState(null);
 
   const splitRef = useRef(null);
   const [sidebarWidth, setSidebarWidth] = useState(520);
@@ -94,25 +95,36 @@ export default function CallUI({
       toast.error(
         "Could not confirm that you left the call. Close the call tab if your camera or microphone remains active."
       );
+      return;
     }
     onLeave();
   }, [call, onLeave]);
 
   const [lifecycle, setLifecycle] = useState(null);
-  useEffect(() => {
-    if (callingState === CallingState.LEFT) onLeave();
-  }, [callingState, onLeave]);
+  const finishLocally = useCallback(async () => {
+    // Database completion is authoritative even while the shared end retries.
+    if (call.state.callingState !== CallingState.LEFT) await call.leave().catch(() => {});
+    onLeave();
+  }, [call, onLeave]);
   useEffect(() => {
     let cancelled = false;
+    let checking = false;
     const check = async () => {
+      if (checking) return;
+      checking = true;
       try {
         const result = await getInterviewLifecycle(callId);
-        if (!cancelled && result.success) setLifecycle(result);
+        if (!cancelled && result.success) {
+          setLifecycle(result);
+          if (result.status === "COMPLETED") await finishLocally();
+        }
       } catch { /* Stream remains the primary disconnect mechanism. */ }
+      finally { checking = false; }
     };
+    void check();
     const timer = setInterval(check, 4000);
     return () => { cancelled = true; clearInterval(timer); };
-  }, [callId]);
+  }, [callId, callingState, finishLocally]);
 
   // Chat client
   const chatClient = useCreateChatClient({
@@ -132,6 +144,7 @@ export default function CallUI({
     if (!chatClient) return;
 
     let cancelled = false;
+    let retryTimer;
 
     const channel = chatClient.channel(
       "messaging",
@@ -145,8 +158,7 @@ export default function CallUI({
       }
     );
 
-    channel
-      .watch()
+    const watch = () => channel.watch()
       .then(() => {
         if (cancelled) return;
 
@@ -157,27 +169,31 @@ export default function CallUI({
         if (cancelled) return;
 
         const message =
-          "Unable to connect to interview chat.";
+          "Unable to connect to interview chat. Retrying automatically...";
 
         setChatError(message);
 
         toast.error(message, {
           id: "chat-connection-error",
         });
+        retryTimer = setTimeout(watch, 4000);
       });
+    void watch();
 
     return () => {
       cancelled = true;
+      clearTimeout(retryTimer);
       channel.stopWatching().catch(() => {});
     };
-  }, [chatClient, callId, booking]);
+  }, [chatClient, callId, booking.interviewer.clerkUserId, booking.interviewee.clerkUserId]);
 
   if (callingState === CallingState.LEFT) {
     return (
-      <PageLoader
-        label="Leaving call"
-        className="min-h-screen"
-      />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p role="alert">The call disconnected. Checking whether the interview has ended. Your saved interview data is preserved.</p>
+        <Button onClick={() => window.location.reload()}>Rejoin meeting</Button>
+        <Button variant="outline" onClick={onLeave}>Back to appointments</Button>
+      </div>
     );
   }
 
@@ -232,7 +248,7 @@ export default function CallUI({
             <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 px-3 pb-2 text-center">
               <span className="hidden text-xs text-muted-foreground xl:block">Leave to rejoin later.</span>
               {lifecycle?.status === "COMPLETED" && <p role="status" className="text-sm">Interview completed. Preparing Feedback. {lifecycle.completionState !== "COMPLETE" ? "Finishing the shared call? You may leave safely." : "The shared call has ended."}</p>}
-              {isInterviewer && <EndInterviewButton bookingId={booking.id} retry={lifecycle?.status === "COMPLETED"} />}
+              {isInterviewer && <EndInterviewButton bookingId={booking.id} retry={lifecycle?.status === "COMPLETED"} onCompleted={finishLocally} />}
             </div>
           </StreamTheme>
         </div>
@@ -275,6 +291,7 @@ export default function CallUI({
           </div>
 
           {/* Content */}
+          {isInterviewer && <div ref={setCurationTarget} className="flex max-h-[45%] min-h-0 shrink-0 flex-col overflow-hidden border-b border-border p-2" aria-label="Pinned question curation" />}
           <div className="min-h-0 flex-1 overflow-hidden">
 
             {/* Interview chat */}
@@ -334,6 +351,8 @@ export default function CallUI({
                   callId={callId}
                   sessionId={booking.id}
                   intervieweeName={booking.interviewee.name || "Candidate"}
+                  curationTarget={curationTarget}
+                  onOpenWorkspace={() => setActiveTab("ai")}
                 />
               </div>
             )}

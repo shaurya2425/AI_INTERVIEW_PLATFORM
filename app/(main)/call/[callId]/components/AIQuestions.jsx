@@ -2,8 +2,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
-  Sparkles,
   Send,
   RefreshCw,
   ListChecks,
@@ -23,6 +23,7 @@ import { useInterviewQuestions } from "./InterviewQuestionMessage";
 import AIResponse from "./AIResponse";
 import AIQuestionCard from "./AIQuestionCard";
 import AIBuddyFilters from "./AIBuddyFilters";
+import { hasQuestionFilter, QUESTION_FILTER_MESSAGE } from "@/lib/interviewCatalog";
 
 const createId = () => crypto.randomUUID();
 
@@ -30,6 +31,8 @@ export default function AIQuestionsPanel({
   callId,
   sessionId,
   intervieweeName = "Candidate",
+  curationTarget,
+  onOpenWorkspace,
 }) {
   const [tab, setTab] = useState("questions");
   const [focusedReview, setFocusedReview] = useState(null);
@@ -163,6 +166,14 @@ export default function AIQuestionsPanel({
     if (!ready || syncing || historyError || busyRef.current) return;
 
     const instruction = text.trim();
+    const requested = retry ? retryRef.current : { mode, forceQuestions, preferences, instruction };
+    if (requested && requested.mode !== "GRILL" &&
+      (requested.forceQuestions || /^(next question|harder|easier)[.!?]?$/i.test(requested.instruction || "")) &&
+      !hasQuestionFilter(requested.preferences)) {
+      setError(QUESTION_FILTER_MESSAGE);
+      setCanRetry(false);
+      return;
+    }
 
     if (
       !retry && !instruction &&
@@ -398,16 +409,9 @@ export default function AIQuestionsPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-amber-400/10 text-brand"><Sparkles size={18} /></span>
-          <div><h2 className="text-sm font-semibold">AI Buddy</h2><p className="text-xs text-muted-foreground">Private interview workspace</p></div>
-        </div>
-        <button type="button" onClick={() => delivery?.refresh()} disabled={delivery?.refreshing} title="Sync questions and evaluations" aria-label="Sync questions and evaluations" className="workspace-icon-button">
-          <RefreshCw size={16} className={delivery?.refreshing ? "animate-spin" : ""} />
-        </button>
-      </header>
-      <div role="tablist" aria-label="AI Buddy workspace" className="grid shrink-0 grid-cols-3 gap-1 border-b border-border bg-surface/50 p-2">
+      {curationTarget && createPortal(<AIBuddyFilters value={preferences} onChange={setPreferences} disabled={loading || !ready || syncing || Boolean(historyError)} onGenerate={() => { onOpenWorkspace?.(); setTab("questions"); void send({ text: input, forceQuestions: true, guided: true }); }} />, curationTarget)}
+      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-surface/50 p-2">
+      <div role="tablist" aria-label="AI Buddy workspace" className="grid min-w-0 flex-1 grid-cols-3 gap-1">
         {[["questions", "Questions", ListChecks], ["evaluations", "Evaluations", ShieldCheck], ["ask", "Ask AI", MessageSquare]].map(([id, label, Icon]) => (
           <button key={id} id={`buddy-tab-${id}`} type="button" role="tab" tabIndex={tab === id ? 0 : -1} aria-selected={tab === id} aria-controls={`buddy-panel-${id}`} onClick={() => setTab(id)}
             onKeyDown={event => {
@@ -422,6 +426,10 @@ export default function AIQuestionsPanel({
             {id === "evaluations" && pendingReviews > 0 && <span className="rounded-full bg-amber-400/15 px-1.5 text-xs text-brand">{pendingReviews}</span>}
           </button>
         ))}
+      </div>
+        <button type="button" onClick={() => delivery?.refresh()} disabled={delivery?.refreshing} title="Sync questions and evaluations" aria-label="Sync questions and evaluations" className="workspace-icon-button shrink-0">
+          <RefreshCw size={16} className={delivery?.refreshing ? "animate-spin" : ""} />
+        </button>
       </div>
       {(historyError || delivery?.error) && (
         <div role="alert" className="shrink-0 border-b border-danger/20 bg-danger/5 px-4 py-2 text-xs leading-5 text-danger">
@@ -440,7 +448,6 @@ export default function AIQuestionsPanel({
         </div>
       )}
       <div hidden={tab !== "questions"} role="tabpanel" id="buddy-panel-questions" aria-labelledby="buddy-tab-questions" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-        <AIBuddyFilters value={preferences} onChange={setPreferences} disabled={loading || !ready || syncing || Boolean(historyError)} onGenerate={() => send({ text: input, forceQuestions: true, guided: true })} />
         <div className="mb-3 mt-4 flex items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>{questions.length} questions · {askedCount} sent</span><span>{gradedCount} graded</span>
         </div>
@@ -468,7 +475,7 @@ export default function AIQuestionsPanel({
         {!reviews.length && <div className="rounded-xl border border-dashed border-border p-6 text-center"><ShieldCheck size={22} className="mx-auto mb-3 text-brand" /><p className="text-sm font-medium">No answers to review yet</p><p className="mt-1 text-sm text-muted-foreground">{askedCount ? "Waiting for candidate response." : "Send a question from the Questions tab to get started."}</p></div>}
         <div className="space-y-3">{reviews.map(q => <details key={q.id} id={`review-${q.id}`} open={focusedReview === q.id || undefined} className="rounded-xl border border-border bg-surface" onToggle={event => { if (!event.currentTarget.open && focusedReview === q.id) setFocusedReview(null); }}>
           <summary className="cursor-pointer p-4 text-sm"><span className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>{q.topic} · {q.difficulty}</span><span className="ml-auto rounded-full bg-background px-2 py-1 text-brand">{q.review?.approvedGrade ? `${q.review.approvedGrade} · ${q.review.approvedScore ?? "—"}` : "Needs review"}</span></span><span className="line-clamp-2 font-medium leading-6">{q.question}</span></summary>
-          <div className="border-t border-border p-3"><AnswerReview question={q} /></div>
+          <div className="border-t border-border p-3"><AnswerReview key={`${q.persistedId}:${q.submission?.revision || 1}`} question={q} /></div>
         </details>)}</div>
       </div>
       <div hidden={tab !== "ask"} role="tabpanel" id="buddy-panel-ask" aria-labelledby="buddy-tab-ask" className="relative min-h-0 flex-1">

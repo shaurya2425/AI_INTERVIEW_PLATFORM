@@ -11,6 +11,7 @@ export default function AnswerReview({ question }) {
   const review = question.review;
   const [grade, setGrade] = useState("");
   const [notes, setNotes] = useState(null);
+  const [correctionWithHint, setCorrectionWithHint] = useState(review?.correctionWithHint || false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   if (!review) return null;
@@ -20,7 +21,7 @@ export default function AnswerReview({ question }) {
     setBusy(true); setMessage("");
     try {
       const result = retry ? await retryInterviewEvaluation({ callId, questionId: question.persistedId }) :
-        await approveInterviewGrade({ callId, questionId: question.persistedId, grade: acceptedGrade || selected, notes: notes ?? review.notes ?? "" });
+        await approveInterviewGrade({ callId, questionId: question.persistedId, submissionRevision: question.submission?.revision || 1, correctionWithHint, grade: acceptedGrade || selected, notes: notes ?? review.notes ?? "" });
       if (!result.success) { setMessage(result.error); return; }
       if (result.question) acceptQuestion(result.question);
       if (retry) {
@@ -66,6 +67,7 @@ export default function AnswerReview({ question }) {
       <label className="block space-y-1.5"><span className="font-medium">{assessment ? "Approve or override" : "Grade manually"}</span><select aria-label="Approved grade" value={selected} onChange={e => setGrade(e.target.value)} disabled={busy} className="workspace-field">
         <option value="">Choose a grade</option>{grades.map((g, i) => <option key={g} value={g}>{g[0] + g.slice(1).toLowerCase()} | {[0, 40, 75, 100][i]}</option>)}</select></label>
       <label className="block space-y-1.5"><span className="text-xs font-medium text-muted-foreground">Private interviewer notes</span><textarea value={notes ?? review.notes ?? ""} onChange={e => setNotes(e.target.value)} maxLength={6000} rows={3} placeholder="Record your reasoning or follow-up ideas..." className="workspace-field resize-y" /></label>
+      {question.type !== "MCQ" && question.submission?.revision > 1 && <label className="flex items-start gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={correctionWithHint} onChange={e => setCorrectionWithHint(e.target.checked)} disabled={busy} />This revision corrects a mistake using my hint (5-point deduction, capped per question). Leave unchecked for independent corrections.</label>}
       <button type="button" disabled={busy || !selected} onClick={() => perform(false)} className="workspace-primary w-full">{busy ? "Saving..." : "Save approved grade"}</button>
     </div>
     {message && <p role="status" className="rounded-lg border border-border bg-background p-3 text-xs leading-5">{message}</p>}

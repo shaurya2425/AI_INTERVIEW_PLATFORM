@@ -14,14 +14,17 @@ export async function POST(request) {
   try {
     // Oldest attempts first prevents a failing report from starving the backlog.
     const bookings = await db.booking.findMany({
-      where: { feedback: null, OR: [{ status: "COMPLETED" }, { status: "SCHEDULED", endTime: { lte: new Date() } }] },
+      where: { status: "COMPLETED", OR: [{ feedback: null }, { feedbackState: { in: ["PENDING", "FAILED", "INCOMPLETE"] } },
+        { feedbackState: { startsWith: "RUNNING:" }, feedbackRequestedAt: { lt: new Date(Date.now() - 5 * 60 * 1000) } }] },
       include: feedbackBookingInclude, orderBy: { updatedAt: "asc" }, take: 3,
     });
     const results = [];
     for (const booking of bookings) {
       try {
         const feedback = await prepareMeetingFeedback(booking);
-        results.push({ bookingId: booking.id, state: feedback ? "ready" : "pending" });
+        const latest = await db.booking.findUnique({ where: { id: booking.id }, select: { feedbackState: true } });
+        const state = latest.feedbackState.startsWith("RUNNING:") ? "pending" : latest.feedbackState.toLowerCase();
+        results.push({ bookingId: booking.id, state });
         if (!feedback) await db.booking.update({ where: { id: booking.id }, data: { updatedAt: new Date() } });
       } catch (error) {
         results.push({ bookingId: booking.id, state: "failed", error: error.publicMessage || "Feedback processing failed. Check server logs." });

@@ -28,6 +28,7 @@ export type AggregateInterviewSubmission = {
 
 export type InterviewSubmissionAvgAggregateOutputType = {
   optionIndex: number | null
+  revision: number | null
   evaluationAttempts: number | null
   suggestedScore: number | null
   approvedScore: number | null
@@ -39,6 +40,7 @@ export type InterviewSubmissionAvgAggregateOutputType = {
 
 export type InterviewSubmissionSumAggregateOutputType = {
   optionIndex: number | null
+  revision: number | null
   evaluationAttempts: number | null
   suggestedScore: number | null
   approvedScore: number | null
@@ -57,6 +59,8 @@ export type InterviewSubmissionMinAggregateOutputType = {
   language: string | null
   submittedAt: Date | null
   notifiedAt: Date | null
+  revision: number | null
+  requestId: string | null
   evaluationStatus: string | null
   evaluationError: string | null
   evaluationStartedAt: Date | null
@@ -85,6 +89,8 @@ export type InterviewSubmissionMaxAggregateOutputType = {
   language: string | null
   submittedAt: Date | null
   notifiedAt: Date | null
+  revision: number | null
+  requestId: string | null
   evaluationStatus: string | null
   evaluationError: string | null
   evaluationStartedAt: Date | null
@@ -113,6 +119,9 @@ export type InterviewSubmissionCountAggregateOutputType = {
   language: number
   submittedAt: number
   notifiedAt: number
+  revision: number
+  requestId: number
+  previousAttempts: number
   evaluationStatus: number
   evaluation: number
   evaluationError: number
@@ -137,6 +146,7 @@ export type InterviewSubmissionCountAggregateOutputType = {
 
 export type InterviewSubmissionAvgAggregateInputType = {
   optionIndex?: true
+  revision?: true
   evaluationAttempts?: true
   suggestedScore?: true
   approvedScore?: true
@@ -148,6 +158,7 @@ export type InterviewSubmissionAvgAggregateInputType = {
 
 export type InterviewSubmissionSumAggregateInputType = {
   optionIndex?: true
+  revision?: true
   evaluationAttempts?: true
   suggestedScore?: true
   approvedScore?: true
@@ -166,6 +177,8 @@ export type InterviewSubmissionMinAggregateInputType = {
   language?: true
   submittedAt?: true
   notifiedAt?: true
+  revision?: true
+  requestId?: true
   evaluationStatus?: true
   evaluationError?: true
   evaluationStartedAt?: true
@@ -194,6 +207,8 @@ export type InterviewSubmissionMaxAggregateInputType = {
   language?: true
   submittedAt?: true
   notifiedAt?: true
+  revision?: true
+  requestId?: true
   evaluationStatus?: true
   evaluationError?: true
   evaluationStartedAt?: true
@@ -222,6 +237,9 @@ export type InterviewSubmissionCountAggregateInputType = {
   language?: true
   submittedAt?: true
   notifiedAt?: true
+  revision?: true
+  requestId?: true
+  previousAttempts?: true
   evaluationStatus?: true
   evaluation?: true
   evaluationError?: true
@@ -338,6 +356,9 @@ export type InterviewSubmissionGroupByOutputType = {
   language: string | null
   submittedAt: Date
   notifiedAt: Date | null
+  revision: number
+  requestId: string | null
+  previousAttempts: runtime.JsonValue
   evaluationStatus: string
   evaluation: runtime.JsonValue | null
   evaluationError: string | null
@@ -390,6 +411,9 @@ export type InterviewSubmissionWhereInput = {
   language?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
   submittedAt?: Prisma.DateTimeFilter<"InterviewSubmission"> | Date | string
   notifiedAt?: Prisma.DateTimeNullableFilter<"InterviewSubmission"> | Date | string | null
+  revision?: Prisma.IntFilter<"InterviewSubmission"> | number
+  requestId?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
+  previousAttempts?: Prisma.JsonFilter<"InterviewSubmission">
   evaluationStatus?: Prisma.StringFilter<"InterviewSubmission"> | string
   evaluation?: Prisma.JsonNullableFilter<"InterviewSubmission">
   evaluationError?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
@@ -421,6 +445,9 @@ export type InterviewSubmissionOrderByWithRelationInput = {
   language?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   notifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  revision?: Prisma.SortOrder
+  requestId?: Prisma.SortOrderInput | Prisma.SortOrder
+  previousAttempts?: Prisma.SortOrder
   evaluationStatus?: Prisma.SortOrder
   evaluation?: Prisma.SortOrderInput | Prisma.SortOrder
   evaluationError?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -455,6 +482,9 @@ export type InterviewSubmissionWhereUniqueInput = Prisma.AtLeast<{
   language?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
   submittedAt?: Prisma.DateTimeFilter<"InterviewSubmission"> | Date | string
   notifiedAt?: Prisma.DateTimeNullableFilter<"InterviewSubmission"> | Date | string | null
+  revision?: Prisma.IntFilter<"InterviewSubmission"> | number
+  requestId?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
+  previousAttempts?: Prisma.JsonFilter<"InterviewSubmission">
   evaluationStatus?: Prisma.StringFilter<"InterviewSubmission"> | string
   evaluation?: Prisma.JsonNullableFilter<"InterviewSubmission">
   evaluationError?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
@@ -486,6 +516,9 @@ export type InterviewSubmissionOrderByWithAggregationInput = {
   language?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   notifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  revision?: Prisma.SortOrder
+  requestId?: Prisma.SortOrderInput | Prisma.SortOrder
+  previousAttempts?: Prisma.SortOrder
   evaluationStatus?: Prisma.SortOrder
   evaluation?: Prisma.SortOrderInput | Prisma.SortOrder
   evaluationError?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -523,6 +556,9 @@ export type InterviewSubmissionScalarWhereWithAggregatesInput = {
   language?: Prisma.StringNullableWithAggregatesFilter<"InterviewSubmission"> | string | null
   submittedAt?: Prisma.DateTimeWithAggregatesFilter<"InterviewSubmission"> | Date | string
   notifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"InterviewSubmission"> | Date | string | null
+  revision?: Prisma.IntWithAggregatesFilter<"InterviewSubmission"> | number
+  requestId?: Prisma.StringNullableWithAggregatesFilter<"InterviewSubmission"> | string | null
+  previousAttempts?: Prisma.JsonWithAggregatesFilter<"InterviewSubmission">
   evaluationStatus?: Prisma.StringWithAggregatesFilter<"InterviewSubmission"> | string
   evaluation?: Prisma.JsonNullableWithAggregatesFilter<"InterviewSubmission">
   evaluationError?: Prisma.StringNullableWithAggregatesFilter<"InterviewSubmission"> | string | null
@@ -550,6 +586,9 @@ export type InterviewSubmissionCreateInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -581,6 +620,9 @@ export type InterviewSubmissionUncheckedCreateInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -608,6 +650,9 @@ export type InterviewSubmissionUpdateInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -639,6 +684,9 @@ export type InterviewSubmissionUncheckedUpdateInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -668,6 +716,9 @@ export type InterviewSubmissionCreateManyInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -695,6 +746,9 @@ export type InterviewSubmissionUpdateManyMutationInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -724,6 +778,9 @@ export type InterviewSubmissionUncheckedUpdateManyInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -768,6 +825,9 @@ export type InterviewSubmissionCountOrderByAggregateInput = {
   language?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   notifiedAt?: Prisma.SortOrder
+  revision?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
+  previousAttempts?: Prisma.SortOrder
   evaluationStatus?: Prisma.SortOrder
   evaluation?: Prisma.SortOrder
   evaluationError?: Prisma.SortOrder
@@ -790,6 +850,7 @@ export type InterviewSubmissionCountOrderByAggregateInput = {
 
 export type InterviewSubmissionAvgOrderByAggregateInput = {
   optionIndex?: Prisma.SortOrder
+  revision?: Prisma.SortOrder
   evaluationAttempts?: Prisma.SortOrder
   suggestedScore?: Prisma.SortOrder
   approvedScore?: Prisma.SortOrder
@@ -808,6 +869,8 @@ export type InterviewSubmissionMaxOrderByAggregateInput = {
   language?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   notifiedAt?: Prisma.SortOrder
+  revision?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   evaluationStatus?: Prisma.SortOrder
   evaluationError?: Prisma.SortOrder
   evaluationStartedAt?: Prisma.SortOrder
@@ -836,6 +899,8 @@ export type InterviewSubmissionMinOrderByAggregateInput = {
   language?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   notifiedAt?: Prisma.SortOrder
+  revision?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   evaluationStatus?: Prisma.SortOrder
   evaluationError?: Prisma.SortOrder
   evaluationStartedAt?: Prisma.SortOrder
@@ -857,6 +922,7 @@ export type InterviewSubmissionMinOrderByAggregateInput = {
 
 export type InterviewSubmissionSumOrderByAggregateInput = {
   optionIndex?: Prisma.SortOrder
+  revision?: Prisma.SortOrder
   evaluationAttempts?: Prisma.SortOrder
   suggestedScore?: Prisma.SortOrder
   approvedScore?: Prisma.SortOrder
@@ -959,6 +1025,9 @@ export type InterviewSubmissionCreateWithoutCandidateInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -988,6 +1057,9 @@ export type InterviewSubmissionUncheckedCreateWithoutCandidateInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -1046,6 +1118,9 @@ export type InterviewSubmissionScalarWhereInput = {
   language?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
   submittedAt?: Prisma.DateTimeFilter<"InterviewSubmission"> | Date | string
   notifiedAt?: Prisma.DateTimeNullableFilter<"InterviewSubmission"> | Date | string | null
+  revision?: Prisma.IntFilter<"InterviewSubmission"> | number
+  requestId?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
+  previousAttempts?: Prisma.JsonFilter<"InterviewSubmission">
   evaluationStatus?: Prisma.StringFilter<"InterviewSubmission"> | string
   evaluation?: Prisma.JsonNullableFilter<"InterviewSubmission">
   evaluationError?: Prisma.StringNullableFilter<"InterviewSubmission"> | string | null
@@ -1073,6 +1148,9 @@ export type InterviewSubmissionCreateWithoutQuestionInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -1102,6 +1180,9 @@ export type InterviewSubmissionUncheckedCreateWithoutQuestionInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -1145,6 +1226,9 @@ export type InterviewSubmissionUpdateWithoutQuestionInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1174,6 +1258,9 @@ export type InterviewSubmissionUncheckedUpdateWithoutQuestionInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1202,6 +1289,9 @@ export type InterviewSubmissionCreateManyCandidateInput = {
   language?: string | null
   submittedAt?: Date | string
   notifiedAt?: Date | string | null
+  revision?: number
+  requestId?: string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: string | null
@@ -1229,6 +1319,9 @@ export type InterviewSubmissionUpdateWithoutCandidateInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1258,6 +1351,9 @@ export type InterviewSubmissionUncheckedUpdateWithoutCandidateInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1286,6 +1382,9 @@ export type InterviewSubmissionUncheckedUpdateManyWithoutCandidateInput = {
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  revision?: Prisma.IntFieldUpdateOperationsInput | number
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  previousAttempts?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   evaluationStatus?: Prisma.StringFieldUpdateOperationsInput | string
   evaluation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   evaluationError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1317,6 +1416,9 @@ export type InterviewSubmissionSelect<ExtArgs extends runtime.Types.Extensions.I
   language?: boolean
   submittedAt?: boolean
   notifiedAt?: boolean
+  revision?: boolean
+  requestId?: boolean
+  previousAttempts?: boolean
   evaluationStatus?: boolean
   evaluation?: boolean
   evaluationError?: boolean
@@ -1348,6 +1450,9 @@ export type InterviewSubmissionSelectCreateManyAndReturn<ExtArgs extends runtime
   language?: boolean
   submittedAt?: boolean
   notifiedAt?: boolean
+  revision?: boolean
+  requestId?: boolean
+  previousAttempts?: boolean
   evaluationStatus?: boolean
   evaluation?: boolean
   evaluationError?: boolean
@@ -1379,6 +1484,9 @@ export type InterviewSubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime
   language?: boolean
   submittedAt?: boolean
   notifiedAt?: boolean
+  revision?: boolean
+  requestId?: boolean
+  previousAttempts?: boolean
   evaluationStatus?: boolean
   evaluation?: boolean
   evaluationError?: boolean
@@ -1410,6 +1518,9 @@ export type InterviewSubmissionSelectScalar = {
   language?: boolean
   submittedAt?: boolean
   notifiedAt?: boolean
+  revision?: boolean
+  requestId?: boolean
+  previousAttempts?: boolean
   evaluationStatus?: boolean
   evaluation?: boolean
   evaluationError?: boolean
@@ -1430,7 +1541,7 @@ export type InterviewSubmissionSelectScalar = {
   weightedScore?: boolean
 }
 
-export type InterviewSubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "questionId" | "candidateId" | "answer" | "optionIndex" | "language" | "submittedAt" | "notifiedAt" | "evaluationStatus" | "evaluation" | "evaluationError" | "evaluationStartedAt" | "evaluationToken" | "evaluationAttempts" | "approvedGrade" | "interviewerNotes" | "approvedAt" | "approvedBy" | "evaluationCompletedAt" | "suggestedScore" | "approvedScore" | "scoringPolicyVersion" | "difficultyWeight" | "followUpMultiplier" | "questionWeight" | "weightedScore", ExtArgs["result"]["interviewSubmission"]>
+export type InterviewSubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "questionId" | "candidateId" | "answer" | "optionIndex" | "language" | "submittedAt" | "notifiedAt" | "revision" | "requestId" | "previousAttempts" | "evaluationStatus" | "evaluation" | "evaluationError" | "evaluationStartedAt" | "evaluationToken" | "evaluationAttempts" | "approvedGrade" | "interviewerNotes" | "approvedAt" | "approvedBy" | "evaluationCompletedAt" | "suggestedScore" | "approvedScore" | "scoringPolicyVersion" | "difficultyWeight" | "followUpMultiplier" | "questionWeight" | "weightedScore", ExtArgs["result"]["interviewSubmission"]>
 export type InterviewSubmissionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   question?: boolean | Prisma.InterviewQuestionDefaultArgs<ExtArgs>
   candidate?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1459,6 +1570,9 @@ export type $InterviewSubmissionPayload<ExtArgs extends runtime.Types.Extensions
     language: string | null
     submittedAt: Date
     notifiedAt: Date | null
+    revision: number
+    requestId: string | null
+    previousAttempts: runtime.JsonValue
     evaluationStatus: string
     evaluation: runtime.JsonValue | null
     evaluationError: string | null
@@ -1910,6 +2024,9 @@ export interface InterviewSubmissionFieldRefs {
   readonly language: Prisma.FieldRef<"InterviewSubmission", 'String'>
   readonly submittedAt: Prisma.FieldRef<"InterviewSubmission", 'DateTime'>
   readonly notifiedAt: Prisma.FieldRef<"InterviewSubmission", 'DateTime'>
+  readonly revision: Prisma.FieldRef<"InterviewSubmission", 'Int'>
+  readonly requestId: Prisma.FieldRef<"InterviewSubmission", 'String'>
+  readonly previousAttempts: Prisma.FieldRef<"InterviewSubmission", 'Json'>
   readonly evaluationStatus: Prisma.FieldRef<"InterviewSubmission", 'String'>
   readonly evaluation: Prisma.FieldRef<"InterviewSubmission", 'Json'>
   readonly evaluationError: Prisma.FieldRef<"InterviewSubmission", 'String'>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,13 @@ import "stream-chat-react/dist/css/v2/index.css";
 import { PageLoader } from "@/components/ui/loading-spinner";
 import CallUI from "./CallUI";
 
-export default function CallRoom({
+export default function CallRoom(props) {
+  // A new room/account owns a new connection; refreshed credentials or profile
+  // props must not tear down the active call and emit LEFT to its children.
+  return <ConnectedCallRoom key={JSON.stringify([props.apiKey, props.callId, props.currentUser.id])} {...props} />;
+}
+
+function ConnectedCallRoom({
   callId,
   token,
   apiKey,
@@ -32,6 +38,8 @@ export default function CallRoom({
   const [videoClient, setVideoClient] = useState(null);
   const [call, setCall] = useState(null);
   const [connectionError, setConnectionError] = useState(null);
+  const [connectionOptions] = useState(() => ({ apiKey, callId, token, currentUser }));
+  const cleanup = useRef(Promise.resolve());
 
   useEffect(() => {
     let cancelled = false;
@@ -40,32 +48,24 @@ export default function CallRoom({
 
     const connect = async () => {
       try {
+        await cleanup.current;
+        if (cancelled) return;
         client = new StreamVideoClient({
-          apiKey,
+          apiKey: connectionOptions.apiKey,
           user: {
-            id: currentUser.id,
-            name: currentUser.name,
-            image: currentUser.imageUrl,
+            id: connectionOptions.currentUser.id,
+            name: connectionOptions.currentUser.name,
+            image: connectionOptions.currentUser.imageUrl,
           },
-          token,
+          token: connectionOptions.token,
         });
 
-        callInstance = client.call("default", callId);
+        callInstance = client.call("default", connectionOptions.callId);
 
-        // Avoid camera conflicts when testing two accounts
-        // on the same laptop.
-        //
-        // Interviewer:
-        //   Use existing Stream camera/microphone settings.
-        //
-        // Interviewee:
-        //   Join with camera and microphone disabled.
-        //   Devices can be enabled later using call controls.
-
-        if (!isInterviewer) {
-          await callInstance.camera.disable();
-          await callInstance.microphone.disable();
-        }
+        // Neither role needs capture permission to join. Enable devices later
+        // with the existing controls, after the room connection is established.
+        await callInstance.camera.disable();
+        await callInstance.microphone.disable();
 
         await callInstance.join({ create: false });
 
@@ -98,7 +98,7 @@ export default function CallRoom({
       cancelled = true;
 
       // Wait for an in-progress join before cleanup.
-      void connection.then(async () => {
+      cleanup.current = connection.then(async () => {
         if (
           callInstance &&
           callInstance.state.callingState !== CallingState.LEFT
@@ -109,15 +109,7 @@ export default function CallRoom({
         await client?.disconnectUser().catch(() => {});
       });
     };
-  }, [
-    apiKey,
-    callId,
-    currentUser.id,
-    currentUser.imageUrl,
-    currentUser.name,
-    token,
-    isInterviewer,
-  ]);
+  }, [connectionOptions]);
 
   const handleLeave = useCallback(() => {
     router.push(
@@ -165,7 +157,7 @@ export default function CallRoom({
           booking={booking}
           onLeave={handleLeave}
           apiKey={apiKey}
-          token={token}
+          token={connectionOptions.token}
           currentUser={currentUser}
         />
       </StreamCall>

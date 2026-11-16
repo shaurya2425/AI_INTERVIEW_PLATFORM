@@ -11,6 +11,8 @@ import { QUESTION_BANK } from "@/lib/questionBank";
 import {
   INTERVIEW_CATALOG,
   QUESTION_TYPES,
+  hasQuestionFilter,
+  QUESTION_FILTER_MESSAGE,
 } from "@/lib/interviewCatalog";
 
 // ============================================================
@@ -18,7 +20,7 @@ import {
 // ============================================================
 
 const MODEL =
-  process.env.PREPT_GEMINI_MODEL || "gemini-2.5-flash";
+  process.env.PREPT_GEMINI_MODEL || "gemini-3.5-flash-lite";
 
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD", "MIXED"];
 
@@ -31,10 +33,19 @@ function invalidResponse(reasons = []) {
 }
 
 function aiFailure(error) {
-  const status = Number(error?.status || error?.code);
-  const message = String(error?.message || "");
-  let code = "AI_NETWORK_ERROR";
-  let text = "AI service could not be reached. Please retry shortly; video and chat are still available.";
+  const status = Number(error?.status || error?.statusCode || error?.response?.status);
+  const providerCode = [
+    error?.status,
+    error?.statusText,
+    error?.code,
+    error?.error?.status,
+    error?.error?.code,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const message = `${providerCode} ${String(error?.message || "")}`;
+  let code = "AI_INTERNAL_ERROR";
+  let text = "AI Buddy encountered an internal error. Retry once; if it persists, check the server error log. Video and chat are still available.";
   if (error?.code === "INTERVIEW_CONTEXT_ERROR") {
     code = "INTERVIEW_CONTEXT_ERROR";
     text = "Saved interview history could not be loaded. Retry shortly. If this persists after an update, restart the dev server and check the database migration.";
@@ -44,28 +55,74 @@ function aiFailure(error) {
   } else if (error?.code === "INVALID_AI_RESPONSE" || error instanceof SyntaxError) {
     code = "INVALID_AI_RESPONSE";
     text = "AI returned an incomplete or invalid response. Retry to generate a fresh response.";
-  } else if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate.limit/i.test(message)) {
+  } else if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate[._ ]?limit/i.test(message)) {
     code = "AI_QUOTA_EXCEEDED";
     text = "AI quota is exhausted or requests are rate limited. Wait before retrying. The operator may need to review server-side Gemini quota and billing.";
-  } else if (status === 401 || status === 403 || /API_KEY_INVALID|API key|permission.denied/i.test(message)) {
+  } else if (status === 401 || status === 403 || /API_KEY_INVALID|API[._ ]?KEY|permission[._ ]denied|unauthenticated/i.test(message)) {
     code = "AI_INVALID_KEY";
     text = "AI credentials are missing, invalid, or lack permission. Ask the operator to update server-side GEMINI_API_KEY or its permissions, then retry.";
-  } else if (status === 404 || /model.*(not found|unavailable|not supported)/i.test(message)) {
+  } else if (status === 404 || /model.*(not found|unavailable|not supported)|NOT_FOUND/i.test(message)) {
     code = "AI_MODEL_UNAVAILABLE";
     text = "The configured AI model is unavailable. Ask the operator to check server-side PREPT_GEMINI_MODEL and model access, then retry.";
+  } else if (status === 400) {
+    code = "AI_REQUEST_ERROR";
+    text = "Gemini rejected the request configuration. Check the server error log before retrying.";
+  } else if (status >= 500 || /fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT|timeout|abort/i.test(`${message} ${error?.cause?.code || ""}`)) {
+    code = "AI_NETWORK_ERROR";
+    text = "AI service could not be reached. Check server internet access and retry; video and chat are still available.";
   }
   return { success: false, error: text, code, retryable: true };
 }
 
+
+
 async function runAIAction(operation) {
-  try { return await operation(); } catch (error) {
+  try {
+    return await operation();
+  } catch (error) {
     const failure = aiFailure(error);
-    // Log identifiers only: no provider bodies, credentials, prompts or candidate answers.
-    console.error("AI Buddy request failed", { code: failure.code, type: error?.name || "Error",
-      status: Number(error?.status) || undefined, validationReasons: error?.validationReasons || error?.cause?.validationReasons });
+
+    const rawMessage = String(error?.message || "");
+    const causeMessage = String(error?.cause?.message || "");
+
+    const category = (message) => {
+      if (/quota|RESOURCE_EXHAUSTED|rate.limit/i.test(message))
+        return "QUOTA";
+      if (/API_KEY_INVALID|permission|unauthenticated/i.test(message))
+        return "AUTH";
+      if (/not found|model|NOT_FOUND/i.test(message))
+        return "MODEL";
+      if (/timeout|abort|ETIMEDOUT/i.test(message))
+        return "TIMEOUT";
+      if (/fetch failed|ECONNRESET|ENOTFOUND|network/i.test(message))
+        return "NETWORK";
+      if (/schema|JSON|invalid argument/i.test(message))
+        return "VALIDATION";
+      return "UNKNOWN";
+    };
+
+    const errorInfo = {
+      failureCode: failure.code,
+      errorName: error?.name || "Error",
+      providerStatus:
+        error?.status ??
+        error?.statusCode ??
+        error?.response?.status ??
+        null,
+      providerCode: error?.code || null,
+      category: category(rawMessage + " " + causeMessage),
+      causeName: error?.cause?.name || null,
+      causeCode: error?.cause?.code || null,
+      validationReasons: error?.validationReasons || null,
+    };
+
+    console.error("AI Buddy request failed", errorInfo);
+
     return failure;
   }
 }
+
+
 
 // ============================================================
 // TEXT UTILITIES
@@ -675,6 +732,10 @@ Do not include private interview or candidate information.
 
   const sources = [];
 
+  if (!chunks.some(chunk => chunk.web?.uri)) {
+    throw Object.assign(new Error("Search returned no verifiable sources"), { code: "WEB_RESEARCH_UNAVAILABLE" });
+  }
+
   for (const chunk of chunks) {
     if (!chunk.web?.uri) continue;
 
@@ -921,6 +982,7 @@ intent = QUESTIONS
 // MAIN SERVER ACTION
 // ============================================================
 
+
 export const generateInterviewQuestions = async ({
   callId,
   requestId = randomUUID(),
@@ -933,328 +995,510 @@ export const generateInterviewQuestions = async ({
   activeQuestion = null,
   grillLevel = "DEEPER",
 } = {}) =>
-  runAIAction(
-    async () => {
-      // ------------------------------------------------------
-      // AUTHORIZATION
-      // ------------------------------------------------------
+  runAIAction(async () => {
 
-      if (
-        typeof callId !== "string" ||
-        !callId.trim()
-      ) {
-        return actionFailure("Missing call ID");
-      }
+    // AUTHORIZATION
+    if (typeof callId !== "string" || !callId.trim()) {
+      return actionFailure("Missing call ID");
+    }
 
-      let user;
-      try { user = await currentUser(); }
-      catch { throw Object.assign(new Error("Authentication unavailable"), { code: "INTERVIEW_AUTH_ERROR" }); }
-      if (!user) return actionFailure("Unauthorized");
-      let booking;
-      try {
-        booking = await db.booking.findUnique({ where: { streamCallId: callId },
-          select: { id: true, status: true, interviewer: { select: { clerkUserId: true } } } });
-      } catch { throw Object.assign(new Error("Booking unavailable"), { code: "INTERVIEW_CONTEXT_ERROR" }); }
-      if (!booking || booking.interviewer.clerkUserId !== user.id) return actionFailure("Forbidden");
+    let user;
+    try {
+      user = await currentUser();
+    } catch {
+      throw Object.assign(
+        new Error("Authentication unavailable"),
+        { code: "INTERVIEW_AUTH_ERROR" }
+      );
+    }
 
-      // ------------------------------------------------------
-      // VALIDATE INPUT
-      // ------------------------------------------------------
+    if (!user) return actionFailure("Unauthorized");
 
-      let pref;
+    let booking;
+    try {
+      booking = await db.booking.findUnique({
+        where: { streamCallId: callId },
+        select: {
+          id: true,
+          status: true,
+          interviewer: {
+            select: { clerkUserId: true },
+          },
+        },
+      });
+    } catch {
+      throw Object.assign(
+        new Error("Booking unavailable"),
+        { code: "INTERVIEW_CONTEXT_ERROR" }
+      );
+    }
 
-      try {
-        pref = validPreferences(preferences);
-      } catch (error) {
-        return actionFailure(error.message);
-      }
+    if (!booking || booking.interviewer.clerkUserId !== user.id) {
+      return actionFailure("Forbidden");
+    }
 
-      if (!["AUTO", "GRILL"].includes(mode)) {
-        return actionFailure("Invalid request mode");
-      }
+    // VALIDATE INPUT
+    let pref;
+    try {
+      pref = validPreferences(preferences);
+    } catch (error) {
+      return actionFailure(error.message);
+    }
 
-      if (
-        typeof instruction !== "string" ||
-        instruction.length > 1200
-      ) {
-        return actionFailure("Invalid request");
-      }
+    if (!["AUTO", "GRILL"].includes(mode)) {
+      return actionFailure("Invalid request mode");
+    }
 
-      if (typeof requestId !== "string" || !/^[\w-]{1,100}$/.test(requestId)) return actionFailure("Invalid request ID");
-      const responseId = requestId + ":assistant";
-      const restoredResponse = record => record.payload.result || {
-        type: record.payload.cards?.length ? "QUESTIONS" : "MESSAGE", message: record.content,
-        questions: record.payload.cards || [], sources: record.payload.sources || [],
-        metadata: record.payload.metadata || null, messageId: record.messageId,
+    if (
+      typeof instruction !== "string" ||
+      instruction.length > 1200
+    ) {
+      return actionFailure("Invalid request");
+    }
+
+    if (
+      typeof requestId !== "string" ||
+      !/^[\w-]{1,100}$/.test(requestId)
+    ) {
+      return actionFailure("Invalid request ID");
+    }
+
+    if (mode !== "GRILL" && (forceQuestions || /^(next question|harder|easier)[.!?]?$/i.test(instruction.trim())) && !hasQuestionFilter(pref)) {
+      return actionFailure(QUESTION_FILTER_MESSAGE);
+    }
+
+    const responseId = requestId + ":assistant";
+
+    const restoredResponse = (record) =>
+      record.payload.result || {
+        type: record.payload.cards?.length
+          ? "QUESTIONS"
+          : "MESSAGE",
+        message: record.content,
+        questions: record.payload.cards || [],
+        sources: record.payload.sources || [],
+        metadata: record.payload.metadata || null,
+        messageId: record.messageId,
       };
+
+    // PERSIST REQUEST AND CHECK EXISTING RESPONSE
+    try {
+      const existing = await db.aIBuddyMessage.findUnique({
+        where: {
+          bookingId_messageId: {
+            bookingId: booking.id,
+            messageId: responseId,
+          },
+        },
+      });
+
+      if (existing) {
+        return restoredResponse(existing);
+      }
+
+      if (booking.status !== "SCHEDULED") {
+        return actionFailure(
+          "This interview has ended. Conversation history is preserved and read-only."
+        );
+      }
+
+      await appendBuddyMessage(booking.id, user.id, {
+        id: requestId,
+        role: "user",
+        text: instruction,
+        cards: [],
+        questionIds: activeQuestion?.id
+          ? [activeQuestion.id]
+          : [],
+        createdAt: new Date().toISOString(),
+        action: mode,
+        preferences,
+      });
+    } catch (error) {
+      console.error("History persistence failed", {
+        code: error?.code,
+        type: error?.name,
+      });
+      return historyFailure(error);
+    }
+
+    // SAVE AI RESPONSE
+    async function persistResponse(result) {
       try {
-        const existing = await db.aIBuddyMessage.findUnique({ where: { bookingId_messageId: { bookingId: booking.id, messageId: responseId } } });
-        if (existing) return restoredResponse(existing);
-        if (booking.status !== "SCHEDULED") return actionFailure("This interview has ended. Conversation history is preserved and read-only.");
-        await appendBuddyMessage(booking.id, user.id, { id: requestId, role: "user", text: instruction,
-          cards: [], questionIds: activeQuestion?.id ? [activeQuestion.id] : [], createdAt: new Date().toISOString(), action: mode, preferences });
-      } catch (error) { return historyFailure(error); }
-      async function persistResponse(result) {
-        try {
-          const stored = await appendBuddyMessage(booking.id, user.id, {
-            id: responseId, role: "assistant", text: result.message, cards: result.questions.map(q => ({ ...q, status: "SUGGESTED" })),
-            sources: result.sources, metadata: result.metadata, createdAt: new Date().toISOString(),
-            result: { ...result, messageId: responseId },
-          }, result.type);
-          return restoredResponse(stored);
-        } catch (error) {
-          // Keep a generated response available for browser backup and explicit sync.
-          // A storage outage must not silently throw away generated questions.
-          return { ...result, messageId: responseId, persistenceError: historyFailure(error).error };
-        }
+        const stored = await appendBuddyMessage(
+          booking.id,
+          user.id,
+          {
+            id: responseId,
+            role: "assistant",
+            text: result.message,
+            cards: result.questions.map((q) => ({
+              ...q,
+              status: "SUGGESTED",
+            })),
+            sources: result.sources,
+            metadata: result.metadata,
+            createdAt: new Date().toISOString(),
+            result: {
+              ...result,
+              messageId: responseId,
+            },
+          },
+          result.type
+        );
+
+        return restoredResponse(stored);
+      } catch (error) {
+        console.error("Response persistence failed", {
+          code: error?.code,
+          type: error?.name,
+        });
+
+        return {
+          ...result,
+          messageId: responseId,
+          persistenceError: historyFailure(error).error,
+        };
       }
+    }
 
-      if (/^(next question|harder|easier)[.!?]?$/i.test(instruction.trim())) {
-        forceQuestions = true;
-      }
+    if (
+      /^(next question|harder|easier)[.!?]?$/i.test(
+        instruction.trim()
+      )
+    ) {
+      forceQuestions = true;
+    }
 
-      // ------------------------------------------------------
-      // FIX B: FREE FLOW SUBJECT DETECTION
-      // ------------------------------------------------------
+    // CHECK GEMINI CONFIGURATION
 
-      // ------------------------------------------------------
-      // CHECK AI CONFIGURATION
-      // ------------------------------------------------------
+    if (!process.env.GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY missing");
+      return aiFailure({ status: 401 });
+    }
 
-      if (!process.env.GEMINI_API_KEY) {
-        return aiFailure({ status: 401 });
-      }
-
-      // ------------------------------------------------------
-      // BUILD INTERVIEW CONTEXT
-      // ------------------------------------------------------
-
-      let records;
-      try { records = await db.interviewQuestion.findMany({
-        where: { booking: { streamCallId: callId } }, include: { submission: true, parent: { select: { sourceId: true } } },
+    // LOAD INTERVIEW CONTEXT
+    let records;
+    try {
+      records = await db.interviewQuestion.findMany({
+        where: {
+          booking: { streamCallId: callId },
+        },
+        include: {
+          submission: true,
+          parent: {
+            select: { sourceId: true },
+          },
+        },
         orderBy: { createdAt: "asc" },
-      }); } catch { throw Object.assign(new Error("History unavailable"), { code: "INTERVIEW_CONTEXT_ERROR" }); }
-      const durable = records.map(q => ({ ...q, id: q.sourceId, answer: q.referenceAnswer,
-        parentId: q.parent?.sourceId || null, candidateAnswer: q.submission?.answer || "",
-        status: !q.sentAt ? "PENDING" : q.submission?.approvedGrade ? "EVALUATED" : q.submission ? "ANSWERED" : "SENT",
-        grade: ["POOR", "AVERAGE", "GOOD", "EXCELLENT"].indexOf(q.submission?.approvedGrade) + 1 || null,
-        notes: [q.submission?.interviewerNotes || "", q.submission?.approvedGrade && q.submission?.evaluation ?
-          JSON.stringify({ missingConcepts: q.submission.evaluation.missingConcepts, mistakes: q.submission.evaluation.mistakes,
-            recommendedFollowUp: q.submission.evaluation.recommendedFollowUp }) : ""].filter(Boolean).join("\n"),
+      });
+    } catch {
+      throw Object.assign(
+        new Error("History unavailable"),
+        { code: "INTERVIEW_CONTEXT_ERROR" }
+      );
+    }
+
+    const durable = records.map((q) => ({
+      ...q,
+      id: q.sourceId,
+      answer: q.referenceAnswer,
+      parentId: q.parent?.sourceId || null,
+      candidateAnswer: q.submission?.answer || "",
+      status: !q.sentAt
+        ? "PENDING"
+        : q.submission?.approvedGrade
+          ? "EVALUATED"
+          : q.submission
+            ? "ANSWERED"
+            : "SENT",
+      grade:
+        ["POOR", "AVERAGE", "GOOD", "EXCELLENT"].indexOf(
+          q.submission?.approvedGrade
+        ) + 1 || null,
+      notes: [
+        q.submission?.interviewerNotes || "",
+        q.submission?.approvedGrade &&
+        q.submission?.evaluation
+          ? JSON.stringify({
+              missingConcepts:
+                q.submission.evaluation.missingConcepts,
+              mistakes:
+                q.submission.evaluation.mistakes,
+              recommendedFollowUp:
+                q.submission.evaluation.recommendedFollowUp,
+            })
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    }));
+
+    const local = sanitizeHistory(history)
+      .filter((q) => !durable.some((d) => d.id === q.id))
+      .map((q) => ({
+        ...q,
+        grade: null,
+        candidateAnswer: "",
+        notes: "",
       }));
-      const local = sanitizeHistory(history).filter(q => !durable.some(d => d.id === q.id)).map(q => ({ ...q, grade: null, candidateAnswer: "", notes: "" }));
-      const past = [...local, ...sanitizeHistory(durable)];
 
-      const conversation =
-        sanitizeMessages(messages);
+    const past = [
+      ...local,
+      ...sanitizeHistory(durable),
+    ];
 
-      const active =
-        sanitizeActive(durable.find(q => q.id === activeQuestion?.id) || (activeQuestion ? { ...activeQuestion, grade: null, candidateAnswer: "", notes: "" } : null));
+    const conversation = sanitizeMessages(messages);
 
-      if (mode === "GRILL" && !active) {
-        return actionFailure(
-          "Select a question to grill"
-        );
-      }
+    const active = sanitizeActive(
+      durable.find(
+        (q) => q.id === activeQuestion?.id
+      ) ||
+        (activeQuestion
+          ? {
+              ...activeQuestion,
+              grade: null,
+              candidateAnswer: "",
+              notes: "",
+            }
+          : null)
+    );
 
-      if (
-        mode === "GRILL" &&
-        active.depth >= MAX_GRILL_DEPTH
-      ) {
-        return actionFailure(
-          "Maximum follow-up depth reached"
-        );
-      }
+    // GRILL VALIDATION
+    if (mode === "GRILL" && !active) {
+      return actionFailure("Select a question to grill");
+    }
 
-      // Grill should retain the parent's subject.
-      if (
-        mode === "GRILL" &&
-        active?.category &&
-        INTERVIEW_CATALOG[active.category]
-      ) {
-        pref.subject = active.category;
-        pref.topic = "ALL";
-        pref.questionType = "ANY";
-      }
+    if (
+      mode === "GRILL" &&
+      active.depth >= MAX_GRILL_DEPTH
+    ) {
+      return actionFailure(
+        "Maximum follow-up depth reached"
+      );
+    }
 
-      pref = resolveRequest(pref, instruction, active, mode, grillLevel);
+    if (
+      mode === "GRILL" &&
+      active?.category &&
+      INTERVIEW_CATALOG[active.category]
+    ) {
+      pref.subject = active.category;
+      pref.topic = "ALL";
+      pref.questionType = "ANY";
+    }
 
-      const ai = new GoogleGenAI({
-        apiKey: process.env.GEMINI_API_KEY,
-        httpOptions: { timeout: 30000, retryOptions: { attempts: 1 } },
+    pref = resolveRequest(
+      pref,
+      instruction,
+      active,
+      mode,
+      grillLevel
+    );
+
+    // INITIALIZE GEMINI
+
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        timeout: 30000,
+        retryOptions: { attempts: 1 },
+      },
+    });
+
+    const started = performance.now();
+
+    const context = {
+      activeQuestion: active,
+      recentChat: conversation,
+      questionHistory: past,
+      recentEvaluations: past
+        .filter((q) => q.status === "EVALUATED")
+        .slice(-12),
+    };
+
+    // OPTIONAL WEB RESEARCH
+    let researchWarning = null;
+    let research = {
+      context: "",
+      sources: [],
+    };
+
+    try {
+      research = await collectWebContext(
+        ai,
+        clean(instruction, 1200),
+        pref
+      );
+    } catch (error) {
+      console.error("Web research failed", {
+        type: error?.name,
+        status: error?.status,
       });
 
-      const started = performance.now();
+      researchWarning =
+        `Web research unavailable. ${error?.code === "WEB_RESEARCH_UNAVAILABLE" ? "Search returned no verifiable sources." : aiFailure(error).error} ` +
+        "This response uses existing model knowledge.";
+    }
 
-      const context = {
-        activeQuestion: active,
-        recentChat: conversation,
-        questionHistory: past,
+    // CURATED BANK CANDIDATES
+    const bank =
+      mode === "GRILL"
+        ? []
+        : getBankCandidates(
+            pref,
+            past,
+            instruction
+          );
 
-        recentEvaluations: past
-          .filter(
-            (q) => q.status === "EVALUATED"
-          )
-          .slice(-12),
-      };
+    const count =
+      mode === "GRILL"
+        ? 1
+        : pref.questionCount;
 
-      // ------------------------------------------------------
-      // OPTIONAL WEB RESEARCH
-      // ------------------------------------------------------
+    const bankTarget =
+      mode === "GRILL"
+        ? 0
+        : Math.min(
+            3,
+            bank.length,
+            Math.max(count - 1, 0)
+          );
 
-      let researchWarning = null;
-      let research = {
-        context: "",
-        sources: [],
-      };
+    const generateTarget = count - bankTarget;
 
-      try {
-        research = await collectWebContext(
-          ai,
-          clean(instruction, 1200),
-          pref
-        );
-      } catch (error) {
-        researchWarning = `Web research unavailable. ${aiFailure(error).error} This response uses existing model knowledge.`;
-      }
+    const prompt = buildPrompt({
+      pref,
+      instruction: clean(instruction, 1200),
+      context,
+      candidates: bankTarget > 0 ? bank : [],
+      bankTarget,
+      generateTarget,
+      forceQuestions:
+        mode === "GRILL" ||
+        Boolean(forceQuestions),
+      webContext: research.context,
+      mode,
+    });
 
-      // ------------------------------------------------------
-      // SELECT CURATED BANK CANDIDATES
-      // ------------------------------------------------------
+    // GENERATE STRUCTURED RESPONSE
 
-      const bank =
-        mode === "GRILL"
-          ? []
-          : getBankCandidates(
-              pref,
-              past,
-              instruction
-            );
+    let validatedQuestions = [];
 
-      const count =
-        mode === "GRILL"
-          ? 1
-          : pref.questionCount;
-
-      const bankTarget =
-        mode === "GRILL"
-          ? 0
-          : Math.min(
-              3,
-              bank.length,
-              Math.max(count - 1, 0)
-            );
-
-      const generateTarget =
-        count - bankTarget;
-
-      // ------------------------------------------------------
-      // GENERATE RESPONSE
-      // ------------------------------------------------------
-
-      const prompt = buildPrompt({
-        pref,
-        instruction: clean(instruction, 1200),
-        context,
-        candidates: bankTarget > 0 ? bank : [],
-        bankTarget,
-        generateTarget,
-        forceQuestions:
-          mode === "GRILL" ||
-          Boolean(forceQuestions),
-        webContext: research.context,
-        mode,
-      });
-
-      let validatedQuestions = [];
-      const output = await generateStructured(ai, prompt, (data) => {
-        if (data.intent === "MESSAGE" && mode !== "GRILL" && !forceQuestions) {
-          if (!clean(data.message, 16000)) throw invalidResponse();
+    const output = await generateStructured(
+      ai,
+      prompt,
+      (data) => {
+        if (
+          data.intent === "MESSAGE" &&
+          mode !== "GRILL" &&
+          !forceQuestions
+        ) {
+          if (!clean(data.message, 16000)) {
+            throw invalidResponse();
+          }
           return;
         }
-        if (data.intent !== "QUESTIONS") throw invalidResponse(["intent must be QUESTIONS for this request"]);
-        const ids = new Set(data.bankIds);
-        const selected = bank.filter((q) => ids.has(q.id)).slice(0, bankTarget).map(makeBankQuestion);
-        const issues = [];
-        const generated = createAIQuestions(data.generated, pref, [...past, ...selected], count - selected.length, issues);
-        validatedQuestions = [...selected, ...generated];
-        if (validatedQuestions.length !== count) throw invalidResponse([...issues, `Need ${count} valid questions in total; accepted ${validatedQuestions.length}. Generate ${count - selected.length} original questions; bankIds may contain at most ${bankTarget} supplied IDs.`]);
-      }, schemaForRequest(pref, mode === "GRILL" || Boolean(forceQuestions)));
 
-      const latencyMs = () =>
-        Math.round(
-          performance.now() - started
+        if (data.intent !== "QUESTIONS") {
+          throw invalidResponse([
+            "intent must be QUESTIONS for this request",
+          ]);
+        }
+
+        const ids = new Set(data.bankIds);
+
+        const selected = bank
+          .filter((q) => ids.has(q.id))
+          .slice(0, bankTarget)
+          .map(makeBankQuestion);
+
+        const issues = [];
+
+        const generated = createAIQuestions(
+          data.generated,
+          pref,
+          [...past, ...selected],
+          count - selected.length,
+          issues
         );
 
-      // ------------------------------------------------------
-      // CONVERSATIONAL MESSAGE
-      // ------------------------------------------------------
+        validatedQuestions = [
+          ...selected,
+          ...generated,
+        ];
 
-      if (
-        output.intent === "MESSAGE" &&
-        mode !== "GRILL" &&
-        !forceQuestions
-      ) {
-        return persistResponse({
-          type: "MESSAGE",
-          message: clean(
-            output.message,
-            16000
-          ),
-          questions: [],
-          sources: research.sources,
-          warning: researchWarning,
-
-          metadata: {
-            latencyMs: latencyMs(),
-            bankCount: 0,
-            generatedCount: 0,
-          },
-        });
-      }
-
-      // ------------------------------------------------------
-      // CURATED BANK QUESTION SELECTION
-      // ------------------------------------------------------
-
-      const selected = validatedQuestions.filter((q) => q.source === "CURATED");
-      const generated = validatedQuestions.filter((q) => q.source === "GENERATED");
-
-      // Link Grill follow-ups to their parent question.
-      if (mode === "GRILL") {
-        for (const q of generated) {
-          q.parentId = active.id;
-          q.depth = active.depth + 1;
+        if (validatedQuestions.length !== count) {
+          throw invalidResponse([
+            ...issues,
+            `Need ${count} valid questions in total; accepted ${validatedQuestions.length}. Generate ${count - selected.length} original questions; bankIds may contain at most ${bankTarget} supplied IDs.`,
+          ]);
         }
-      }
+      },
+      schemaForRequest(
+        pref,
+        mode === "GRILL" || Boolean(forceQuestions)
+      )
+    );
 
-      const questions = [
-        ...selected,
-        ...generated,
-      ];
+    const latencyMs = () =>
+      Math.round(performance.now() - started);
 
-      // ------------------------------------------------------
-      // FINAL RESPONSE
-      // ------------------------------------------------------
-
+    // CONVERSATIONAL RESPONSE
+    if (
+      output.intent === "MESSAGE" &&
+      mode !== "GRILL" &&
+      !forceQuestions
+    ) {
       return persistResponse({
-        type: "QUESTIONS",
-
-        message: clean(
-          output.message ||
-            "Here are some questions to consider.",
-          1800
-        ),
-
-        questions,
+        type: "MESSAGE",
+        message: clean(output.message, 16000),
+        questions: [],
         sources: research.sources,
-          warning: researchWarning,
-
+        warning: researchWarning,
         metadata: {
           latencyMs: latencyMs(),
-          bankCount: selected.length,
-          generatedCount: generated.length,
+          bankCount: 0,
+          generatedCount: 0,
         },
       });
     }
-  );
+
+    // FINAL QUESTION RESPONSE
+    const selected = validatedQuestions.filter(
+      (q) => q.source === "CURATED"
+    );
+
+    const generated = validatedQuestions.filter(
+      (q) => q.source === "GENERATED"
+    );
+
+    if (mode === "GRILL") {
+      for (const q of generated) {
+        q.parentId = active.id;
+        q.depth = active.depth + 1;
+      }
+    }
+
+    const questions = [
+      ...selected,
+      ...generated,
+    ];
+
+    return persistResponse({
+      type: "QUESTIONS",
+      message: clean(
+        output.message ||
+          "Here are some questions to consider.",
+        1800
+      ),
+      questions,
+      sources: research.sources,
+      warning: researchWarning,
+      metadata: {
+        latencyMs: latencyMs(),
+        bankCount: selected.length,
+        generatedCount: generated.length,
+      },
+    });
+  });

@@ -34,7 +34,8 @@ export async function POST(request) {
       await db.booking.update({ where: { id: booking.id }, data: { transcriptArtifacts: JSON.parse(JSON.stringify(originals)) } });
       booking.transcriptArtifacts = originals;
     }
-    if (!booking.feedback) await prepareMeetingFeedback(booking);
+    // A late transcript can improve an already-persisted fallback report.
+    await prepareMeetingFeedback(booking);
     revalidatePath("/appointments");
     revalidatePath("/dashboard");
     return Response.json({ ok: true });

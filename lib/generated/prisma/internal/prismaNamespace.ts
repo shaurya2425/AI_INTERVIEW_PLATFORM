@@ -1324,6 +1324,9 @@ export const InterviewSubmissionScalarFieldEnum = {
   language: 'language',
   submittedAt: 'submittedAt',
   notifiedAt: 'notifiedAt',
+  revision: 'revision',
+  requestId: 'requestId',
+  previousAttempts: 'previousAttempts',
   evaluationStatus: 'evaluationStatus',
   evaluation: 'evaluation',
   evaluationError: 'evaluationError',
@@ -1358,6 +1361,7 @@ export const FeedbackScalarFieldEnum = {
   strengths: 'strengths',
   improvements: 'improvements',
   overallRating: 'overallRating',
+  report: 'report',
   sessionRating: 'sessionRating',
   sessionComment: 'sessionComment',
   createdAt: 'createdAt'

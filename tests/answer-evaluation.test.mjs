@@ -48,7 +48,7 @@ function actions(role='INTERVIEWER') {
  const api=runInNewContext(`${source('actions/interviewQuestions.js')}; ({getInterviewQuestions,retryInterviewEvaluation,approveInterviewGrade,publicQuestion,sendInterviewQuestion})`,{
   GRADE_SCORES, questionCalculation, scoreInterview, SCORING_POLICY_VERSION, currentUser:async()=>({id:role==='INTERVIEWER'?'i':role==='INTERVIEWEE'?'c':'stranger'}),GRADES:['POOR','AVERAGE','GOOD','EXCELLENT'],
   after:job=>jobs.push(job), evaluateSubmission:async()=>{}, console, Date,createHash:()=>({update(){return this},digest(){return 'new-id'}}),QUESTION_TYPES:{CONCEPTUAL:{}},
-  db:{$transaction:async function(fn){return fn(this)},booking:{findUnique:async()=>booking,update:async()=>({...booking,status:'SCHEDULED'})},interviewQuestion:{findMany:async()=>[record],findFirst:async()=>record,findUnique:async()=>record},interviewSubmission:{update:async({data})=>{writes++;Object.assign(record.submission,data)}}},
+  db:{$transaction:async function(fn){return fn(this)},booking:{findUnique:async()=>booking,update:async()=>({...booking,status:'SCHEDULED'})},interviewQuestion:{findMany:async()=>[record],findFirst:async()=>record,findUnique:async()=>record},interviewSubmission:{findUnique:async()=>record.submission,update:async({data})=>{writes++;Object.assign(record.submission,data)}}},
  });
  return {...api,record,jobs,writes:()=>writes};
 }
@@ -95,8 +95,8 @@ test('Grill delivery persists validated same-booking parent and independent dept
  const parent={id:'parent-db',sourceId:'parent-source',depth:2};let saved=null;
  const booking={id:'b',status:'SCHEDULED',streamCallId:'call',intervieweeId:'c',interviewer:{id:'i',clerkUserId:'i',role:'INTERVIEWER'},interviewee:{id:'c',clerkUserId:'c',role:'INTERVIEWEE'}};
  const api=runInNewContext(`${source('actions/interviewQuestions.js')}; sendInterviewQuestion`,{
-   currentUser:async()=>({id:'i'}),createHash:()=>({update(){return this},digest(){return 'child'}}),QUESTION_TYPES:{CONCEPTUAL:{}},console,process:{env:{}},
-   db:{booking:{findUnique:async()=>booking},interviewQuestion:{findUnique:async()=>saved,findFirst:async({where})=>{assert.equal(where.bookingId,'b');return parent},createMany:async({data})=>{saved=data[0]}}},
+   SCORING_POLICY_VERSION,currentUser:async()=>({id:'i'}),createHash:()=>({update(){return this},digest(){return 'child'}}),QUESTION_TYPES:{CONCEPTUAL:{}},console,process:{env:{}},
+   db:{$transaction:async function(fn){return fn(this)},booking:{findUnique:async()=>booking,update:async()=>booking},interviewQuestion:{findUnique:async()=>saved,findFirst:async({where})=>{assert.equal(where.bookingId,'b');return parent},createMany:async({data})=>{saved=data[0]}}},
  });
  const result=await api({callId:'call',question:{id:'child-source',parentId:'parent-source',question:'Why this edge case?',topic:'Search',category:'DSA',type:'CONCEPTUAL',difficulty:'HARD',answer:'Reference'}});
  assert.equal(saved.parentId,'parent-db');assert.equal(saved.depth,3);assert.equal(saved.id,'child');
@@ -115,7 +115,7 @@ test('submission is durable before evaluation is scheduled and response contains
  });
  const result=await api({callId:'call',questionId:'q',answer:'actual answer'});
  assert.equal(result.success,true);assert.equal(saved.answer,'actual answer');assert.equal(jobs.length,1);assert.equal(result.question.review,undefined);
- assert.match(result.warning,/Answer saved/);
+ assert.equal(result.warning,undefined);
 });
 
 test('numerical score is derived from grade, ignoring model-supplied numbers',()=>{
@@ -133,4 +133,28 @@ test('evaluation rubric explicitly accepts Hindi-English and distinguishes diffi
 });
 test('credential, model and network failures retain manual-grading fallback',()=>{
  const api=evaluator();assert.match(api.evaluationFailure({status:401}),/credentials.*manually/);assert.match(api.evaluationFailure({status:404}),/model.*manually/);assert.match(api.evaluationFailure({status:503}),/saved.*manually/);
+});
+
+test('hint confirmation is explicit, revision-bound, reversible and private',async()=>{
+ const api=actions();Object.assign(api.record.submission,{revision:2,previousAttempts:[{revision:1,answer:'old',interviewerNotes:'SECRET',approvedGrade:'POOR'}]});
+ const input={callId:'call',questionId:'q',grade:'EXCELLENT',submissionRevision:2,correctionWithHint:true};
+ assert.equal((await api.approveInterviewGrade({...input,submissionRevision:1})).success,false);
+ let result=await api.approveInterviewGrade(input);assert.equal(result.success,true);assert.equal(result.question.review.approvedScore,95);
+ assert.equal(api.record.submission.previousAttempts[0].hintConfirmedBy,'interviewer');
+ const candidate=api.publicQuestion(api.record,'INTERVIEWEE');assert.ok(!JSON.stringify(candidate).includes('SECRET'));assert.ok(!JSON.stringify(candidate).includes('hintConfirmedBy'));
+ result=await api.approveInterviewGrade({...input,correctionWithHint:false});assert.equal(result.question.review.approvedScore,100);
+});
+
+test('non-MCQ resubmission archives evidence, resets approval and evaluation, and rejects stale drafts',async()=>{
+ const question={...q(),sentAt:new Date(),submission:{...q().submission,id:'answer-q',revision:1,submittedAt:new Date(),previousAttempts:[],approvedGrade:'GOOD',interviewerNotes:'keep private',evaluationToken:'old-worker',evaluationStatus:'COMPLETE'}};
+ const booking={id:'b',status:'SCHEDULED',streamCallId:'call',interviewer:{id:'i',clerkUserId:'i',role:'INTERVIEWER'},interviewee:{id:'c',clerkUserId:'c',role:'INTERVIEWEE'}};
+ let summary;const jobs=[];
+ const db={$transaction:async fn=>fn(db),booking:{findUnique:async()=>booking,update:async({data})=>{if(data.scoringSummary)summary=data.scoringSummary;return booking}},interviewQuestion:{findFirst:async()=>question,findUnique:async()=>question,findMany:async()=>[question],update:async()=>question},interviewSubmission:{findUnique:async()=>question.submission,update:async({data})=>{const revision=data.revision?question.submission.revision+1:question.submission.revision;Object.assign(question.submission,data,{revision});return question.submission}}};
+ const submit=runInNewContext(source('actions/interviewQuestions.js')+'; submitInterviewAnswer',{db,Prisma:{DbNull:null},GRADE_SCORES,questionCalculation,scoreInterview,SCORING_POLICY_VERSION,currentUser:async()=>({id:'c'}),after:f=>jobs.push(f),evaluateSubmission:async()=>{},console,Date,process:{env:{}}});
+ const input={callId:'call',questionId:'q',answer:'corrected independently',expectedRevision:1,requestId:'request-2'};
+ let result=await submit(input);assert.equal(result.success,true);assert.equal(question.submission.revision,2);assert.equal(question.submission.previousAttempts[0].answer,'Halve a sorted range');assert.equal(question.submission.previousAttempts[0].interviewerNotes,'keep private');
+ assert.equal(question.submission.approvedGrade,null);assert.equal(question.submission.evaluationToken,null);assert.equal(question.submission.evaluationStatus,'PENDING');assert.equal(summary.overallScore,null);assert.equal(jobs.length,1);assert.equal(result.warning,undefined);
+ result=await submit(input);assert.equal(result.success,true);assert.equal(question.submission.revision,2);
+ result=await submit({...input,requestId:'stale-request'});assert.equal(result.success,false);assert.equal(question.submission.revision,2);
+ question.type='MCQ';result=await submit({...input,optionIndex:1,expectedRevision:2,requestId:'mcq-retry'});assert.equal(result.success,true);assert.equal(question.submission.revision,2);
 });

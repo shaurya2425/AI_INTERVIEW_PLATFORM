@@ -25,25 +25,24 @@ export function InterviewQuestionProvider({ callId, userId, isInterviewer, chann
   const refresh = useCallback(async () => {
     if (inFlight.current) { refreshAgain.current = true; return; }
     inFlight.current = true;
-    const request = ++revision.current;
     setRefreshing(true);
-    try {
-      const result = await getInterviewQuestions(callId);
-      if (!mounted.current || request !== revision.current) return;
-      if (!result.success) { setError(result.error); return; }
-      setQuestions(result.questions);
-      setScoring(result.scoring || null);
-      setInitialized(true);
-      setError("");
-    } catch {
-      if (mounted.current && request === revision.current) setError("Unable to load questions. Refresh to retry.");
-    } finally {
-      inFlight.current = false;
-      if (mounted.current) {
-        setRefreshing(false);
-        if (refreshAgain.current) { refreshAgain.current = false; void refresh(); }
+    do {
+      refreshAgain.current = false;
+      const request = ++revision.current;
+      try {
+        const result = await getInterviewQuestions(callId);
+        if (!mounted.current || request !== revision.current) continue;
+        if (!result.success) { setError(result.error); continue; }
+        setQuestions(result.questions);
+        setScoring(result.scoring || null);
+        setInitialized(true);
+        setError("");
+      } catch {
+        if (mounted.current && request === revision.current) setError("Unable to load questions. Refresh to retry.");
       }
-    }
+    } while (mounted.current && refreshAgain.current);
+    inFlight.current = false;
+    if (mounted.current) setRefreshing(false);
   }, [callId]);
   const acceptQuestion = useCallback((question) => {
     ++revision.current;
@@ -77,18 +76,17 @@ export function InterviewQuestionProvider({ callId, userId, isInterviewer, chann
     };
   }, [refresh, channel, client, invalidate]);
 
-  // Refresh privately while evaluation is pending; candidate payloads never carry review state.
-  const evaluating = isInterviewer && questions.some(q => ["PENDING", "RUNNING"].includes(q.review?.status));
+  // Events are only wake-ups. Poll while waiting for questions/answers too,
+  // so a missed notification cannot hide a durable submission indefinitely.
   useEffect(() => {
-    if (!evaluating) return;
     const timer = setInterval(() => { if (!document.hidden) void refresh(); }, 4000);
     return () => clearInterval(timer);
-  }, [evaluating, refresh]);
+  }, [refresh]);
 
   const seenAnswers = useRef(null);
   useEffect(() => {
     if (!initialized) return;
-    const answered = new Set(questions.filter(q => q.submission).map(q => q.id));
+    const answered = new Set(questions.filter(q => q.submission).map(q => `${q.id}:${q.submission.revision || 1}`));
     if (isInterviewer && seenAnswers.current) {
       for (const id of answered) if (!seenAnswers.current.has(id)) toast.success("Candidate submitted an answer. Open AI Buddy / Evaluations to review.", { id: `answer-${id}` });
     }
@@ -114,17 +112,17 @@ export function InterviewChatMessage(props) {
   const id = message.prept_question_id;
   const kind = message.prept_kind;
   // Ordinary Stream messages keep their existing renderer and controls.
-  if (!context || !["question", "answer"].includes(kind) || typeof id !== "string" || message.id !== `prept-${kind}-${id}`) {
+  const revision = message.prept_submission_revision || 1;
+  const messageId = `prept-${kind}-${id}${kind === "answer" && revision > 1 ? `-r${revision}` : ""}`;
+  if (!context || !["question", "answer"].includes(kind) || typeof id !== "string" || message.id !== messageId) {
     return <MessageSimple {...props} />;
   }
+  if (kind === "answer") return null;
   const question = context.questions.find(q => q.id === id);
   if (!question) return <div className="m-3 rounded-lg border border-border bg-background p-3 text-sm text-foreground">
     Question delivery is synchronizing.
     <button type="button" className="ml-2 underline" onClick={context.refresh}>Refresh</button>
   </div>;
-  if (kind === "answer") return <p role="status" className="m-3 rounded-lg border border-border bg-background p-3 text-sm text-foreground">
-    {question.submission ? `Answer submitted for ${question.topic}. Review it in the question card above.` : "Synchronizing answer submission…"}
-  </p>;
   return <CandidateQuestionCard key={`${context.userId}:${id}`} question={question} />;
 }
 
@@ -142,6 +140,9 @@ function CandidateQuestionCard({ question }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [warning, setWarning] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [baseRevision, setBaseRevision] = useState(0);
+  const requestRef = useRef(null);
   const [speechState, setSpeechState] = useState("checking");
   const [speechError, setSpeechError] = useState("");
   const [speechLanguage, setSpeechLanguage] = useState("en-IN");
@@ -159,6 +160,9 @@ function CandidateQuestionCard({ question }) {
           if (typeof saved?.answer === "string") setAnswer(saved.answer.slice(0, 30000));
           if (Number.isInteger(saved?.optionIndex) && saved.optionIndex >= 0 && saved.optionIndex < 4) setOptionIndex(saved.optionIndex);
           if (typeof saved?.language === "string") setLanguage(saved.language);
+          if (saved?.editing) setEditing(true);
+          if (Number.isInteger(saved?.baseRevision)) setBaseRevision(saved.baseRevision);
+          if (saved?.request) requestRef.current = saved.request;
         } catch { /* A missing/corrupt draft must not block writing an answer. */ }
       }
       setReady(true);
@@ -180,16 +184,16 @@ function CandidateQuestionCard({ question }) {
   useEffect(() => {
     if (!ready || isInterviewer) return;
     try {
-      if (submitted) localStorage.removeItem(draftKey);
-      else localStorage.setItem(draftKey, JSON.stringify({ answer, optionIndex, language }));
+      if (submitted && !editing) localStorage.removeItem(draftKey);
+      else localStorage.setItem(draftKey, JSON.stringify({ answer, optionIndex, language, editing, baseRevision, request: requestRef.current }));
     } catch { /* Editing/submitting remains available without browser storage. */ }
-    if (submitted) recognition.current?.abort();
-  }, [ready, isInterviewer, submitted, draftKey, answer, optionIndex, language]);
+    if (submitted && !editing) recognition.current?.abort();
+  }, [ready, isInterviewer, submitted, draftKey, answer, optionIndex, language, editing, baseRevision]);
 
   function toggleDictation() {
     if (recognition.current) { recognition.current.stop(); return; }
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition || submitted || lock.current) return;
+    if (!SpeechRecognition || (submitted && !editing) || lock.current) return;
     const speech = new SpeechRecognition();
     recognition.current = speech;
     speech.lang = speechLanguage;
@@ -225,16 +229,26 @@ function CandidateQuestionCard({ question }) {
     event.preventDefault();
     if (lock.current || isInterviewer || !ready) return;
     if (recognition.current) { setError("Stop dictation and review the text before submitting."); return; }
-    if (!submitted && (question.type === "MCQ" ? optionIndex === null : !answer.trim())) {
+    if ((!submitted || editing) && (question.type === "MCQ" ? optionIndex === null : !answer.trim())) {
       setError(question.type === "MCQ" ? "Choose one option." : "Write an answer before submitting."); return;
     }
     lock.current = true;
     setBusy(true);
     setError("");
     try {
-      const result = await submitInterviewAnswer({ callId, questionId: question.id, answer, optionIndex, language });
+      const payload = { callId, questionId: question.id, answer, optionIndex, language };
+      if (question.type !== "MCQ" && (!submitted || editing)) {
+        payload.expectedRevision = baseRevision;
+        const key = JSON.stringify(payload);
+        if (requestRef.current?.key !== key) requestRef.current = { key, id: crypto.randomUUID() };
+        payload.requestId = requestRef.current.id;
+        try { localStorage.setItem(draftKey, JSON.stringify({ answer, optionIndex, language, editing, baseRevision, request: requestRef.current })); } catch { /* Server revision checks still prevent stale writes. */ }
+      }
+      const result = await submitInterviewAnswer(payload);
       if (!result.success) { setError(result.error); return; }
       acceptQuestion(result.question);
+      setEditing(false);
+      requestRef.current = null;
       setWarning(result.warning || "");
     } catch { setError("Submission could not be confirmed. Retry safely; your draft is preserved."); }
     finally { lock.current = false; setBusy(false); }
@@ -243,7 +257,7 @@ function CandidateQuestionCard({ question }) {
   return <article className="m-2 min-w-0 space-y-4 rounded-xl border border-border bg-background p-4 text-foreground sm:m-3">
     <p className="text-xs text-muted-foreground">{question.topic} · {question.difficulty} · {question.type.replaceAll("_", " ")}</p>
     <AIResponse content={question.question} />
-    <p role="status" className="text-xs font-semibold">{submitted ? "Submitted · read-only" : "Sent / Awaiting answer"}</p>
+    <p role="status" className="text-xs font-semibold">{submitted ? question.type === "MCQ" ? "Submitted · final answer" : `Submitted · attempt ${submitted.revision || 1}${editing ? " · editing a new attempt" : ""}` : "Sent / Awaiting answer"}</p>
     <form onSubmit={submit} className="space-y-3">
       {question.type === "MCQ" ? <fieldset disabled={isInterviewer || !!submitted || busy || !ready} className="space-y-2">
         <legend className="mb-2 text-sm">Select one answer</legend>
@@ -251,9 +265,10 @@ function CandidateQuestionCard({ question }) {
           <input className="mt-1.5 accent-amber-500" type="radio" name={`option-${question.id}`} checked={(submitted ? submitted.optionIndex : optionIndex) === index} onChange={() => setOptionIndex(index)} />
           <span>{String.fromCharCode(65 + index)}. {option}</span>
         </label>)}
-      </fieldset> : submitted ? <div>
+      </fieldset> : submitted && !editing ? <div>
         <p className="mb-2 flex items-center gap-1.5 text-xs text-success"><CheckCircle2 size={14} />Answer saved to this interview</p>
         {code ? <CodeView code={submitted.answer} language={submitted.language || "text"} /> : <p className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-border bg-surface p-3 text-sm leading-6">{submitted.answer}</p>}
+        {!isInterviewer && <button type="button" disabled={busy} className={`${buttonClass} mt-3`} onClick={() => { setAnswer(submitted.answer); setLanguage(submitted.language || language); setBaseRevision(submitted.revision || 1); setEditing(true); setError(""); setWarning(""); }}>Edit & resubmit</button>}
       </div> : !isInterviewer && <>
         <CandidateAnswerEditor question={question} answer={answer} setAnswer={setAnswer} language={language} setLanguage={setLanguage} code={code} disabled={busy || !ready} error={error} onSubmit={submit} />
         {dictation && <div className="space-y-2 text-xs">
@@ -270,10 +285,17 @@ function CandidateQuestionCard({ question }) {
       </>}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {warning && <p role="status" className="text-sm">{warning}</p>}
-      {!isInterviewer && (!submitted || submitted.notificationPending) && <button type="submit" disabled={busy || !ready || speechState === "listening"} className="workspace-primary w-full">
-        {busy ? "Saving…" : submitted ? "Retry notification" : "Submit answer"}
+      {!isInterviewer && submitted && !editing && <p role="status" className="rounded-xl border border-border bg-surface p-3 text-sm font-medium">
+        Answer submitted — ready for the next question.
+      </p>}
+      {!isInterviewer && (!submitted || editing) && <button type="submit" disabled={busy || !ready || speechState === "listening"} className="workspace-primary w-full">
+        {busy ? "Saving…" : editing ? "Submit updated answer" : "Submit answer"}
       </button>}
+      {editing && <button type="button" disabled={busy} className={buttonClass} onClick={() => { recognition.current?.abort(); setEditing(false); requestRef.current = null; }}>Cancel edit</button>}
       {speechState === "listening" && <p className="text-xs">Stop dictation and review your answer before submitting.</p>}
     </form>
+    {submitted?.previousAttempts?.length > 0 && <details className="border-t border-border pt-3 text-sm"><summary className="cursor-pointer text-muted-foreground">Previous attempts ({submitted.previousAttempts.length})</summary>
+      {submitted.previousAttempts.map(attempt => <div key={attempt.revision} className="mt-3 space-y-2"><p className="font-medium">Attempt {attempt.revision}</p>{code ? <CodeView code={attempt.answer} language={attempt.language || "text"} /> : <p className="whitespace-pre-wrap">{attempt.answer}</p>}</div>)}
+    </details>}
   </article>;
 }

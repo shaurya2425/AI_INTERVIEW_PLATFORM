@@ -30,7 +30,8 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
     feedback: savedFeedback,
   } = booking;
   const feedback = feedbackResult?.feedback ?? savedFeedback;
-  const preparing = status === "COMPLETED" && !feedback;
+  const currentFeedbackState = feedbackResult?.state?.toUpperCase() || booking.feedbackState;
+  const preparing = status === "COMPLETED" && !feedback && !["FAILED", "INCOMPLETE"].includes(currentFeedbackState);
   const canViewFeedback = Boolean(isPast || feedback || status !== "SCHEDULED");
   const feedbackMessage = feedbackError || feedbackResult?.message || (booking.feedbackState === "FAILED" ? "Feedback generation failed. Open meeting feedback to retry and view the error details." : null) || (preparing ? "Preparing Feedback. Your interview is completed and its evidence is saved." : status === "CANCELLED"
     ? "This meeting was cancelled. No interview feedback is available."
@@ -39,7 +40,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
     ? "Not held" : isPast && status === "SCHEDULED" ? "Ended" : status.charAt(0) + status.slice(1).toLowerCase();
   const openFeedback = () => {
     setFeedbackOpen(true);
-    if (!feedback && !feedbackLoading) loadFeedback(booking.id);
+    if (!feedbackLoading) loadFeedback(booking.id);
   };
 
   const person =
@@ -63,7 +64,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
         open={feedbackOpen}
         onOpenChange={setFeedbackOpen}
         feedback={feedback}
-        message={feedbackMessage}
+        message={feedbackError || feedbackResult?.message || (!feedback ? feedbackMessage : booking.feedbackState !== "READY" ? "The report may be incomplete or awaiting an update. Check again to refresh saved evidence." : "")}
         loading={feedbackLoading}
         onRetry={() => loadFeedback(booking.id)}
         intervieweeName={
@@ -212,7 +213,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
                     <Sparkles size={12} />
                     {feedback ? "Full Feedback" : preparing ? "Preparing Feedback" : "View feedback"}
                   </Button>
-                  {feedback && <Badge
+                  {feedback?.overallRating && <Badge
                     variant="outline"
                     className={RATING_STYLES[feedback.overallRating]}
                   >

@@ -23,18 +23,19 @@ export const getMeetingFeedback = async (bookingId) => runAction(async () => {
     include: feedbackBookingInclude,
   });
   if (!booking) return actionFailure("Meeting not found");
-  if (booking.feedback) return { feedback: booking.feedback, state: "ready" };
   if (booking.status === "CANCELLED") return getMeetingOutcome(booking, {}, []);
-  if (booking.status === "SCHEDULED" && new Date(booking.endTime).getTime() > Date.now()) return {
+  if (booking.status !== "COMPLETED") return {
     state: "pending", message: "The interview is still scheduled or active. Feedback is generated after completion.",
   };
   const limitError = await checkRateLimit(limiter, await request(), user.id);
   if (limitError) return actionFailure(limitError);
   let feedback;
   try { feedback = await prepareMeetingFeedback(booking); }
-  catch (error) { return actionFailure(error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved."); }
-  if (!feedback) return { state: "pending", message: "The interview is still active. End the interview before generating feedback." };
+  catch (error) { return { feedback: booking.feedback, state: "failed", message: error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved." }; }
+  const latest = await db.booking.findUnique({ where: { id: booking.id }, select: { feedbackState: true } });
+  const state = latest?.feedbackState === "READY" ? "ready" : latest?.feedbackState === "INCOMPLETE" ? "incomplete" : "pending";
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
-  return { feedback, state: "ready" };
+  return { feedback, state, message: state === "pending" ? "Preparing feedback. Any previous report remains available; check again shortly."
+    : state === "incomplete" ? "Report available with incomplete evidence. Check its limitations and retry after transcripts or approved grades become available." : "" };
 }, "Unable to retrieve feedback right now. Please try again later.");

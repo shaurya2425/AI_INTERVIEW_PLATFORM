@@ -16,6 +16,8 @@ import {
   getTopicOptions,
   getQuestionTypeOptions,
   makeDefaultPreferences,
+  hasQuestionFilter,
+  QUESTION_FILTER_MESSAGE,
 } from "@/lib/interviewCatalog";
 
 const selectClass = `
@@ -69,6 +71,7 @@ export default function AIBuddyFilters({
   disabled = false,
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showFilterHint, setShowFilterHint] = useState(false);
 
   function patch(changes) {
     onChange({
@@ -102,7 +105,7 @@ export default function AIBuddyFilters({
       ?.label || "Any type";
 
   return (
-    <section className="shrink-0 border-b border-border pb-3">
+    <section className="flex min-h-0 flex-col">
       {/* Collapsible header */}
       <button
         type="button"
@@ -112,7 +115,7 @@ export default function AIBuddyFilters({
         aria-expanded={expanded}
         aria-controls="ai-buddy-curation"
         className="
-          flex min-h-12 w-full items-center
+          flex min-h-12 w-full shrink-0 items-center
           justify-between gap-3 rounded-xl
           border border-border bg-surface
           px-3 py-2.5 text-left
@@ -157,7 +160,7 @@ export default function AIBuddyFilters({
         <div
           id="ai-buddy-curation"
           className="
-            mt-3 space-y-3 rounded-xl
+            mt-2 min-h-0 space-y-3 overflow-y-auto overscroll-contain rounded-xl
             border border-border bg-surface
             p-3
           "
@@ -237,11 +240,16 @@ export default function AIBuddyFilters({
             Selected filters take priority over conflicting text. Your requested count overrides the default (1–5). Grill follows its parent question.
           </p>
           <button type="button" disabled={disabled} onClick={() => onChange(makeDefaultPreferences())} className="text-xs text-brand underline">Reset filters</button>
-
+        </div>
+      )}
+      <div className="shrink-0 pt-2">
+          {showFilterHint && !hasQuestionFilter(value) && <p role="alert" className="mb-2 text-xs text-brand">{QUESTION_FILTER_MESSAGE}</p>}
           <button
             type="button"
             disabled={disabled}
             onClick={() => {
+              if (!hasQuestionFilter(value)) { setShowFilterHint(true); setExpanded(true); return; }
+              setShowFilterHint(false);
               setExpanded(false);
               onGenerate();
             }}
@@ -258,8 +266,7 @@ export default function AIBuddyFilters({
             <Sparkles size={16} />
             Suggest Questions
           </button>
-        </div>
-      )}
+      </div>
     </section>
   );
 }

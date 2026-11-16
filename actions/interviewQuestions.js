@@ -8,6 +8,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { createHash } from "node:crypto";
 import { StreamChat } from "stream-chat";
 import { db } from "@/lib/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { QUESTION_TYPES } from "@/lib/interviewCatalog";
 
 const LANGUAGES = ["javascript", "typescript", "python", "java", "cpp", "c", "csharp", "go", "rust", "sql", "plaintext"];
@@ -55,7 +56,8 @@ function publicQuestion(q, role) {
       review: q.submission ? {
         status: q.submission.evaluationStatus, assessment: q.submission.evaluation,
         suggestedScore: q.submission.evaluation ? GRADE_SCORES[q.submission.evaluation.suggestedGrade] : null,
-        approvedScore: q.submission.approvedGrade ? GRADE_SCORES[q.submission.approvedGrade] : null,
+        approvedScore: questionCalculation(q, q.submission.approvedGrade)?.approvedScore ?? null,
+        correctionWithHint: q.submission.previousAttempts?.at(-1)?.correctionHintGiven === true,
         calculation: questionCalculation(q, q.submission.approvedGrade),
         evaluatedAt: q.submission.evaluationCompletedAt?.toISOString() || null,
         error: q.submission.evaluationError, approvedGrade: q.submission.approvedGrade,
@@ -64,19 +66,23 @@ function publicQuestion(q, role) {
     } : {}),
     status: q.submission ? "ANSWERED" : q.sentAt ? "SENT" : "PENDING",
     submission: q.submission ? {
+      revision: q.submission.revision || 1,
+      previousAttempts: (Array.isArray(q.submission.previousAttempts) ? q.submission.previousAttempts : []).map(attempt => ({
+        revision: attempt.revision, answer: attempt.answer, language: attempt.language, submittedAt: attempt.submittedAt,
+        ...(role === "INTERVIEWER" ? { approvedGrade: attempt.approvedGrade, notes: attempt.interviewerNotes, evaluation: attempt.evaluation } : {}),
+      })),
       answer: q.submission.answer, optionIndex: q.submission.optionIndex,
       language: q.submission.language, submittedAt: q.submission.submittedAt.toISOString(),
-      notificationPending: !q.submission.notifiedAt,
     } : null,
   };
 }
 
-async function deliver(booking, questionId, kind, userId) {
+async function deliver(booking, questionId, kind, userId, revision = 1) {
   const key = process.env.NEXT_PUBLIC_STREAM_API_KEY;
   const secret = process.env.STREAM_SECRET_KEY;
   if (!key || !secret) throw new Error("Stream configuration missing");
   const client = StreamChat.getInstance(key, secret);
-  const id = `prept-${kind}-${questionId}`;
+  const id = `prept-${kind}-${questionId}${kind === "answer" && revision > 1 ? `-r${revision}` : ""}`;
   const cid = `messaging:${booking.streamCallId}`;
   const matches = (message) => message?.cid === cid && message?.user?.id === userId &&
     message?.prept_question_id === questionId && message?.prept_kind === kind && !message.deleted_at;
@@ -100,7 +106,7 @@ async function deliver(booking, questionId, kind, userId) {
   await channel.create();
   try {
     await channel.sendMessage({ id, user_id: userId, text: kind === "question" ? "Interview question" : "Candidate submitted an answer",
-      prept_kind: kind, prept_question_id: questionId });
+      prept_kind: kind, prept_question_id: questionId, ...(kind === "answer" ? { prept_submission_revision: revision } : {}) });
   } catch (error) {
     const existing = await client.getMessage(id).catch(() => null);
     if (!matches(existing?.message)) throw error;
@@ -165,17 +171,24 @@ export async function sendInterviewQuestion({ callId, question } = {}) {
       saved = await db.interviewQuestion.findUnique({ where: { id }, include: { submission: true } });
     }
     if (!saved.sentAt) {
-      if (booking.status !== "SCHEDULED") fail("This interview is closed for new question delivery.");
-      try { await deliver(booking, id, "question", actor.clerkUserId); }
-      catch { fail("Question saved, but chat delivery could not be confirmed. Retry safely. If this continues, ask the operator to check Stream server configuration."); }
-      saved = await db.interviewQuestion.update({ where: { id }, data: { sentAt: new Date() }, include: { submission: true } });
+      saved = await db.$transaction(async tx => {
+        // Use the same booking row lock as completion and submissions. Completion
+        // must see either the delivered question or a failed/pending delivery.
+        const locked = await tx.booking.update({ where: { id: booking.id }, data: { scoringPolicyVersion: SCORING_POLICY_VERSION } });
+        const latest = await tx.interviewQuestion.findUnique({ where: { id }, include: { submission: true } });
+        if (latest.sentAt) return latest;
+        if (locked.status !== "SCHEDULED") fail("This interview is closed for new question delivery.");
+        try { await deliver(booking, id, "question", actor.clerkUserId); }
+        catch { fail("Question saved, but chat delivery could not be confirmed. Retry safely. If this continues, ask the operator to check Stream server configuration."); }
+        return tx.interviewQuestion.update({ where: { id }, data: { sentAt: new Date() }, include: { submission: true } });
+      }, { timeout: 30000 });
       await announceCommitted(booking, id, actor.clerkUserId);
     }
     return { success: true, question: publicQuestion(saved, "INTERVIEWER") };
   });
 }
 
-export async function submitInterviewAnswer({ callId, questionId, answer, optionIndex, language } = {}) {
+export async function submitInterviewAnswer({ callId, questionId, answer, optionIndex, language, requestId, expectedRevision } = {}) {
   return safely(async () => {
     const { booking, actor } = await access(callId, "INTERVIEWEE");
     text(questionId, 100, "question ID");
@@ -184,7 +197,9 @@ export async function submitInterviewAnswer({ callId, questionId, answer, option
       include: { submission: true },
     });
     if (!q) fail("Question is not available. Refresh and retry.");
-    if (!q.submission) {
+    const revising = q.type !== "MCQ" && expectedRevision != null;
+    if (revising && (!Number.isInteger(expectedRevision) || expectedRevision < 0 || typeof requestId !== "string" || !/^[\w-]{1,100}$/.test(requestId))) fail("Invalid answer revision. Refresh and try again.");
+    if (!q.submission || revising) {
       if (booking.status !== "SCHEDULED") fail("This interview is closed for submissions.");
       const isCode = ["CODING", "SQL_QUERY", "DEBUGGING"].includes(q.type);
       if (q.type === "MCQ" && (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= q.options.length)) fail("Choose one option.");
@@ -195,25 +210,41 @@ export async function submitInterviewAnswer({ callId, questionId, answer, option
       await db.$transaction(async tx => {
         const locked = await tx.booking.update({ where: { id: booking.id }, data: { scoringPolicyVersion: SCORING_POLICY_VERSION } });
         if (locked.status !== "SCHEDULED") fail("This interview is closed for submissions.");
-        await tx.interviewSubmission.createMany({ skipDuplicates: true, data: [{
-        id: `answer-${q.id}`, questionId: q.id, candidateId: actor.id, answer: response,
-        optionIndex: q.type === "MCQ" ? optionIndex : null, language: isCode ? language : null,
-        }] });
+        let current = await tx.interviewSubmission.findUnique({ where: { questionId: q.id } });
+        if (current && requestId && (current.requestId === requestId || (current.previousAttempts || []).some(a => a.requestId === requestId))) return;
+        if (current && revising) {
+          // Lock the current answer too: an in-flight evaluation must not slip
+          // between the archived snapshot and resetting the new evaluation lease.
+          current = await tx.interviewSubmission.update({ where: { questionId: q.id }, data: { id: current.id } });
+          if (expectedRevision !== current.revision) fail("A newer answer was saved. Refresh and review it before resubmitting; your draft is preserved.");
+          const { previousAttempts, ...previous } = current;
+          await tx.interviewSubmission.update({ where: { questionId: q.id }, data: {
+            answer: response, language: isCode ? language : null, requestId, revision: { increment: 1 }, submittedAt: new Date(), notifiedAt: null,
+            previousAttempts: JSON.parse(JSON.stringify([...(Array.isArray(previousAttempts) ? previousAttempts : []), previous])),
+            evaluationStatus: "PENDING", evaluation: Prisma.DbNull, evaluationError: null, evaluationStartedAt: null, evaluationToken: null,
+            evaluationAttempts: 0, evaluationCompletedAt: null, suggestedScore: null,
+            approvedGrade: null, approvedScore: null, approvedAt: null, approvedBy: null, interviewerNotes: null,
+            scoringPolicyVersion: null, difficultyWeight: null, followUpMultiplier: null, questionWeight: null, weightedScore: null,
+          } });
+        } else if (!current) {
+          if (revising && expectedRevision !== 0) fail("The original answer is unavailable. Refresh before submitting.");
+          await tx.interviewSubmission.createMany({ skipDuplicates: true, data: [{
+            id: `answer-${q.id}`, questionId: q.id, candidateId: actor.id, answer: response,
+            optionIndex: q.type === "MCQ" ? optionIndex : null, language: isCode ? language : null,
+            ...(requestId ? { requestId } : {}),
+          }] });
+        }
         await tx.interviewQuestion.update({ where: { id: q.id }, data: { responseStatus: "ANSWERED" } });
+        if (current && revising) {
+          const questions = await tx.interviewQuestion.findMany({ where: { bookingId: booking.id }, include: { submission: true } });
+          await tx.booking.update({ where: { id: booking.id }, data: { scoringSummary: scoreInterview(questions, locked.status) } });
+        }
       });
     }
     after(() => evaluateSubmission(q.id));
-    const submission = await db.interviewSubmission.findUnique({ where: { questionId: q.id } });
-    let warning = "";
-    if (!submission.notifiedAt) {
-      try {
-        await deliver(booking, q.id, "answer", actor.clerkUserId);
-        await db.interviewSubmission.update({ where: { id: submission.id }, data: { notifiedAt: new Date() } });
-      } catch { warning = "Answer saved. Chat notification is pending; retry notification without resubmitting your answer."; }
-    }
     const saved = await db.interviewQuestion.findUnique({ where: { id: q.id }, include: { submission: true } });
     await announceCommitted(booking, q.id, actor.clerkUserId);
-    return { success: true, question: publicQuestion(saved), warning };
+    return { success: true, question: publicQuestion(saved) };
   });
 }
 
@@ -227,7 +258,7 @@ export async function retryInterviewEvaluation({ callId, questionId } = {}) {
     return { success: true };
   });
 }
-export async function approveInterviewGrade({ callId, questionId, grade, notes = "" } = {}) {
+export async function approveInterviewGrade({ callId, questionId, grade, notes = "", submissionRevision, correctionWithHint = false } = {}) {
   return safely(async () => {
     const { booking, actor } = await access(callId, "INTERVIEWER");
     text(questionId, 100, "question ID");
@@ -236,16 +267,28 @@ export async function approveInterviewGrade({ callId, questionId, grade, notes =
     const q = await db.interviewQuestion.findFirst({ where: { id: questionId, bookingId: booking.id }, include: { submission: true } });
     if (!q?.submission) fail("Wait for a saved candidate answer before grading.");
     if (!q.sentAt || booking.status === "CANCELLED") fail("Only delivered questions in a valid interview can be graded.");
-    const calculation = questionCalculation(q, grade);
-    if (!calculation) fail("This question has invalid scoring metadata.");
+
     await db.$transaction(async tx => {
       const locked = await tx.booking.update({ where: { id: booking.id }, data: { scoringPolicyVersion: SCORING_POLICY_VERSION } });
       if (locked.status === "CANCELLED") fail("Cancelled interviews cannot be graded.");
+      const latest = await tx.interviewSubmission.findUnique({ where: { questionId } });
+      if ((latest.revision || 1) !== (submissionRevision ?? q.submission.revision ?? 1)) fail("The candidate submitted a newer answer. Refresh and review it before approving a grade.");
+      if (typeof correctionWithHint !== "boolean") fail("Invalid hint confirmation.");
+      const previousAttempts = Array.isArray(latest.previousAttempts) ? latest.previousAttempts.map(a => ({ ...a })) : [];
+      if (correctionWithHint && (q.type === "MCQ" || !previousAttempts.length)) fail("Hint corrections require a revised non-MCQ answer.");
+      if (previousAttempts.length) Object.assign(previousAttempts.at(-1), {
+        correctionHintGiven: correctionWithHint, hintConfirmedBy: actor.id,
+      });
+      const calculation = questionCalculation({ ...q, submission: { ...latest, previousAttempts } }, grade);
+      if (!calculation) fail("This question has invalid scoring metadata.");
       await tx.interviewSubmission.update({ where: { questionId }, data: {
+        previousAttempts,
         approvedGrade: grade, interviewerNotes: validatedNotes, approvedBy: actor.id, approvedAt: new Date(), ...calculation,
       } });
       const questions = await tx.interviewQuestion.findMany({ where: { bookingId: booking.id }, include: { submission: true } });
-      await tx.booking.update({ where: { id: booking.id }, data: { scoringSummary: scoreInterview(questions, locked.status) } });
+      await tx.booking.update({ where: { id: booking.id }, data: { scoringSummary: scoreInterview(questions, locked.status),
+        ...(locked.status === "COMPLETED" ? { feedbackState: "PENDING" } : {}),
+      } });
     });
     const saved = await db.interviewQuestion.findUnique({ where: { id: questionId }, include: { submission: true } });
     return { success: true, question: publicQuestion(saved, "INTERVIEWER") };

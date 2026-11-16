@@ -226,6 +226,9 @@ model InterviewSubmission {
   language    String?
   submittedAt DateTime @default(now())
   notifiedAt  DateTime?
+  revision    Int @default(1)
+  requestId   String?
+  previousAttempts Json @default("[]")
   evaluationStatus String @default("PENDING")
   evaluation Json?
   evaluationError String?
@@ -261,7 +264,8 @@ model Feedback {
   recommendation String
   strengths      String[]
   improvements   String[]
-  overallRating  FeedbackRating
+  overallRating  FeedbackRating?
+  report         Json?
   sessionRating  Int?
   sessionComment String?        @db.Text
   createdAt      DateTime       @default(now())
