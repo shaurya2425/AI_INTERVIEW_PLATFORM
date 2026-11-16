@@ -32,7 +32,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
   const feedback = feedbackResult?.feedback ?? savedFeedback;
   const preparing = status === "COMPLETED" && !feedback;
   const canViewFeedback = Boolean(isPast || feedback || status !== "SCHEDULED");
-  const feedbackMessage = feedbackError || feedbackResult?.message || (preparing ? "Preparing Feedback. Your interview is completed and its evidence is saved." : status === "CANCELLED"
+  const feedbackMessage = feedbackError || feedbackResult?.message || (booking.feedbackState === "FAILED" ? "Feedback generation failed. Open meeting feedback to retry and view the error details." : null) || (preparing ? "Preparing Feedback. Your interview is completed and its evidence is saved." : status === "CANCELLED"
     ? "This meeting was cancelled. No interview feedback is available."
     : "Feedback is not available yet. View feedback to check the meeting status and retrieve its report.");
   const statusLabel = feedback ? "Completed" : feedbackResult?.state === "missed"

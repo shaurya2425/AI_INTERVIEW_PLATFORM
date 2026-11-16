@@ -138,6 +138,7 @@ model Booking {
   transactions   CreditTransaction[]
   reminders      InterviewReminder[]
   questions      InterviewQuestion[]
+  buddyMessages  AIBuddyMessage[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -145,6 +146,25 @@ model Booking {
   @@index([status, startTime])
   @@index([interviewerId, status])
   @@index([intervieweeId, status])
+}
+
+// Private, append-only evidence. UI preferences stay in browser storage.
+model AIBuddyMessage {
+  id          String   @id @default(uuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  messageId   String
+  authorId    String
+  role        String
+  content     String   @db.Text
+  kind        String
+  questionIds String[]
+  payload     Json
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@unique([bookingId, messageId])
+  @@index([bookingId, occurredAt, createdAt])
 }
 
 model InterviewReminder {

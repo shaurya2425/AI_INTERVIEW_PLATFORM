@@ -14,7 +14,7 @@ import "katex/dist/katex.min.css";
 
 const subscribe = () => () => {};
 
-function CodeView({ code, language = "text" }) {
+export function CodeView({ code, language = "text" }) {
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const { resolvedTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
@@ -50,7 +50,7 @@ function CodeView({ code, language = "text" }) {
         </button>
       </div>
 
-      <div className="w-full overflow-x-auto">
+      <div className="max-h-80 w-full overflow-auto">
         <SyntaxHighlighter
           language={language}
           style={dark ? oneDark : oneLight}
@@ -61,7 +61,7 @@ function CodeView({ code, language = "text" }) {
             padding: 14,
             background: "var(--surface)",
             borderRadius: 0,
-            fontSize: 13,
+            fontSize: 14,
             lineHeight: 1.65,
           }}
         >
@@ -74,7 +74,7 @@ function CodeView({ code, language = "text" }) {
 
 export default function AIResponse({ content = "" }) {
   return (
-    <div className="min-w-0 max-w-full break-words text-[14px] leading-7 text-foreground">
+    <div className="min-w-0 max-w-full break-words text-[15px] leading-7 text-foreground [overflow-wrap:anywhere]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

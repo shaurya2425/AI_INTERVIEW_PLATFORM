@@ -1,8 +1,7 @@
 import { StreamClient } from "@stream-io/node-sdk";
 import { revalidatePath } from "next/cache";
-import { getMeetingOutcome } from "@/lib/meeting-outcome";
 import { db } from "@/lib/prisma";
-import { feedbackBookingInclude, generateMeetingFeedback } from "@/lib/meeting-feedback";
+import { feedbackBookingInclude, prepareMeetingFeedback } from "@/lib/meeting-feedback";
 
 export async function POST(request) {
   const rawBody = await request.text();
@@ -15,7 +14,7 @@ export async function POST(request) {
   try { body = JSON.parse(rawBody); } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  if (!["call.transcription_ready", "call.recording_ready"].includes(body.type)) {
+  if (!["call.transcription_ready", "call.recording_ready", "call.ended", "call.session_ended"].includes(body.type)) {
     return Response.json({ ok: true });
   }
   const streamCallId = body.call_cid?.replace(/^default:/, "");
@@ -28,16 +27,14 @@ export async function POST(request) {
       if (!body.call_recording?.url) throw new Error("Missing recording URL");
       const { recordings } = await call.listRecordings();
       await db.booking.update({ where: { id: booking.id }, data: { recordingUrl: body.call_recording.url, recordingArtifacts: JSON.parse(JSON.stringify(recordings)) } });
-    } else if (!booking.feedback) {
-      // Use URLs returned by Stream, including transcripts from earlier sessions.
-      const { transcriptions } = await call.listTranscriptions();
-      const originals = transcriptions.filter((item) => !item.translated)
-        .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-      if (!originals.length) throw new Error("Transcript is not yet available");
-      await db.booking.update({ where: { id: booking.id }, data: { transcriptArtifacts: JSON.parse(JSON.stringify(originals)) } });
-      const { call: details } = await call.get();
-      if (getMeetingOutcome(booking, details, originals).state === "transcript") await generateMeetingFeedback(booking, originals);
     }
+    if (body.type === "call.transcription_ready") {
+      const { transcriptions } = await call.listTranscriptions();
+      const originals = transcriptions.filter(item => !item.translated);
+      await db.booking.update({ where: { id: booking.id }, data: { transcriptArtifacts: JSON.parse(JSON.stringify(originals)) } });
+      booking.transcriptArtifacts = originals;
+    }
+    if (!booking.feedback) await prepareMeetingFeedback(booking);
     revalidatePath("/appointments");
     revalidatePath("/dashboard");
     return Response.json({ ok: true });

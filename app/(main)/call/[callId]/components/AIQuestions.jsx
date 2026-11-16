@@ -5,16 +5,17 @@ import { useEffect, useRef, useState } from "react";
 import {
   Sparkles,
   Send,
-  RotateCcw,
+  RefreshCw,
+  ListChecks,
+  ShieldCheck,
   ArrowDown,
   MessageSquare,
 } from "lucide-react";
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { generateInterviewQuestions } from "@/actions/aiQuestions";
-import {
-  makeDefaultPreferences,
-} from "@/lib/interviewCatalog";
+import useBuddyHistory from "./useBuddyHistory";
+import AnswerReview from "./AnswerReview";
 
 import { sendInterviewQuestion } from "@/actions/interviewQuestions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -30,7 +31,8 @@ export default function AIQuestionsPanel({
   sessionId,
   intervieweeName = "Candidate",
 }) {
-  const defaultSubject = "ALL";
+  const [tab, setTab] = useState("questions");
+  const [focusedReview, setFocusedReview] = useState(null);
   const delivery = useInterviewQuestions();
   const [pendingQuestion, setPendingQuestion] = useState(null);
   const [sendingQuestion, setSendingQuestion] = useState(false);
@@ -55,7 +57,7 @@ export default function AIQuestionsPanel({
 
   function withDelivery(question) {
     const saved = delivery?.questions.find(item => item.sourceId === question.id);
-    if (!saved || saved.status === "PENDING") return question;
+    if (!saved) return question;
     return { ...question, persistedId: saved.id, review: saved.review, submission: saved.submission,
       answer: saved.referenceAnswer, correctOptionIndex: saved.correctOptionIndex, depth: saved.depth,
       status: saved.review?.approvedGrade ? "EVALUATED" : saved.status,
@@ -63,24 +65,11 @@ export default function AIQuestionsPanel({
       notes: saved.review?.notes || "", candidateAnswer: saved.submission?.answer || "" };
   }
 
-  const storageKey = `prept-ai-buddy:${sessionId || callId}`;
-
-  const [preferences, setPreferences] = useState(() =>
-    makeDefaultPreferences(defaultSubject)
-  );
-
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [activeQuestionId, setActiveQuestionId] =
-    useState(null);
-
+  const { messages, setMessages, preferences, setPreferences, activeQuestionId, setActiveQuestionId,
+    input, setInput, ready, syncing, historyError, setHistoryError, storageWarning, syncHistory } = useBuddyHistory(callId, sessionId, delivery?.userId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [loadedKey, setLoadedKey] = useState(null);
-
-  const [showScrollBottom, setShowScrollBottom] =
-    useState(false);
-
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
   const busyRef = useRef(false);
   const retryRef = useRef(null);
   const [canRetry, setCanRetry] = useState(false);
@@ -89,87 +78,18 @@ export default function AIQuestionsPanel({
   const scrollRef = useRef(null);
   const composerRef = useRef(null);
 
-  const ready = loadedKey === storageKey;
-
-  // ==============================================
-  // LOAD SESSION HISTORY
-  // ==============================================
-
-  useEffect(() => {
-    // Restore browser storage after the first paint; cancel stale session loads.
-    const frame = requestAnimationFrame(() => {
-      let saved = null;
-
-      try {
-        saved = JSON.parse(
-          localStorage.getItem(storageKey) || "null"
-        );
-      } catch {
-        saved = null;
-      }
-
-      setMessages(
-        Array.isArray(saved?.messages)
-          ? saved.messages
-          : []
-      );
-
-      setActiveQuestionId(
-        saved?.activeQuestionId || null
-      );
-
-      const defaults = makeDefaultPreferences(
-        defaultSubject
-      );
-
-      setPreferences({
-        ...defaults,
-        ...(saved?.preferences || {}),
-        mode: "FREE_FLOW",
-      });
-
-      setInput("");
-      setError("");
-      setLoadedKey(storageKey);
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [storageKey, defaultSubject]);
-
-  // ==============================================
-  // SAVE SESSION HISTORY
-  // ==============================================
-
-  useEffect(() => {
-    if (!ready) return;
-
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          messages,
-          activeQuestionId,
-          preferences,
-        })
-      );
-    } catch {
-      // Continue without persistence.
-    }
-  }, [
-    ready,
-    storageKey,
-    messages,
-    activeQuestionId,
-    preferences,
-  ]);
-
   // ==============================================
   // QUESTION STATE
   // ==============================================
 
-  const questions = messages.flatMap(
-    (message) => (message.cards || []).map(withDelivery)
-  );
+  const questionMap = new Map();
+  for (const message of messages) for (const question of message.cards || []) questionMap.set(question.id, withDelivery(question));
+  for (const saved of delivery?.questions || []) {
+    if (!questionMap.has(saved.sourceId)) questionMap.set(saved.sourceId, withDelivery({ ...saved, id: saved.sourceId, answer: saved.referenceAnswer }));
+  }
+  const questions = [...questionMap.values()];
+  const reviews = questions.filter(q => q.submission).sort((a, b) => Number(Boolean(a.review?.approvedGrade)) - Number(Boolean(b.review?.approvedGrade)));
+  const pendingReviews = reviews.filter(q => !q.review?.approvedGrade).length;
 
   const activeQuestion =
     questions.find(
@@ -240,7 +160,7 @@ export default function AIQuestionsPanel({
     grillLevel = "DEEPER",
     retry = false,
   } = {}) {
-    if (!ready || busyRef.current) return;
+    if (!ready || syncing || historyError || busyRef.current) return;
 
     const instruction = text.trim();
 
@@ -297,6 +217,7 @@ export default function AIQuestionsPanel({
     const userMessage = {
       id: createId(),
       role: "user",
+      createdAt: new Date().toISOString(),
       text: displayText,
       cards: [],
     };
@@ -312,6 +233,7 @@ export default function AIQuestionsPanel({
     try {
       const request = retry ? retryRef.current : {
           callId,
+          requestId: userMessage.id,
           preferences: requestPreferences,
           instruction: instruction || displayText,
           mode,
@@ -335,6 +257,7 @@ export default function AIQuestionsPanel({
       }
 
       retryRef.current = null;
+      if (result.persistenceError) setHistoryError(result.persistenceError);
       setWarning(result.warning || "");
       const cards = Array.isArray(result.questions)
         ? result.questions.map((question) => ({
@@ -347,9 +270,10 @@ export default function AIQuestionsPanel({
         : [];
 
       setMessages((previous) => [
-        ...previous,
+        ...previous.filter(message => message.id !== result.messageId),
         {
-          id: createId(),
+          id: result.messageId || createId(),
+          createdAt: new Date().toISOString(),
           role: "assistant",
           text:
             result.message ||
@@ -397,25 +321,6 @@ export default function AIQuestionsPanel({
     });
   }
 
-  function clearChat() {
-    if (loading) return;
-
-    if (
-      !window.confirm(
-        "Clear local AI Buddy conversation? Saved questions and approved grades will remain."
-      )
-    ) {
-      return;
-    }
-
-    retryRef.current = null;
-    setWarning("");
-    setMessages([]);
-    setActiveQuestionId(null);
-    setInput("");
-    setError("");
-  }
-
   // ==============================================
   // KEYBOARD SUPPORT
   // ==============================================
@@ -429,7 +334,7 @@ export default function AIQuestionsPanel({
       event.preventDefault();
 
       if (!loading && ready && input.trim()) {
-        send({ text: input });
+        send({ text: input, forceQuestions: tab === "questions" });
       }
     }
   }
@@ -466,7 +371,7 @@ export default function AIQuestionsPanel({
       top: container.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages.length, loading]);
+  }, [messages.length, loading, tab]);
 
   // ==============================================
   // RENDER
@@ -489,407 +394,108 @@ export default function AIQuestionsPanel({
           {deliveryError && <p role="alert" className="text-sm text-danger">{deliveryError}</p>}
           <DialogFooter>
             <button type="button" disabled={sendingQuestion} onClick={() => setPendingQuestion(null)} className="rounded-lg border border-border px-4 py-2 disabled:opacity-50">Cancel</button>
-            <button type="button" disabled={sendingQuestion} onClick={confirmQuestion} className="rounded-lg bg-amber-400 px-4 py-2 font-semibold text-zinc-950 disabled:opacity-50">{sendingQuestion ? "Sending?" : deliveryError ? "Retry send" : "Confirm and send"}</button>
+            <button type="button" disabled={sendingQuestion} onClick={confirmQuestion} className="rounded-lg bg-amber-400 px-4 py-2 font-semibold text-zinc-950 disabled:opacity-50">{sendingQuestion ? "Sending..." : deliveryError ? "Retry send" : "Confirm and send"}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {delivery?.scoring && <div className="mb-3 rounded-lg border border-border p-3 text-xs" role="status">
-        <p className="font-semibold">Interview score: {delivery.scoring.overallScore == null ? "Unavailable ? no approved main answers" : delivery.scoring.overallScore.toFixed(1) + "/100"} {delivery.scoring.state === "PROVISIONAL" ? "(provisional)" : ""}</p>
-        <p>Main: {delivery.scoring.mainScore?.toFixed(1) ?? "?"} ? Grill: {delivery.scoring.grillScore?.toFixed(1) ?? "?"} ? Approved main answers: {delivery.scoring.mainCount}</p>
-        <p>Grill is bonus-only. Unanswered or unapproved questions are not scored as zero.</p>
-      </div>}
-      {/* Compact header */}
-      <header className="flex shrink-0 items-center justify-between gap-3 pb-3">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span
-            className="
-              flex size-9 shrink-0 items-center
-              justify-center rounded-lg
-              bg-amber-400/10 text-brand
-            "
-          >
-            <Sparkles size={18} />
-          </span>
-
-          <div>
-            <h2 className="text-base font-semibold text-foreground">
-              AI Buddy
-            </h2>
-
-            <p className="text-xs text-muted-foreground">
-              Your private interview assistant
-            </p>
-          </div>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-amber-400/10 text-brand"><Sparkles size={18} /></span>
+          <div><h2 className="text-sm font-semibold">AI Buddy</h2><p className="text-xs text-muted-foreground">Private interview workspace</p></div>
         </div>
-
-        <button
-          type="button"
-          onClick={clearChat}
-          disabled={loading}
-          aria-label="Clear conversation"
-          title="Clear conversation"
-          className="
-            flex size-9 items-center
-            justify-center rounded-lg
-            border border-border
-            text-muted-foreground
-            hover:text-foreground
-            disabled:opacity-50
-          "
-        >
-          <RotateCcw size={15} />
+        <button type="button" onClick={() => delivery?.refresh()} disabled={delivery?.refreshing} title="Sync questions and evaluations" aria-label="Sync questions and evaluations" className="workspace-icon-button">
+          <RefreshCw size={16} className={delivery?.refreshing ? "animate-spin" : ""} />
         </button>
       </header>
-
-      {delivery?.questions.some(q => q.status !== "PENDING") && <details className="mb-3 max-h-[65vh] shrink-0 overflow-y-auto rounded-lg border border-border p-3">
-        <summary className="cursor-pointer font-semibold">Saved questions & private reviews ({delivery.questions.filter(q => q.status !== "PENDING").length})</summary>
-        <div className="mt-3 space-y-3">{delivery.questions.filter(q => q.status !== "PENDING").map(q =>
-          <AIQuestionCard key={q.id} question={withDelivery({ ...q, id: q.sourceId })} loading={loading} onGrill={handleGrill} />
-        )}</div>
-      </details>}
-      {/* Collapsible question curation */}
-      {delivery?.questions.some(question => question.status === "PENDING") && <div className="mb-3 space-y-2 rounded-lg border border-border p-3 text-sm">
-        <p>Saved questions awaiting chat delivery:</p>
-        {delivery.questions.filter(question => question.status === "PENDING").map(question => <button
-          key={question.id} type="button" disabled={sendingQuestion}
-          className="block w-full truncate text-left text-brand underline"
-          onClick={() => { setDeliveryError(""); setPendingQuestion({ ...question, id: question.sourceId }); }}>
-          Review and retry: {question.question}
-        </button>)}
-      </div>}
-      <AIBuddyFilters
-        value={preferences}
-        onChange={setPreferences}
-        disabled={loading}
-        onGenerate={() =>
-          send({
-            text: input,
-            forceQuestions: true,
-            guided: true,
-          })
-        }
-      />
-
-      {/* Small session status */}
-      <div className="flex shrink-0 items-center justify-between gap-2 py-2.5">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <MessageSquare size={13} />
-          <span>
-            {askedCount} asked · {gradedCount} graded
-          </span>
-        </div>
-
-        {activeQuestion && (
-          <button
-            type="button"
-            onClick={() =>
-              setActiveQuestionId(null)
-            }
-            className="
-              max-w-[58%] truncate
-              text-xs text-brand
-              hover:underline
-            "
-            title={activeQuestion.question}
-          >
-            {activeQuestion.topic} ×
-          </button>
-        )}
-      </div>
-
-      {/* Error banner */}
-      {error && (
-        <div
-          role="alert"
-          className="
-            mb-2 shrink-0 rounded-lg
-            border border-red-400/20
-            bg-red-400/5 px-3 py-2
-            text-sm text-danger
-          "
-        >
-          {error}
-          {canRetry && <button type="button" disabled={loading} onClick={() => send({ retry: true })} className="mt-2 block font-semibold underline disabled:opacity-50">Retry request</button>}
-        </div>
-      )}
-
-      {warning && <p role="status" className="mb-2 text-xs text-muted-foreground">{warning}</p>}
-
-      {/* Chat: takes remaining available height */}
-      <div className="relative min-h-0 flex-1">
-
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="
-            h-full min-h-0
-            space-y-4
-            overflow-y-auto
-            overscroll-contain
-            px-1 pr-2
-            [scrollbar-width:thin]
-            [scrollbar-color:var(--border)_transparent]
-            [&::-webkit-scrollbar]:w-1.5
-            [&::-webkit-scrollbar-thumb]:rounded-full
-            [&::-webkit-scrollbar-thumb]:bg-border
-            [&::-webkit-scrollbar-track]:bg-transparent
-          "
-        >
-
-          {/* Empty chat state */}
-          {messages.length === 0 && (
-            <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <span
-                className="
-                  flex size-12 items-center
-                  justify-center rounded-2xl
-                  border border-border
-                  bg-surface
-                "
-              >
-                <MessageSquare
-                  size={22}
-                  className="text-brand"
-                />
-              </span>
-
-              <div>
-                <h3 className="text-base font-semibold text-foreground">
-                  How can I help?
-                </h3>
-
-                <p className="mt-2 max-w-[290px] text-sm leading-6 text-muted-foreground">
-                  Ask for interview questions,
-                  explanations, code solutions,
-                  or deeper follow-ups.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Messages */}
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className="min-w-0 space-y-3"
-            >
-              <div
-                className={`min-w-0 rounded-xl px-3.5 py-3 ${
-                  message.role === "user"
-                    ? "ml-6 bg-amber-400/10"
-                    : "border border-border bg-surface"
-                }`}
-              >
-                {message.role === "assistant" ? (
-                  <AIResponse
-                    content={message.text}
-                  />
-                ) : (
-                  <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
-                    {message.text}
-                  </p>
-                )}
-              </div>
-
-              {/* Inline question cards */}
-              {message.cards?.map((question) => (
-                <AIQuestionCard
-                  key={question.id}
-                  question={withDelivery(question)}
-                  isActive={
-                    activeQuestionId === question.id
-                  }
-                  loading={loading}
-                  onSelect={(q) => {
-                    setDeliveryError("");
-                    setPendingQuestion(q);
-                  }}
-                  onSkip={(q) => {
-                    updateQuestion(q.id, {
-                      status: "SKIPPED",
-                    });
-
-                    if (
-                      activeQuestionId === q.id
-                    ) {
-                      setActiveQuestionId(null);
-                    }
-                  }}
-                  onGrill={handleGrill}
-                />
-              ))}
-
-              {/* Web research citations */}
-              {message.sources?.length > 0 && (
-                <div className="rounded-xl border border-border p-3">
-                  <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                    Sources
-                  </p>
-
-                  <div className="space-y-2">
-                    {message.sources.map(
-                      (source, index) => (
-                        <a
-                          key={`${source.url}-${index}`}
-                          href={source.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block break-words text-sm text-brand underline underline-offset-2"
-                        >
-                          {source.title}
-                        </a>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* AI loading indicator */}
-          {loading && (
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-3 text-sm text-muted-foreground">
-              <LoadingSpinner
-                label="AI Buddy is thinking"
-                className="size-4"
-              />
-              AI Buddy is thinking...
-            </div>
-          )}
-
-        </div>
-
-        {/* Scroll to latest */}
-        {showScrollBottom && (
-          <button
-            type="button"
-            onClick={scrollToBottom}
-            aria-label="Scroll to latest message"
-            className="
-              absolute bottom-3 right-3
-              flex size-9 items-center
-              justify-center rounded-full
-              border border-border
-              bg-background text-foreground
-              shadow-md
-            "
-          >
-            <ArrowDown size={16} />
-          </button>
-        )}
-      </div>
-
-      {/* Quick prompts: single compact row */}
-      <div
-        className="
-          flex shrink-0 gap-2
-          overflow-x-auto py-3
-          [scrollbar-width:none]
-          [&::-webkit-scrollbar]:hidden
-        "
-      >
-        {[
-          "Next question",
-          "Harder",
-          "Easier",
-          "Explain selected",
-        ].map((prompt) => (
-          <button
-            key={prompt}
-            type="button"
-            disabled={loading || !ready}
-            onClick={() =>
-              send({ text: prompt })
-            }
-            className="
-              shrink-0 rounded-full
-              border border-border
-              px-3 py-1.5
-              text-xs font-medium
-              text-muted-foreground
-              transition-colors
-              hover:border-amber-400/40
-              hover:text-foreground
-              disabled:opacity-50
-            "
-          >
-            {prompt}
+      <div role="tablist" aria-label="AI Buddy workspace" className="grid shrink-0 grid-cols-3 gap-1 border-b border-border bg-surface/50 p-2">
+        {[["questions", "Questions", ListChecks], ["evaluations", "Evaluations", ShieldCheck], ["ask", "Ask AI", MessageSquare]].map(([id, label, Icon]) => (
+          <button key={id} id={`buddy-tab-${id}`} type="button" role="tab" tabIndex={tab === id ? 0 : -1} aria-selected={tab === id} aria-controls={`buddy-panel-${id}`} onClick={() => setTab(id)}
+            onKeyDown={event => {
+              const tabs = ["questions", "evaluations", "ask"];
+              if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+              event.preventDefault();
+              const next = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[2] : tabs[(tabs.indexOf(tab) + (event.key === "ArrowRight" ? 1 : 2)) % tabs.length];
+              setTab(next); document.getElementById(`buddy-tab-${next}`)?.focus();
+            }}
+            className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors ${tab === id ? "bg-background text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}>
+            <Icon size={15} className="hidden min-[400px]:block" />{label}
+            {id === "evaluations" && pendingReviews > 0 && <span className="rounded-full bg-amber-400/15 px-1.5 text-xs text-brand">{pendingReviews}</span>}
           </button>
         ))}
       </div>
-
-      {/* Fixed chat composer */}
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          send({ text: input });
-        }}
-        className="shrink-0 border-t border-border pt-3"
-      >
-        <div
-          className="
-            rounded-2xl border border-border
-            bg-surface p-2
-            transition-colors
-            focus-within:border-amber-400/50
-            focus-within:ring-2
-            focus-within:ring-amber-400/10
-          "
-        >
-          <textarea
-            ref={composerRef}
-            rows={2}
-            maxLength={1200}
-            value={input}
-            disabled={loading || !ready}
-            onChange={(event) =>
-              setInput(event.target.value)
-            }
-            onKeyDown={onMessageKeyDown}
-            aria-label="Message AI Buddy"
-            placeholder="Ask for questions, explanations, or code..."
-            className="
-              max-h-36 min-h-12 w-full
-              resize-none bg-transparent
-              px-2 py-2
-              text-sm leading-6 text-foreground
-              outline-none
-              placeholder:text-muted-foreground
-              disabled:opacity-50
-            "
-          />
-
-          <div className="flex items-center justify-between gap-2 px-1 pb-1">
-            <span className="text-[11px] text-muted-foreground">
-              Enter to send · Shift+Enter for newline
-            </span>
-
-            <button
-              type="submit"
-              disabled={
-                loading ||
-                !ready ||
-                !input.trim()
-              }
-              aria-label="Send message"
-              title="Send message"
-              className="
-                flex size-10 shrink-0
-                items-center justify-center
-                rounded-xl bg-amber-400
-                text-zinc-950
-                transition-all
-                hover:opacity-90
-                active:scale-95
-                disabled:cursor-not-allowed
-                disabled:opacity-40
-              "
-            >
-              <Send size={18} />
-            </button>
-          </div>
+      {(historyError || delivery?.error) && (
+        <div role="alert" className="shrink-0 border-b border-danger/20 bg-danger/5 px-4 py-2 text-xs leading-5 text-danger">
+          {historyError || delivery?.error}
+          <button
+            type="button"
+            disabled={syncing || delivery?.refreshing}
+            onClick={() => {
+              if (historyError) void syncHistory();
+              else void delivery?.refresh();
+            }}
+            className="ml-2 font-semibold underline disabled:opacity-50"
+          >
+            {syncing ? "Syncing…" : "Retry sync"}
+          </button>
         </div>
-      </form>
+      )}
+      <div hidden={tab !== "questions"} role="tabpanel" id="buddy-panel-questions" aria-labelledby="buddy-tab-questions" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+        <AIBuddyFilters value={preferences} onChange={setPreferences} disabled={loading || !ready || syncing || Boolean(historyError)} onGenerate={() => send({ text: input, forceQuestions: true, guided: true })} />
+        <div className="mb-3 mt-4 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>{questions.length} questions · {askedCount} sent</span><span>{gradedCount} graded</span>
+        </div>
+        {!questions.length && <div className="rounded-xl border border-dashed border-border px-5 py-8 text-center">
+          <ListChecks size={22} className="mx-auto mb-3 text-brand" />
+          <p className="text-sm font-medium">No questions yet</p><p className="mt-1 text-sm leading-6 text-muted-foreground">Ask AI Buddy to suggest questions, or choose a topic in Question Curation.</p>
+          <button type="button" disabled={loading || !ready || syncing || Boolean(historyError)} onClick={() => send({ forceQuestions: true, guided: true })} className="workspace-primary mt-4">Suggest questions</button>
+        </div>}
+        <div className="space-y-3">{questions.map(question => <AIQuestionCard key={question.id} question={question} isActive={activeQuestionId === question.id} loading={loading || sendingQuestion || syncing || Boolean(historyError)}
+          onSelect={q => { setDeliveryError(""); setPendingQuestion(q); }}
+          onSkip={q => updateQuestion(q.id, { status: "SKIPPED" })} onGrill={handleGrill}
+          onReview={q => {
+            setFocusedReview(q.id); setTab("evaluations");
+            requestAnimationFrame(() => document.getElementById(`review-${q.id}`)?.scrollIntoView({ block: "nearest" }));
+          }} />)}</div>
+      </div>
+      <div hidden={tab !== "evaluations"} role="tabpanel" id="buddy-panel-evaluations" aria-labelledby="buddy-tab-evaluations" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+        <section className="mb-4 rounded-xl border border-border bg-surface p-4">
+          <div className="flex items-end justify-between gap-3"><div><p className="text-xs text-muted-foreground">Interview score</p><p className="mt-1 text-2xl font-semibold tabular-nums">{delivery?.scoring?.overallScore == null ? "—" : delivery.scoring.overallScore.toFixed(1)}<span className="ml-1 text-sm font-normal text-muted-foreground">/ 100</span></p></div><span className="text-xs text-muted-foreground">{delivery?.scoring?.state === "PROVISIONAL" ? "Provisional" : "Approved grades"}</span></div>
+          <div className="mt-4 grid grid-cols-3 divide-x divide-border border-t border-border pt-3 text-center text-xs text-muted-foreground">
+            <p><span className="mb-1 block text-base font-semibold text-foreground">{askedCount}</span>Asked</p><p><span className="mb-1 block text-base font-semibold text-foreground">{reviews.length}</span>Answered</p><p><span className="mb-1 block text-base font-semibold text-foreground">{gradedCount}</span>Graded</p>
+          </div>
+          <details className="mt-3 text-xs leading-5 text-muted-foreground"><summary className="cursor-pointer py-1">Score breakdown</summary><p className="mt-2">Main: {delivery?.scoring?.mainScore?.toFixed(1) ?? "—"} · Grill: {delivery?.scoring?.grillScore?.toFixed(1) ?? "—"}</p><p>Grill adds a bonus only. Unanswered and unapproved questions are excluded, not scored as zero.</p></details>
+        </section>
+        {!reviews.length && <div className="rounded-xl border border-dashed border-border p-6 text-center"><ShieldCheck size={22} className="mx-auto mb-3 text-brand" /><p className="text-sm font-medium">No answers to review yet</p><p className="mt-1 text-sm text-muted-foreground">{askedCount ? "Waiting for candidate response." : "Send a question from the Questions tab to get started."}</p></div>}
+        <div className="space-y-3">{reviews.map(q => <details key={q.id} id={`review-${q.id}`} open={focusedReview === q.id || undefined} className="rounded-xl border border-border bg-surface" onToggle={event => { if (!event.currentTarget.open && focusedReview === q.id) setFocusedReview(null); }}>
+          <summary className="cursor-pointer p-4 text-sm"><span className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>{q.topic} · {q.difficulty}</span><span className="ml-auto rounded-full bg-background px-2 py-1 text-brand">{q.review?.approvedGrade ? `${q.review.approvedGrade} · ${q.review.approvedScore ?? "—"}` : "Needs review"}</span></span><span className="line-clamp-2 font-medium leading-6">{q.question}</span></summary>
+          <div className="border-t border-border p-3"><AnswerReview question={q} /></div>
+        </details>)}</div>
+      </div>
+      <div hidden={tab !== "ask"} role="tabpanel" id="buddy-panel-ask" aria-labelledby="buddy-tab-ask" className="relative min-h-0 flex-1">
+        <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto overscroll-contain space-y-5 p-4">
+          {!messages.length && <div className="rounded-xl border border-dashed border-border p-6"><p className="text-sm font-medium">A little help, when you need it</p><p className="mt-2 text-sm leading-6 text-muted-foreground">Ask AI Buddy for questions, explanations, or code solutions. This conversation is private to you.</p></div>}
+          {messages.map(message => <article key={message.id} className="min-w-0">
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">{message.role === "user" ? "You" : "AI Buddy"}</p>
+            <div className={`min-w-0 rounded-xl p-3.5 ${message.role === "user" ? "bg-amber-400/10" : "border border-border bg-surface"}`}>
+              <AIResponse content={message.text} />
+              {message.cards?.length > 0 && <button type="button" onClick={() => setTab("questions")} className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-brand"><ListChecks size={16} />View {message.cards.length} question{message.cards.length === 1 ? "" : "s"}</button>}
+              {message.sources?.length > 0 && <details className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground"><summary className="cursor-pointer">Sources ({message.sources.length})</summary><div className="mt-2 space-y-2">{message.sources.filter(source => /^https?:\/\//i.test(source.url)).map((source, i) => <a key={i} href={source.url} target="_blank" rel="noopener noreferrer" className="block break-words text-brand underline">{source.title}</a>)}</div></details>}
+            </div>
+          </article>)}
+        </div>
+        {showScrollBottom && <button type="button" onClick={scrollToBottom} aria-label="Scroll to latest message" className="workspace-icon-button absolute bottom-3 right-4 rounded-full bg-background shadow-md"><ArrowDown size={16} /></button>}
+      </div>
+      {loading && <div role="status" className="flex shrink-0 items-center gap-2 border-t border-border px-4 py-2 text-sm text-muted-foreground"><LoadingSpinner className="size-4" label="AI Buddy is thinking" />{tab === "questions" ? "Generating questions…" : "AI Buddy is thinking…"}</div>}
+      {(error || warning) && <div role={error ? "alert" : "status"} className={`shrink-0 border-t border-border px-4 py-2 text-xs leading-5 ${error ? "text-danger" : "text-muted-foreground"}`}>{error || warning}{error && canRetry && <button type="button" disabled={loading || syncing} onClick={() => send({ retry: true })} className="ml-2 font-semibold underline">Retry request</button>}</div>}
+      {tab !== "evaluations" && <div className="shrink-0 border-t border-border bg-background p-3">
+        {tab === "ask" && <div className="mb-2 flex flex-wrap gap-1.5">{["Next question", "Harder", "Easier", "Explain selected"].map(prompt => <button key={prompt} type="button" disabled={loading || !ready || syncing || Boolean(historyError)} onClick={() => send({ text: prompt })} className="rounded-full border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">{prompt}</button>)}</div>}
+        <form onSubmit={event => { event.preventDefault(); send({ text: input, forceQuestions: tab === "questions" }); }} className="rounded-xl border border-border bg-surface p-2 focus-within:border-brand/60 focus-within:ring-2 focus-within:ring-brand/10">
+          <label htmlFor="buddy-composer" className="sr-only">{tab === "questions" ? "Describe the questions you need" : "Message AI Buddy"}</label>
+          <textarea id="buddy-composer" ref={composerRef} rows={2} maxLength={1200} value={input} onChange={event => setInput(event.target.value)} onKeyDown={onMessageKeyDown} placeholder={tab === "questions" ? "e.g. Two medium React questions about hooks…" : "Ask for an explanation, solution, or follow-up…"} className="max-h-28 w-full resize-none bg-transparent px-2 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground" />
+          <div className="flex items-center justify-between gap-2 px-1"><span className="text-xs text-muted-foreground">{syncing ? "Syncing history…" : "Shift + Enter for a new line"}</span><button type="submit" disabled={loading || !ready || syncing || Boolean(historyError) || !input.trim()} className="workspace-primary flex items-center gap-2"><Send size={15} />{tab === "questions" ? "Generate" : "Send"}</button></div>
+        </form>
+      </div>}
+      {storageWarning && <p role="status" className="shrink-0 border-b border-border bg-amber-400/5 px-4 py-2 text-xs leading-5 text-brand">{storageWarning}</p>}
     </div>
   );
 }

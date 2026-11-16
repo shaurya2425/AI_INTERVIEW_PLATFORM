@@ -1,6 +1,7 @@
 
 "use server";
 
+import { appendBuddyMessage, historyFailure } from "@/lib/ai-buddy-history";
 import { db } from "@/lib/prisma";
 import { actionFailure } from "@/lib/action-result";
 import { GoogleGenAI } from "@google/genai";
@@ -922,6 +923,7 @@ intent = QUESTIONS
 
 export const generateInterviewQuestions = async ({
   callId,
+  requestId = randomUUID(),
   preferences,
   instruction = "",
   mode = "AUTO",
@@ -951,7 +953,7 @@ export const generateInterviewQuestions = async ({
       let booking;
       try {
         booking = await db.booking.findUnique({ where: { streamCallId: callId },
-          select: { id: true, interviewer: { select: { clerkUserId: true } } } });
+          select: { id: true, status: true, interviewer: { select: { clerkUserId: true } } } });
       } catch { throw Object.assign(new Error("Booking unavailable"), { code: "INTERVIEW_CONTEXT_ERROR" }); }
       if (!booking || booking.interviewer.clerkUserId !== user.id) return actionFailure("Forbidden");
 
@@ -976,6 +978,35 @@ export const generateInterviewQuestions = async ({
         instruction.length > 1200
       ) {
         return actionFailure("Invalid request");
+      }
+
+      if (typeof requestId !== "string" || !/^[\w-]{1,100}$/.test(requestId)) return actionFailure("Invalid request ID");
+      const responseId = requestId + ":assistant";
+      const restoredResponse = record => record.payload.result || {
+        type: record.payload.cards?.length ? "QUESTIONS" : "MESSAGE", message: record.content,
+        questions: record.payload.cards || [], sources: record.payload.sources || [],
+        metadata: record.payload.metadata || null, messageId: record.messageId,
+      };
+      try {
+        const existing = await db.aIBuddyMessage.findUnique({ where: { bookingId_messageId: { bookingId: booking.id, messageId: responseId } } });
+        if (existing) return restoredResponse(existing);
+        if (booking.status !== "SCHEDULED") return actionFailure("This interview has ended. Conversation history is preserved and read-only.");
+        await appendBuddyMessage(booking.id, user.id, { id: requestId, role: "user", text: instruction,
+          cards: [], questionIds: activeQuestion?.id ? [activeQuestion.id] : [], createdAt: new Date().toISOString(), action: mode, preferences });
+      } catch (error) { return historyFailure(error); }
+      async function persistResponse(result) {
+        try {
+          const stored = await appendBuddyMessage(booking.id, user.id, {
+            id: responseId, role: "assistant", text: result.message, cards: result.questions.map(q => ({ ...q, status: "SUGGESTED" })),
+            sources: result.sources, metadata: result.metadata, createdAt: new Date().toISOString(),
+            result: { ...result, messageId: responseId },
+          }, result.type);
+          return restoredResponse(stored);
+        } catch (error) {
+          // Keep a generated response available for browser backup and explicit sync.
+          // A storage outage must not silently throw away generated questions.
+          return { ...result, messageId: responseId, persistenceError: historyFailure(error).error };
+        }
       }
 
       if (/^(next question|harder|easier)[.!?]?$/i.test(instruction.trim())) {
@@ -1164,7 +1195,7 @@ export const generateInterviewQuestions = async ({
         mode !== "GRILL" &&
         !forceQuestions
       ) {
-        return {
+        return persistResponse({
           type: "MESSAGE",
           message: clean(
             output.message,
@@ -1179,7 +1210,7 @@ export const generateInterviewQuestions = async ({
             bankCount: 0,
             generatedCount: 0,
           },
-        };
+        });
       }
 
       // ------------------------------------------------------
@@ -1206,7 +1237,7 @@ export const generateInterviewQuestions = async ({
       // FINAL RESPONSE
       // ------------------------------------------------------
 
-      return {
+      return persistResponse({
         type: "QUESTIONS",
 
         message: clean(
@@ -1224,6 +1255,6 @@ export const generateInterviewQuestions = async ({
           bankCount: selected.length,
           generatedCount: generated.length,
         },
-      };
+      });
     }
   );

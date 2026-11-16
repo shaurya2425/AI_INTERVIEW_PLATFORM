@@ -157,12 +157,12 @@ export default function AIBuddyFilters({
         <div
           id="ai-buddy-curation"
           className="
-            mt-3 max-h-[32vh] overflow-y-auto space-y-3 rounded-xl
+            mt-3 space-y-3 rounded-xl
             border border-border bg-surface
             p-3
           "
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
             <SelectField
               label="Subject"
               value={value.subject}

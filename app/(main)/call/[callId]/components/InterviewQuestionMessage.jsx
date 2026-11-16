@@ -4,7 +4,9 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { MessageSimple, useMessageContext } from "stream-chat-react";
 import { toast } from "sonner";
 import { getInterviewQuestions, submitInterviewAnswer } from "@/actions/interviewQuestions";
-import AIResponse from "./AIResponse";
+import AIResponse, { CodeView } from "./AIResponse";
+import { RefreshCw, CheckCircle2 } from "lucide-react";
+import CandidateAnswerEditor from "./CandidateAnswerEditor";
 
 const QuestionContext = createContext(null);
 export const useInterviewQuestions = () => useContext(QuestionContext);
@@ -13,20 +15,34 @@ export function InterviewQuestionProvider({ callId, userId, isInterviewer, chann
   const [questions, setQuestions] = useState([]);
   const [scoring, setScoring] = useState(null);
   const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const inFlight = useRef(false);
+  const refreshAgain = useRef(false);
   const mounted = useRef(false);
   const revision = useRef(0);
   const invalidate = useCallback(() => { ++revision.current; }, []);
   const refresh = useCallback(async () => {
+    if (inFlight.current) { refreshAgain.current = true; return; }
+    inFlight.current = true;
     const request = ++revision.current;
+    setRefreshing(true);
     try {
       const result = await getInterviewQuestions(callId);
       if (!mounted.current || request !== revision.current) return;
       if (!result.success) { setError(result.error); return; }
       setQuestions(result.questions);
       setScoring(result.scoring || null);
+      setInitialized(true);
       setError("");
     } catch {
       if (mounted.current && request === revision.current) setError("Unable to load questions. Refresh to retry.");
+    } finally {
+      inFlight.current = false;
+      if (mounted.current) {
+        setRefreshing(false);
+        if (refreshAgain.current) { refreshAgain.current = false; void refresh(); }
+      }
     }
   }, [callId]);
   const acceptQuestion = useCallback((question) => {
@@ -71,23 +87,24 @@ export function InterviewQuestionProvider({ callId, userId, isInterviewer, chann
 
   const seenAnswers = useRef(null);
   useEffect(() => {
+    if (!initialized) return;
     const answered = new Set(questions.filter(q => q.submission).map(q => q.id));
     if (isInterviewer && seenAnswers.current) {
-      for (const id of answered) if (!seenAnswers.current.has(id)) toast.success("Candidate submitted an answer. Open Chat to review.", { id: `answer-${id}` });
+      for (const id of answered) if (!seenAnswers.current.has(id)) toast.success("Candidate submitted an answer. Open AI Buddy / Evaluations to review.", { id: `answer-${id}` });
     }
     seenAnswers.current = answered;
-  }, [questions, isInterviewer]);
+  }, [questions, isInterviewer, initialized]);
 
-  return <QuestionContext.Provider value={{ callId, userId, isInterviewer, questions, scoring, error, refresh, acceptQuestion }}>
+  return <QuestionContext.Provider value={{ callId, userId, isInterviewer, questions, scoring, error, refreshing, refresh, acceptQuestion }}>
     {children}
   </QuestionContext.Provider>;
 }
 
 export function InterviewQuestionStatus() {
-  const { error, refresh } = useInterviewQuestions();
-  return <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-3 py-2 text-xs text-foreground">
-    <span role={error ? "alert" : undefined}>{error || "Questions and answers are saved to this interview."}</span>
-    <button type="button" className="shrink-0 underline" onClick={refresh}>Refresh</button>
+  const { error, refresh, refreshing } = useInterviewQuestions();
+  return <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+    <span role={error ? "alert" : "status"} className={error ? "text-danger" : "flex items-center gap-1.5"}>{!error && <CheckCircle2 size={14} />}{error || "Interview chat"}</span>
+    <button type="button" disabled={refreshing} title="Sync saved questions and answers" aria-label="Sync saved questions and answers" className="workspace-icon-button size-8" onClick={refresh}><RefreshCw size={14} className={refreshing ? "animate-spin" : ""} /></button>
   </div>;
 }
 
@@ -111,7 +128,6 @@ export function InterviewChatMessage(props) {
   return <CandidateQuestionCard key={`${context.userId}:${id}`} question={question} />;
 }
 
-const fieldClass = "w-full rounded-lg border border-border bg-background p-2 text-sm text-foreground disabled:opacity-70";
 const buttonClass = "rounded-lg border border-border px-3 py-2 text-sm font-medium disabled:opacity-50";
 
 function CandidateQuestionCard({ question }) {
@@ -224,30 +240,22 @@ function CandidateQuestionCard({ question }) {
     finally { lock.current = false; setBusy(false); }
   }
 
-  return <article className="m-3 min-w-0 space-y-3 rounded-xl border border-border bg-background p-4 text-foreground">
+  return <article className="m-2 min-w-0 space-y-4 rounded-xl border border-border bg-background p-4 text-foreground sm:m-3">
     <p className="text-xs text-muted-foreground">{question.topic} · {question.difficulty} · {question.type.replaceAll("_", " ")}</p>
     <AIResponse content={question.question} />
     <p role="status" className="text-xs font-semibold">{submitted ? "Submitted · read-only" : "Sent / Awaiting answer"}</p>
     <form onSubmit={submit} className="space-y-3">
       {question.type === "MCQ" ? <fieldset disabled={isInterviewer || !!submitted || busy || !ready} className="space-y-2">
         <legend className="mb-2 text-sm">Select one answer</legend>
-        {question.options.map((option, index) => <label key={index} className="flex items-start gap-2 rounded-lg border border-border p-2 text-sm">
-          <input type="radio" name={`option-${question.id}`} checked={(submitted ? submitted.optionIndex : optionIndex) === index} onChange={() => setOptionIndex(index)} />
+        {question.options.map((option, index) => <label key={index} className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-3 text-sm leading-6 transition-colors has-checked:border-brand/50 has-checked:bg-amber-400/10">
+          <input className="mt-1.5 accent-amber-500" type="radio" name={`option-${question.id}`} checked={(submitted ? submitted.optionIndex : optionIndex) === index} onChange={() => setOptionIndex(index)} />
           <span>{String.fromCharCode(65 + index)}. {option}</span>
         </label>)}
       </fieldset> : submitted ? <div>
-        {submitted.language && <p className="mb-2 text-xs">Language: {submitted.language}</p>}
-        <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border p-3 text-sm">{submitted.answer}</pre>
+        <p className="mb-2 flex items-center gap-1.5 text-xs text-success"><CheckCircle2 size={14} />Answer saved to this interview</p>
+        {code ? <CodeView code={submitted.answer} language={submitted.language || "text"} /> : <p className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-border bg-surface p-3 text-sm leading-6">{submitted.answer}</p>}
       </div> : !isInterviewer && <>
-        {code && <label className="block space-y-1 text-sm">Language
-          <select aria-label="Answer language" value={language} onChange={event => setLanguage(event.target.value)} disabled={busy || !ready} className={fieldClass}>
-            {["javascript", "typescript", "python", "java", "cpp", "c", "csharp", "go", "rust", "sql", "plaintext"].map(item => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>}
-        <label className="block space-y-1 text-sm">{code ? "Code / SQL (you can paste from your IDE)" : "Your answer"}
-          <textarea rows={code ? 10 : 5} maxLength={30000} value={answer} onChange={event => setAnswer(event.target.value)} disabled={busy || !ready}
-            spellCheck={!code} className={`${fieldClass} resize-y ${code ? "font-mono" : ""}`} />
-        </label>
+        <CandidateAnswerEditor question={question} answer={answer} setAnswer={setAnswer} language={language} setLanguage={setLanguage} code={code} disabled={busy || !ready} error={error} onSubmit={submit} />
         {dictation && <div className="space-y-2 text-xs">
           {speechState === "unsupported" ? <p>Dictation is not supported by this browser. Type your answer or use a browser with speech recognition.</p> : <div className="flex flex-wrap items-center gap-2">
             <select aria-label="Dictation language" value={speechLanguage} onChange={e => setSpeechLanguage(e.target.value)} disabled={speechState === "listening" || busy} className="rounded border border-border bg-background p-2">
@@ -262,7 +270,7 @@ function CandidateQuestionCard({ question }) {
       </>}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {warning && <p role="status" className="text-sm">{warning}</p>}
-      {!isInterviewer && (!submitted || submitted.notificationPending) && <button type="submit" disabled={busy || !ready || speechState === "listening"} className={`${buttonClass} bg-amber-400 text-zinc-950`}>
+      {!isInterviewer && (!submitted || submitted.notificationPending) && <button type="submit" disabled={busy || !ready || speechState === "listening"} className="workspace-primary w-full">
         {busy ? "Saving…" : submitted ? "Retry notification" : "Submit answer"}
       </button>}
       {speechState === "listening" && <p className="text-xs">Stop dictation and review your answer before submitting.</p>}

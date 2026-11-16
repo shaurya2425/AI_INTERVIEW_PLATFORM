@@ -54,6 +54,7 @@ export const ModelName = {
   User: 'User',
   Availability: 'Availability',
   Booking: 'Booking',
+  AIBuddyMessage: 'AIBuddyMessage',
   InterviewReminder: 'InterviewReminder',
   InterviewQuestion: 'InterviewQuestion',
   InterviewSubmission: 'InterviewSubmission',
@@ -141,6 +142,23 @@ export const BookingScalarFieldEnum = {
 } as const
 
 export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+export const AIBuddyMessageScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  messageId: 'messageId',
+  authorId: 'authorId',
+  role: 'role',
+  content: 'content',
+  kind: 'kind',
+  questionIds: 'questionIds',
+  payload: 'payload',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AIBuddyMessageScalarFieldEnum = (typeof AIBuddyMessageScalarFieldEnum)[keyof typeof AIBuddyMessageScalarFieldEnum]
 
 
 export const InterviewReminderScalarFieldEnum = {

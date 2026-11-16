@@ -362,6 +362,7 @@ export type BookingWhereInput = {
   transactions?: Prisma.CreditTransactionListRelationFilter
   reminders?: Prisma.InterviewReminderListRelationFilter
   questions?: Prisma.InterviewQuestionListRelationFilter
+  buddyMessages?: Prisma.AIBuddyMessageListRelationFilter
 }
 
 export type BookingOrderByWithRelationInput = {
@@ -395,6 +396,7 @@ export type BookingOrderByWithRelationInput = {
   transactions?: Prisma.CreditTransactionOrderByRelationAggregateInput
   reminders?: Prisma.InterviewReminderOrderByRelationAggregateInput
   questions?: Prisma.InterviewQuestionOrderByRelationAggregateInput
+  buddyMessages?: Prisma.AIBuddyMessageOrderByRelationAggregateInput
 }
 
 export type BookingWhereUniqueInput = Prisma.AtLeast<{
@@ -431,6 +433,7 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
   transactions?: Prisma.CreditTransactionListRelationFilter
   reminders?: Prisma.InterviewReminderListRelationFilter
   questions?: Prisma.InterviewQuestionListRelationFilter
+  buddyMessages?: Prisma.AIBuddyMessageListRelationFilter
 }, "id" | "streamCallId">
 
 export type BookingOrderByWithAggregationInput = {
@@ -524,6 +527,7 @@ export type BookingCreateInput = {
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateInput = {
@@ -555,6 +559,7 @@ export type BookingUncheckedCreateInput = {
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUpdateInput = {
@@ -586,6 +591,7 @@ export type BookingUpdateInput = {
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateInput = {
@@ -617,6 +623,7 @@ export type BookingUncheckedUpdateInput = {
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateManyInput = {
@@ -889,6 +896,20 @@ export type EnumBookingStatusFieldUpdateOperationsInput = {
   set?: $Enums.BookingStatus
 }
 
+export type BookingCreateNestedOneWithoutBuddyMessagesInput = {
+  create?: Prisma.XOR<Prisma.BookingCreateWithoutBuddyMessagesInput, Prisma.BookingUncheckedCreateWithoutBuddyMessagesInput>
+  connectOrCreate?: Prisma.BookingCreateOrConnectWithoutBuddyMessagesInput
+  connect?: Prisma.BookingWhereUniqueInput
+}
+
+export type BookingUpdateOneRequiredWithoutBuddyMessagesNestedInput = {
+  create?: Prisma.XOR<Prisma.BookingCreateWithoutBuddyMessagesInput, Prisma.BookingUncheckedCreateWithoutBuddyMessagesInput>
+  connectOrCreate?: Prisma.BookingCreateOrConnectWithoutBuddyMessagesInput
+  upsert?: Prisma.BookingUpsertWithoutBuddyMessagesInput
+  connect?: Prisma.BookingWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BookingUpdateToOneWithWhereWithoutBuddyMessagesInput, Prisma.BookingUpdateWithoutBuddyMessagesInput>, Prisma.BookingUncheckedUpdateWithoutBuddyMessagesInput>
+}
+
 export type BookingCreateNestedOneWithoutRemindersInput = {
   create?: Prisma.XOR<Prisma.BookingCreateWithoutRemindersInput, Prisma.BookingUncheckedCreateWithoutRemindersInput>
   connectOrCreate?: Prisma.BookingCreateOrConnectWithoutRemindersInput
@@ -975,6 +996,7 @@ export type BookingCreateWithoutIntervieweeInput = {
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutIntervieweeInput = {
@@ -1005,6 +1027,7 @@ export type BookingUncheckedCreateWithoutIntervieweeInput = {
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutIntervieweeInput = {
@@ -1045,6 +1068,7 @@ export type BookingCreateWithoutInterviewerInput = {
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutInterviewerInput = {
@@ -1075,6 +1099,7 @@ export type BookingUncheckedCreateWithoutInterviewerInput = {
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutInterviewerInput = {
@@ -1149,6 +1174,146 @@ export type BookingUpdateManyWithWhereWithoutInterviewerInput = {
   data: Prisma.XOR<Prisma.BookingUpdateManyMutationInput, Prisma.BookingUncheckedUpdateManyWithoutInterviewerInput>
 }
 
+export type BookingCreateWithoutBuddyMessagesInput = {
+  id?: string
+  startTime: Date | string
+  endTime: Date | string
+  status?: $Enums.BookingStatus
+  creditsCharged: number
+  streamCallId?: string | null
+  recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  interviewee: Prisma.UserCreateNestedOneWithoutBookingsAsIntervieweeInput
+  interviewer: Prisma.UserCreateNestedOneWithoutBookingsAsInterviewerInput
+  feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
+  transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
+  reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+}
+
+export type BookingUncheckedCreateWithoutBuddyMessagesInput = {
+  id?: string
+  intervieweeId: string
+  interviewerId: string
+  startTime: Date | string
+  endTime: Date | string
+  status?: $Enums.BookingStatus
+  creditsCharged: number
+  streamCallId?: string | null
+  recordingUrl?: string | null
+  completedAt?: Date | string | null
+  completedBy?: string | null
+  completionState?: string
+  completionToken?: string | null
+  completionStartedAt?: Date | string | null
+  completionError?: string | null
+  streamEndedAt?: Date | string | null
+  feedbackState?: string
+  feedbackRequestedAt?: Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
+  transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
+  reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+}
+
+export type BookingCreateOrConnectWithoutBuddyMessagesInput = {
+  where: Prisma.BookingWhereUniqueInput
+  create: Prisma.XOR<Prisma.BookingCreateWithoutBuddyMessagesInput, Prisma.BookingUncheckedCreateWithoutBuddyMessagesInput>
+}
+
+export type BookingUpsertWithoutBuddyMessagesInput = {
+  update: Prisma.XOR<Prisma.BookingUpdateWithoutBuddyMessagesInput, Prisma.BookingUncheckedUpdateWithoutBuddyMessagesInput>
+  create: Prisma.XOR<Prisma.BookingCreateWithoutBuddyMessagesInput, Prisma.BookingUncheckedCreateWithoutBuddyMessagesInput>
+  where?: Prisma.BookingWhereInput
+}
+
+export type BookingUpdateToOneWithWhereWithoutBuddyMessagesInput = {
+  where?: Prisma.BookingWhereInput
+  data: Prisma.XOR<Prisma.BookingUpdateWithoutBuddyMessagesInput, Prisma.BookingUncheckedUpdateWithoutBuddyMessagesInput>
+}
+
+export type BookingUpdateWithoutBuddyMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
+  streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  interviewee?: Prisma.UserUpdateOneRequiredWithoutBookingsAsIntervieweeNestedInput
+  interviewer?: Prisma.UserUpdateOneRequiredWithoutBookingsAsInterviewerNestedInput
+  feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
+  transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
+  reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+}
+
+export type BookingUncheckedUpdateWithoutBuddyMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  intervieweeId?: Prisma.StringFieldUpdateOperationsInput | string
+  interviewerId?: Prisma.StringFieldUpdateOperationsInput | string
+  startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  creditsCharged?: Prisma.IntFieldUpdateOperationsInput | number
+  streamCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recordingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionState?: Prisma.StringFieldUpdateOperationsInput | string
+  completionToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completionStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completionError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamEndedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  feedbackState?: Prisma.StringFieldUpdateOperationsInput | string
+  feedbackRequestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  transcriptArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recordingArtifacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringSummary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  scoringPolicyVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
+  transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
+  reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+}
+
 export type BookingCreateWithoutRemindersInput = {
   id?: string
   startTime: Date | string
@@ -1177,6 +1342,7 @@ export type BookingCreateWithoutRemindersInput = {
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutRemindersInput = {
@@ -1207,6 +1373,7 @@ export type BookingUncheckedCreateWithoutRemindersInput = {
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutRemindersInput = {
@@ -1253,6 +1420,7 @@ export type BookingUpdateWithoutRemindersInput = {
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutRemindersInput = {
@@ -1283,6 +1451,7 @@ export type BookingUncheckedUpdateWithoutRemindersInput = {
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateWithoutQuestionsInput = {
@@ -1313,6 +1482,7 @@ export type BookingCreateWithoutQuestionsInput = {
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutQuestionsInput = {
@@ -1343,6 +1513,7 @@ export type BookingUncheckedCreateWithoutQuestionsInput = {
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutQuestionsInput = {
@@ -1389,6 +1560,7 @@ export type BookingUpdateWithoutQuestionsInput = {
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutQuestionsInput = {
@@ -1419,6 +1591,7 @@ export type BookingUncheckedUpdateWithoutQuestionsInput = {
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateWithoutFeedbackInput = {
@@ -1449,6 +1622,7 @@ export type BookingCreateWithoutFeedbackInput = {
   transactions?: Prisma.CreditTransactionCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutFeedbackInput = {
@@ -1479,6 +1653,7 @@ export type BookingUncheckedCreateWithoutFeedbackInput = {
   transactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutFeedbackInput = {
@@ -1525,6 +1700,7 @@ export type BookingUpdateWithoutFeedbackInput = {
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutFeedbackInput = {
@@ -1555,6 +1731,7 @@ export type BookingUncheckedUpdateWithoutFeedbackInput = {
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateWithoutTransactionsInput = {
@@ -1585,6 +1762,7 @@ export type BookingCreateWithoutTransactionsInput = {
   feedback?: Prisma.FeedbackCreateNestedOneWithoutBookingInput
   reminders?: Prisma.InterviewReminderCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageCreateNestedManyWithoutBookingInput
 }
 
 export type BookingUncheckedCreateWithoutTransactionsInput = {
@@ -1615,6 +1793,7 @@ export type BookingUncheckedCreateWithoutTransactionsInput = {
   feedback?: Prisma.FeedbackUncheckedCreateNestedOneWithoutBookingInput
   reminders?: Prisma.InterviewReminderUncheckedCreateNestedManyWithoutBookingInput
   questions?: Prisma.InterviewQuestionUncheckedCreateNestedManyWithoutBookingInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedCreateNestedManyWithoutBookingInput
 }
 
 export type BookingCreateOrConnectWithoutTransactionsInput = {
@@ -1661,6 +1840,7 @@ export type BookingUpdateWithoutTransactionsInput = {
   feedback?: Prisma.FeedbackUpdateOneWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutTransactionsInput = {
@@ -1691,6 +1871,7 @@ export type BookingUncheckedUpdateWithoutTransactionsInput = {
   feedback?: Prisma.FeedbackUncheckedUpdateOneWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingCreateManyIntervieweeInput = {
@@ -1773,6 +1954,7 @@ export type BookingUpdateWithoutIntervieweeInput = {
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutIntervieweeInput = {
@@ -1803,6 +1985,7 @@ export type BookingUncheckedUpdateWithoutIntervieweeInput = {
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateManyWithoutIntervieweeInput = {
@@ -1859,6 +2042,7 @@ export type BookingUpdateWithoutInterviewerInput = {
   transactions?: Prisma.CreditTransactionUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateWithoutInterviewerInput = {
@@ -1889,6 +2073,7 @@ export type BookingUncheckedUpdateWithoutInterviewerInput = {
   transactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutBookingNestedInput
   reminders?: Prisma.InterviewReminderUncheckedUpdateManyWithoutBookingNestedInput
   questions?: Prisma.InterviewQuestionUncheckedUpdateManyWithoutBookingNestedInput
+  buddyMessages?: Prisma.AIBuddyMessageUncheckedUpdateManyWithoutBookingNestedInput
 }
 
 export type BookingUncheckedUpdateManyWithoutInterviewerInput = {
@@ -1926,12 +2111,14 @@ export type BookingCountOutputType = {
   transactions: number
   reminders: number
   questions: number
+  buddyMessages: number
 }
 
 export type BookingCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactions?: boolean | BookingCountOutputTypeCountTransactionsArgs
   reminders?: boolean | BookingCountOutputTypeCountRemindersArgs
   questions?: boolean | BookingCountOutputTypeCountQuestionsArgs
+  buddyMessages?: boolean | BookingCountOutputTypeCountBuddyMessagesArgs
 }
 
 /**
@@ -1963,6 +2150,13 @@ export type BookingCountOutputTypeCountRemindersArgs<ExtArgs extends runtime.Typ
  */
 export type BookingCountOutputTypeCountQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.InterviewQuestionWhereInput
+}
+
+/**
+ * BookingCountOutputType without action
+ */
+export type BookingCountOutputTypeCountBuddyMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AIBuddyMessageWhereInput
 }
 
 
@@ -1997,6 +2191,7 @@ export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   transactions?: boolean | Prisma.Booking$transactionsArgs<ExtArgs>
   reminders?: boolean | Prisma.Booking$remindersArgs<ExtArgs>
   questions?: boolean | Prisma.Booking$questionsArgs<ExtArgs>
+  buddyMessages?: boolean | Prisma.Booking$buddyMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.BookingCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["booking"]>
 
@@ -2093,6 +2288,7 @@ export type BookingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   transactions?: boolean | Prisma.Booking$transactionsArgs<ExtArgs>
   reminders?: boolean | Prisma.Booking$remindersArgs<ExtArgs>
   questions?: boolean | Prisma.Booking$questionsArgs<ExtArgs>
+  buddyMessages?: boolean | Prisma.Booking$buddyMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.BookingCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BookingIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2113,6 +2309,7 @@ export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     transactions: Prisma.$CreditTransactionPayload<ExtArgs>[]
     reminders: Prisma.$InterviewReminderPayload<ExtArgs>[]
     questions: Prisma.$InterviewQuestionPayload<ExtArgs>[]
+    buddyMessages: Prisma.$AIBuddyMessagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2539,6 +2736,7 @@ export interface Prisma__BookingClient<T, Null = never, ExtArgs extends runtime.
   transactions<T extends Prisma.Booking$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CreditTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reminders<T extends Prisma.Booking$remindersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$remindersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewReminderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   questions<T extends Prisma.Booking$questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InterviewQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  buddyMessages<T extends Prisma.Booking$buddyMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Booking$buddyMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AIBuddyMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3076,6 +3274,30 @@ export type Booking$questionsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.InterviewQuestionScalarFieldEnum | Prisma.InterviewQuestionScalarFieldEnum[]
+}
+
+/**
+ * Booking.buddyMessages
+ */
+export type Booking$buddyMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AIBuddyMessage
+   */
+  select?: Prisma.AIBuddyMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AIBuddyMessage
+   */
+  omit?: Prisma.AIBuddyMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AIBuddyMessageInclude<ExtArgs> | null
+  where?: Prisma.AIBuddyMessageWhereInput
+  orderBy?: Prisma.AIBuddyMessageOrderByWithRelationInput | Prisma.AIBuddyMessageOrderByWithRelationInput[]
+  cursor?: Prisma.AIBuddyMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AIBuddyMessageScalarFieldEnum | Prisma.AIBuddyMessageScalarFieldEnum[]
 }
 
 /**

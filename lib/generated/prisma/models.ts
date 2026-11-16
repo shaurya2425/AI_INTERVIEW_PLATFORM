@@ -11,6 +11,7 @@
 export type * from './models/User'
 export type * from './models/Availability'
 export type * from './models/Booking'
+export type * from './models/AIBuddyMessage'
 export type * from './models/InterviewReminder'
 export type * from './models/InterviewQuestion'
 export type * from './models/InterviewSubmission'

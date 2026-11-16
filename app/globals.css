@@ -156,3 +156,47 @@ body {
 .cl-internal-b8hinb{
   grid-template-columns: auto auto auto !important;
 }
+/* Interview workspace: shared application tokens, no independent theme. */
+@layer components {
+  .workspace-primary {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-amber-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .workspace-secondary {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .workspace-icon-button {
+    @apply flex size-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50;
+  }
+  .workspace-field {
+    @apply w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2.5 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-brand/60 focus:ring-2 focus:ring-brand/10 disabled:opacity-60;
+  }
+}
+.prept-meeting { font-family: var(--font-sans), Arial, Helvetica, sans-serif; }
+.prept-meeting [role="tabpanel"][hidden] { display: none; }
+.prept-meeting button, .prept-meeting summary { -webkit-tap-highlight-color: transparent; }
+.prept-meeting summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.prept-meeting .str-chat {
+  --str-chat__font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  --str-chat__primary-color: var(--brand);
+  --str-chat__background-color: var(--background);
+  --str-chat__secondary-background-color: var(--surface);
+  --str-chat__primary-surface-color: var(--muted);
+  --str-chat__text-color: var(--foreground);
+  height: 100%; min-height: 0; min-width: 0;
+}
+.prept-meeting .str-chat__channel, .prept-meeting .str-chat__main-panel { min-height: 0; min-width: 0; }
+.prept-meeting .str-video__call-controls { flex-wrap: wrap; gap: 6px; padding: 8px; }
+.prept-meeting .meeting-video-stage { height: clamp(120px, 23dvh, 260px); overflow: hidden; }
+.prept-meeting .meeting-video-stage .str-video__speaker-layout__wrapper { height: 100%; min-height: 0; width: 100%; }
+.prept-meeting .str-video__speaker-layout { gap: 8px; }
+.prept-meeting .str-video__speaker-layout__participants-bar-wrapper { max-height: 80px; flex-shrink: 0; }
+.prept-meeting .str-video__speaker-layout__participant-tile { max-width: 120px; }
+@media (min-width: 1024px) {
+  .prept-meeting .meeting-workspace { width: min(var(--workspace-width, 520px), calc(100% - 400px)); }
+  .prept-meeting .meeting-video-stage { display: flex; flex: 1; height: auto; padding: 12px; }
+  .prept-meeting .str-video__speaker-layout__participants-bar-wrapper { max-height: 150px; }
+  .prept-meeting .str-video__speaker-layout__participant-tile { max-width: 200px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prept-meeting *, .prept-meeting *::before, .prept-meeting *::after { scroll-behavior: auto; transition-duration: 0s; }
+}

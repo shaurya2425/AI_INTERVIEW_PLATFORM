@@ -9,7 +9,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-import AnswerReview from "./AnswerReview";
 import AIResponse from "./AIResponse";
 import AIGrillComposer from "./AIGrillComposer";
 
@@ -27,6 +26,7 @@ export default function AIQuestionCard({
   onSelect,
   onSkip,
   onGrill,
+  onReview,
 }) {
   const [showGrill, setShowGrill] = useState(false);
 
@@ -41,6 +41,7 @@ export default function AIQuestionCard({
       {/* Metadata */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
+          {question.source && <span className="text-xs font-medium text-brand">{question.source === "CURATED" ? "Curated" : "Generated"}</span>}
           <span className="rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
             {question.topic}
           </span>
@@ -97,7 +98,9 @@ export default function AIQuestionCard({
         </div>
       </details>
 
-      {question.review && <AnswerReview question={question} />}
+      {question.submission && <button type="button" onClick={() => onReview?.(question)} className="workspace-secondary w-full">
+        {question.review?.approvedGrade ? `${question.review.approvedGrade} · ${question.review.approvedScore ?? "—"} / 100 · View evaluation` : "Answer received · View evaluation"}
+      </button>}
       {/* State */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>
@@ -121,23 +124,25 @@ export default function AIQuestionCard({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        {["SUGGESTED", "SELECTED", "ASKED"].includes(question.status) && (
+        {["SUGGESTED", "SELECTED", "ASKED", "PENDING", "SKIPPED"].includes(question.status) && (
           <>
             <button
               type="button"
-              onClick={() => onSelect(question)}
-              className="flex h-9 items-center gap-1.5 rounded-lg bg-amber-400 px-3 text-sm font-semibold text-zinc-950"
+              disabled={loading || !onSelect}
+              onClick={() => onSelect?.(question)}
+              className="workspace-primary flex items-center gap-1.5"
             >
               <Check size={14} />
-              Select
+              {question.status === "PENDING" ? "Retry delivery" : "Select & Send"}
             </button>
 
             <button
               type="button"
-              onClick={() => onSkip(question)}
-              className="h-9 rounded-lg border border-border px-3 text-sm text-muted-foreground hover:text-foreground"
+              disabled={loading || !onSkip}
+              onClick={() => onSkip?.(question)}
+              className="workspace-secondary"
             >
-              Skip
+              Set aside
             </button>
           </>
         )}

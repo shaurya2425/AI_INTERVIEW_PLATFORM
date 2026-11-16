@@ -387,6 +387,7 @@ export const ModelName = {
   User: 'User',
   Availability: 'Availability',
   Booking: 'Booking',
+  AIBuddyMessage: 'AIBuddyMessage',
   InterviewReminder: 'InterviewReminder',
   InterviewQuestion: 'InterviewQuestion',
   InterviewSubmission: 'InterviewSubmission',
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "availability" | "booking" | "interviewReminder" | "interviewQuestion" | "interviewSubmission" | "feedback" | "creditTransaction" | "payout"
+    modelProps: "user" | "availability" | "booking" | "aIBuddyMessage" | "interviewReminder" | "interviewQuestion" | "interviewSubmission" | "feedback" | "creditTransaction" | "payout"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -631,6 +632,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BookingCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BookingCountAggregateOutputType> | number
+        }
+      }
+    }
+    AIBuddyMessage: {
+      payload: Prisma.$AIBuddyMessagePayload<ExtArgs>
+      fields: Prisma.AIBuddyMessageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AIBuddyMessageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AIBuddyMessageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>
+        }
+        findFirst: {
+          args: Prisma.AIBuddyMessageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AIBuddyMessageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>
+        }
+        findMany: {
+          args: Prisma.AIBuddyMessageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>[]
+        }
+        create: {
+          args: Prisma.AIBuddyMessageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>
+        }
+        createMany: {
+          args: Prisma.AIBuddyMessageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AIBuddyMessageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>[]
+        }
+        delete: {
+          args: Prisma.AIBuddyMessageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>
+        }
+        update: {
+          args: Prisma.AIBuddyMessageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>
+        }
+        deleteMany: {
+          args: Prisma.AIBuddyMessageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AIBuddyMessageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AIBuddyMessageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>[]
+        }
+        upsert: {
+          args: Prisma.AIBuddyMessageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIBuddyMessagePayload>
+        }
+        aggregate: {
+          args: Prisma.AIBuddyMessageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAIBuddyMessage>
+        }
+        groupBy: {
+          args: Prisma.AIBuddyMessageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AIBuddyMessageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AIBuddyMessageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AIBuddyMessageCountAggregateOutputType> | number
         }
       }
     }
@@ -1182,6 +1257,23 @@ export const BookingScalarFieldEnum = {
 export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
 
 
+export const AIBuddyMessageScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  messageId: 'messageId',
+  authorId: 'authorId',
+  role: 'role',
+  content: 'content',
+  kind: 'kind',
+  questionIds: 'questionIds',
+  payload: 'payload',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AIBuddyMessageScalarFieldEnum = (typeof AIBuddyMessageScalarFieldEnum)[keyof typeof AIBuddyMessageScalarFieldEnum]
+
+
 export const InterviewReminderScalarFieldEnum = {
   id: 'id',
   bookingId: 'bookingId',
@@ -1624,6 +1716,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   availability?: Prisma.AvailabilityOmit
   booking?: Prisma.BookingOmit
+  aIBuddyMessage?: Prisma.AIBuddyMessageOmit
   interviewReminder?: Prisma.InterviewReminderOmit
   interviewQuestion?: Prisma.InterviewQuestionOmit
   interviewSubmission?: Prisma.InterviewSubmissionOmit
