@@ -1,662 +1,544 @@
-﻿# Prept — AI Interview Platform
+<div align="center">
+
+# Prept — AI-Powered Mock Interview Platform
 
 **Prepare with purpose. Practice with confidence.**
 
-Prept connects candidates with interviewers for live mock interviews. Candidates discover interviewers, book sessions using subscription credits, and join video calls with integrated chat. Interviewers manage availability, receive AI-generated question suggestions, and earn credits. After a session, transcript analysis produces structured feedback, while recording events attach playback links to the booking.
+A full-stack interview practice platform that connects candidates with human interviewers and brings **AI-assisted question curation, structured answer evaluation, and evidence-grounded feedback** into the same live session.
 
-The application is a full-stack Next.js project backed by PostgreSQL. Clerk handles identity and subscriptions; Stream provides video and chat; Gemini generates questions and feedback; Arcjet protects requests; and Resend delivers withdrawal notifications.
+[**Live Application**](https://ai-interview-platform-ten-silk.vercel.app/) · [**Source Code**](https://github.com/shaurya2425/AI_INTERVIEW_PLATFORM) · [**Report an Issue**](https://github.com/shaurya2425/AI_INTERVIEW_PLATFORM/issues)
+
+![Next.js](https://img.shields.io/badge/Next.js-16.4.3-black?logo=nextdotjs) ![React](https://img.shields.io/badge/React-19.3.0-149ECA?logo=react&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white) ![Prisma](https://img.shields.io/badge/Prisma-7.4.2-2D3748?logo=prisma) ![Deployment](https://img.shields.io/badge/Deployment-Vercel-000000?logo=vercel)
+
+**B.Tech capstone project · Full-stack SaaS prototype · Human-led interviews with an AI copilot**
+
+</div>
+
+---
+
+## Overview
+
+Traditional mock interviews often involve disconnected tools for scheduling, video meetings, interview questions, grading, and post-session review. **Prept** brings those workflows into a single application.
+
+Candidates can discover interviewers, book a time slot using credits, attend a live interview, answer questions, and review their performance afterward. Interviewers can conduct sessions with video and chat, use **Prept AI Buddy** to find relevant questions and adaptive follow-ups, review submitted answers, and approve grades. After completion, Prept assembles available evidence into a structured feedback report.
+
+**The current product is human-led:** Gemini assists an actual interviewer; it does **not** independently conduct a complete AI-led interview. Autonomous/self-interview functionality is future scope.
+
+### Why Prept?
+
+- **One end-to-end workflow:** discovery → booking → live interview → questions and answers → approved evaluation → feedback.
+- **Human judgment retained:** interviewer-approved grades, not AI-generated numeric ratings, determine the official score.
+- **Context-aware assistance:** a curated question bank plus Gemini helps interviewers choose questions, explore topics, and ask harder follow-ups.
+- **Evidence-first reports:** a missing transcript does not automatically prevent feedback; reports disclose what could and could not be assessed.
+- **Role-specific experience:** distinct candidate and interviewer workflows, supported by persistent application data.
 
 ## Contents
 
-- [Features and roles](#features-and-roles)
-- [Technology stack](#technology-stack)
+- [Live demo and screenshots](#live-demo-and-screenshots)
+- [Features](#features)
+- [How an interview works](#how-an-interview-works)
+- [AI Buddy](#ai-buddy)
+- [Answer evaluation and scoring](#answer-evaluation-and-scoring)
+- [AI feedback and transcript-optional workflow](#ai-feedback-and-transcript-optional-workflow)
 - [System architecture](#system-architecture)
-- [Application workflows](#application-workflows)
+- [Technology stack](#technology-stack)
+- [Data model](#data-model)
 - [Credits and payouts](#credits-and-payouts)
-- [Database design](#database-design)
-- [Routes and access](#routes-and-access)
-- [Repository structure](#repository-structure)
-- [Local setup](#local-setup)
-- [Development and verification](#development-and-verification)
-- [Deployment considerations](#deployment-considerations)
-- [Current implementation boundaries](#current-implementation-boundaries)
+- [Getting started](#getting-started)
+- [Configuration and integrations](#configuration-and-integrations)
+- [Key routes and project structure](#key-routes-and-project-structure)
+- [Verification](#verification)
+- [Future roadmap](#future-roadmap)
+- [Team](#team)
 
-## Features and roles
+## Live demo and screenshots
 
-### Interviewees
+**Live application:** https://ai-interview-platform-ten-silk.vercel.app/
 
-- Sign up and sign in through Clerk, then complete role-based onboarding.
-- Browse interviewers, filter by category, and search by name, title, or company.
-- Review profiles, experience, expertise, availability, and credit cost.
-- Select a 45-minute slot from a seven-day booking window.
-- Book sessions using the available credit balance.
-- View upcoming and past appointments.
-- Join interviews with video, audio, screen-sharing support, and chat.
-- Read generated feedback summaries and access full reports through the Starter or Pro UI.
-- Open available recording links through the Pro UI.
+The live experience requires appropriate sign-in, role onboarding, and access to configured third-party services. For a full interview walkthrough, use separate interviewer and candidate accounts.
 
-### Interviewers
+> **Screenshots coming soon.** Updated screenshots will be added for the candidate dashboard, interviewer discovery, AI Buddy, live meeting room, question/answer review, and final feedback report. The README intentionally does not link to nonexistent image files.
 
-- Complete a profile with title, company, experience, biography, and categories.
-- Set a daily availability window and view appointments from the dashboard.
-- Conduct live interviews with integrated chat.
-- Generate six category-specific questions with reference answers.
-- Inspect credit balance, completed-session earnings, and withdrawal history.
-- Request withdrawals with PayPal, bank transfer, or UPI payment details.
+<!-- Screenshot integration guide (after adding actual assets to public or docs/screenshots):
 
-### Payout review
+### Candidate dashboard
+![Candidate dashboard](docs/screenshots/candidate-dashboard.png)
 
-An administrator receives a withdrawal email, opens the review page, and marks the request processed using the configured payout password. Processing records an administrative decision; the application does not transfer money through a payment-provider API.
+### Find an interviewer
+![Interviewer discovery](docs/screenshots/interviewer-discovery.png)
 
-### Interview categories
+### AI Buddy and live session
+![AI Buddy](docs/screenshots/ai-buddy.png)
+![Live interview room](docs/screenshots/meeting-room.png)
 
-Frontend · Backend · Full Stack · Data Structures and Algorithms · System Design · Behavioral · DevOps · Mobile
+### Evaluation and feedback
+![Question review](docs/screenshots/answer-review.png)
+![Final feedback report](docs/screenshots/feedback-report.png)
 
-## Technology stack
+-->
 
-Versions reflect declarations in the repository, rather than a claim about the latest available releases.
+## Features
 
-| Layer | Technology | Responsibility |
-| --- | --- | --- |
-| Framework | Next.js 16.4.3 | App Router, server rendering, Server Actions, route handlers, request proxy |
-| Interface | React 19.3.0 | Components, hooks, interactive screens |
-| Language | JavaScript / JSX | Most application code; generated Prisma code uses TypeScript |
-| Styling | Tailwind CSS 4, `tw-animate-css` | Utility styling and animation utilities |
-| UI primitives | Radix UI, shadcn-style components | Dialogs, tabs, inputs, cards, buttons |
-| Motion and icons | Motion, Animate UI, Lucide React | Animations, effects, and icons |
-| Themes and notifications | `next-themes`, Sonner | Theme context and toast notifications |
-| Typography | DM Sans and Lora through `next/font` | Sans-serif and serif typography |
-| Identity and billing | Clerk Next.js SDK 7.9.x | Sessions, account UI, plan checks, subscription checkout |
-| Database | PostgreSQL | Persistent application data |
-| Data access | Prisma 7.4.2, `PrismaPg`, `pg` | Generated client, queries, transactions, connection pooling |
-| Video | Stream Video React SDK and Node SDK | Calls, membership, tokens, recording, transcription |
-| Messaging | Stream Chat and Stream Chat React | Persistent chat channel for each interview |
-| Generative AI | `@google/generative-ai` | Questions and transcript analysis |
-| Protection | Arcjet | Shield, bot detection, per-user token buckets |
-| Email | Resend and React Email | Withdrawal notification rendering and delivery |
-| Dates | `date-fns` | Slot generation and date/time formatting |
-| Code presentation | Shiki | Syntax highlighting for code-display components |
-| Code quality | ESLint 9 and Next.js ESLint configuration | Static lint checks |
+### For candidates (interviewees)
 
-## System architecture
+- **Secure authentication and onboarding** through Clerk.
+- **Interviewer discovery** with profiles, experience, expertise, and category-based search/filtering.
+- **Availability-based bookings:** choose from available 45-minute interview slots in a rolling seven-day window.
+- **Credit-based booking** with database-backed transactions and appointment tracking.
+- **Real-time interview room** with Stream-powered video, audio, and persistent chat; screen sharing is supported by the video integration.
+- **Question delivery and candidate submissions:** answer interview questions using supported question and response types.
+- **Feedback review:** read the performance summary, technical assessment, communication, problem-solving, strengths, weaknesses, improvement suggestions, approved score, and advisory next steps, subject to plan/UI access.
+- **Recording playback links** where a recording exists and the applicable plan permits access.
 
-Prept runs as one Next.js application. Server-rendered pages load data, client components handle interaction, and Server Actions perform most mutations. A Stream webhook handles post-call events. There is no separate backend service or background worker in the repository.
+### For interviewers
+
+- **Professional profile** with work details, experience, categories, and availability.
+- **Interview dashboard** for upcoming/past sessions, earnings, and withdrawals.
+- **AI Buddy**, an interviewer-side copilot for generating or selecting questions without replacing the human interviewer.
+- **Question delivery** into the interview and candidate answer review.
+- **Interviewer-approved grades**, with AI-assisted evaluation supporting the review workflow.
+- **Follow-up and Grill flows** for progressively deeper questioning.
+- **Controlled completion** of a session with feedback preparation after interview completion.
+- **Credit earnings and payout requests** with administrative review.
+
+### Interview subjects and question types
+
+The **interviewer marketplace** uses categories such as Frontend, Backend, Full Stack, DSA, System Design, Behavioral, DevOps, and Mobile.
+
+The **AI Buddy catalog** extends beyond those discovery categories to include Core CS, Machine Coding, and AI & ML. Topics include DBMS, operating systems, networking, React, APIs, system design, DSA, cloud infrastructure, LLMs, and more. Supported question formats include conceptual, coding, scenario, MCQ, debugging, complexity analysis, design, SQL, practical, and behavioral questions.
+
+## How an interview works
 
 ```mermaid
-flowchart TB
-    Browser[Browser: candidate or interviewer]
-    Proxy[Next.js proxy: Clerk and Arcjet]
-    subgraph App[Next.js application]
-        Pages[App Router pages and layouts]
-        UI[Interactive React components]
-        Actions[Server Actions and server-only readers]
-        Webhook[Stream webhook route]
-        Prisma[Prisma and PostgreSQL adapter]
-    end
-    Clerk[Clerk: identity and subscriptions]
-    Arcjet[Arcjet: request protection]
-    Stream[Stream: video and chat]
-    Gemini[Gemini: questions and feedback]
-    Resend[Resend: withdrawal email]
-    DB[(PostgreSQL)]
-    Browser --> Proxy --> Pages
-    Proxy <--> Clerk
-    Proxy --> Arcjet
-    Pages --> UI
-    Pages --> Actions
-    UI --> Actions
-    Actions --> Clerk
-    Actions --> Arcjet
-    Actions --> Prisma
-    Prisma --> DB
-    Actions --> Stream
-    UI <-->|Video and messaging SDKs| Stream
-    Actions --> Gemini
-    Actions --> Resend
-    Stream -->|Recording and transcription events| Webhook
-    Webhook --> Gemini
-    Webhook --> Prisma
+flowchart TD
+    A[Candidate signs in and completes onboarding] --> B[Explore interviewers and available slots]
+    B --> C[Book with credits]
+    C --> D[Both participants join Stream call and chat]
+    D --> E[Interviewer selects or generates questions with AI Buddy]
+    E --> F[Question delivered to candidate]
+    F --> G[Candidate submits an answer]
+    G --> H[AI-assisted review and interviewer-approved grade]
+    H --> I{Continue interview?}
+    I -->|Yes| E
+    I -->|No| J[Interviewer completes session]
+    J --> K[Collect saved answers, chat and available transcript]
+    K --> L[Compute approved score and prepare report]
+    L --> M[Candidate and interviewer view feedback]
 ```
 
-### Responsibilities and data ownership
+1. **Discover and book.** The candidate chooses a real interviewer and an available session. Booking records the appointment and the related credit movement.
+2. **Join the meeting.** Both users join the Stream call and its associated persistent chat channel.
+3. **Ask and answer.** The interviewer uses their own questions or AI Buddy suggestions, then delivers selected questions to the candidate.
+4. **Review performance.** Candidate submissions are saved, reviewed, and assigned an approved grade by the interviewer.
+5. **Complete and evaluate.** The interviewer ends the interview through the application workflow. Feedback preparation begins without requiring a finished speech transcript.
+6. **Review the report.** The report presents demonstrated strengths and weaknesses along with explicit limitations if evidence is incomplete.
 
-| Boundary | What it owns |
-| --- | --- |
-| Clerk | Authentication, session identity, subscription entitlements |
-| PostgreSQL | Profiles, roles, availability, bookings, balances, feedback, credit records, payouts |
-| Stream | Live media, messaging channels, recordings, transcript artifacts |
-| Gemini | Generated question/answer pairs and feedback responses |
-| Next.js server | Authorization checks, business rules, service credentials, database writes |
-| Browser | Forms, filtering, slot selection, call controls, chat, report presentation |
+## AI Buddy
 
-`clerkUserId` links Clerk identities to local users and identifies participants in Stream. A booking's `streamCallId` connects database records to calls, chat channels, and webhook events.
+**Prept AI Buddy is an interviewer-facing assistant, not an autonomous interviewer.** It combines a curated question bank with Google Gemini and saved interview context.
 
-Prisma uses a `pg` pool and PostgreSQL adapter. Development reuses the client through `globalThis` during hot reloads. Selected mutations use `revalidatePath` to refresh affected pages. A shared client hook exposes action loading/data/error state and displays error toasts.
+### Question generation and controls
 
-## Application workflows
+- Select an interview **subject**, **topic**, **question type**, and **difficulty** (Easy, Medium, Hard, Mixed).
+- Generate a configurable batch of **1–5 questions**, rather than a fixed six-question batch.
+- Use natural-language prompts and quick actions such as **Next Question**, **Harder**, and **Easier**.
+- Use **Guided** or **Free Flow** modes.
+- Request optional web research for current/time-sensitive subjects (subject to model/tool availability).
+- View AI suggestions and choose which question to deliver; generation does not automatically make every suggestion a candidate question.
+- Avoid previously suggested or delivered questions using stored history and code-side deduplication.
+- Use **Grill** for a more demanding follow-up chain; the server enforces a maximum follow-up depth.
 
-### 1. Authentication and onboarding
-
-1. Clerk authenticates the user.
-2. The shared header calls the user synchronization helper.
-3. A missing local user is created with identity details, the `UNASSIGNED` role, and the current plan's credits.
-4. Existing non-interviewers are checked for a plan change or new calendar month to determine whether to add credits.
-5. Client role navigation sends unassigned users to onboarding.
-6. Onboarding stores `INTERVIEWEE` or `INTERVIEWER`. Interviewers also provide their professional profile and categories.
-
-Interviewees proceed to discovery; interviewers proceed to the dashboard. User synchronization happens during application rendering, not through a Clerk webhook implemented in this project.
-
-### 2. Availability and booking
-
-The interviewer saves one active availability window. The picker uses its hours and minutes as a daily window for each of the next seven dates, including today. It generates 45-minute slots, removes past starts and incomplete trailing slots, and disables overlaps with scheduled bookings.
-
-```mermaid
-sequenceDiagram
-    actor Candidate
-    participant UI as Slot picker
-    participant Server as Booking action
-    participant Guard as Clerk and Arcjet
-    participant DB as PostgreSQL
-    participant Stream as Stream Video
-    Candidate->>UI: Select date and slot
-    UI->>Server: Interviewer ID and start/end timestamps
-    Server->>Guard: Authenticate and apply rate limit
-    Server->>DB: Read users, balance, and overlapping bookings
-    alt Invalid role, insufficient credits, or conflict
-        Server-->>UI: Error
-    else Checks pass
-        Server->>Stream: Upsert participants and create call
-        Stream-->>Server: Call ready
-        Server->>DB: Transaction: booking, deduction, balance updates
-        Note over Server,DB: Deduct candidate credits and increase interviewer balance
-        Server-->>UI: Booking ID and Stream call ID
-        UI-->>Candidate: Navigate to appointments
-    end
-```
-
-Both call members receive the Stream `host` role. Call settings enable screen sharing, make 1080p recording available, and configure transcription as `auto-on`. Database writes are transactional, but Stream call creation happens first and is a separate operation.
-
-### 3. Live interview and AI questions
-
-The server looks up the booking by Stream call ID, verifies that the signed-in user is a participant, and generates a Stream token valid for one hour. The client joins the existing `default` call, renders a speaker layout and controls, and watches a `messaging` channel with the same call ID and both participants as members.
-
-The interviewer sees an AI Questions tab:
-
-1. Select one of the interviewer's categories.
-2. Request questions through a Server Action.
-3. Send Gemini a category-specific prompt requesting six questions and concise reference answers.
-4. Remove optional Markdown fences, parse the returned JSON, and display the result.
-
-Both AI workflows select the model string `gemini-3.5-flash-lite`. Question sets are not stored in PostgreSQL. The action checks authentication and category validity; interviewer-only visibility is implemented in the call UI.
-
-Leaving attempts to stop an active recording before disconnecting, then returns the user to the dashboard or appointments page.
-
-### 4. Recording and feedback
-
-```mermaid
-sequenceDiagram
-    participant Stream
-    participant Hook as Stream webhook
-    participant CDN as Transcript storage
-    participant AI as Gemini
-    participant DB as PostgreSQL
-    Stream->>Hook: call.recording_ready
-    Hook->>DB: Save recording URL
-    Stream->>Hook: call.transcription_ready
-    Hook->>DB: Find booking and check existing feedback
-    Hook->>CDN: Download JSONL transcript
-    CDN-->>Hook: Transcript entries
-    Note over Hook: Keep speech entries and map speaker IDs to names
-    Hook->>AI: Transcript and evaluation prompt
-    AI-->>Hook: Structured feedback JSON
-    Hook->>DB: Transaction: upsert feedback and mark booking COMPLETED
-    Hook->>DB: Check and create BOOKING_EARNING record
-    Hook-->>Stream: Acknowledge event
-```
-
-| Feedback field | Meaning |
-| --- | --- |
-| Summary | Overall session assessment |
-| Technical | Knowledge and answer accuracy |
-| Communication | Clarity, structure, and communication style |
-| Problem solving | Reasoning and approach |
-| Recommendation | Hiring recommendation and supporting reason |
-| Strengths | Demonstrated capabilities |
-| Improvements | Areas to practice |
-| Overall rating | `POOR`, `AVERAGE`, `GOOD`, or `EXCELLENT` |
-
-Recording and transcription events are independent. A recording URL alone does not complete a booking. Completion occurs when transcript analysis and feedback persistence succeed. Empty transcripts are skipped; there is no separate completion job when a call ends. Appointment readers load the saved report for later display.
-
-## Credits and payouts
-
-### Subscription credits
-
-| Plan | Monthly price displayed | Credits per allocation | Full feedback button | Recording button |
-| --- | --- | --- | --- | --- |
-| Free | $0 | 1 | No | No |
-| Starter | $29 | 5 | Yes | No |
-| Pro | $69 | 15 | Yes | Yes |
-
-Prices are static presentation values. Checkout uses configured Clerk plan IDs; entitlement checks use the `starter` and `pro` slugs. Session cost depends on the interviewer's `creditRate`, so one credit is not universally equivalent to one session.
-
-Allocation runs when user synchronization executes. A new account, detected plan change, or new calendar month triggers an allocation. Remaining credits carry forward because new credits are added to the balance. Interviewers skip subsequent subscription allocations. This is not a scheduled billing-anniversary job and does not calculate separate allocations for every missed month.
-
-### Credit accounting
-
-| Event | Candidate balance | Interviewer balance | Stored record |
-| --- | --- | --- | --- |
-| Plan allocation | Increased by allowance | Unchanged | User balance and allocation timestamp; no credit transaction |
-| Booking succeeds | Reduced by `creditRate` | Increased immediately by the same amount | Booking and negative `BOOKING_DEDUCTION` |
-| Feedback completes | Unchanged | Unchanged | Feedback, completed status, positive `BOOKING_EARNING` |
-| Withdrawal requested | Unchanged | Reduced by requested credits | `PROCESSING` payout |
-| Payout approved | Unchanged | Unchanged | Payout marked `PROCESSED` |
-
-Available interviewer balance grows at booking time. Dashboard total-earned statistics use completed bookings, so the two figures can differ.
-
-### Withdrawals
-
-```text
-Gross value  = requested credits × $5
-Platform fee = gross value × 20%
-Net payout   = gross value × 80%
-
-10 credits → $50 gross → $10 fee → $40 net
-```
-
-The dashboard submits the full available balance. The server accepts a positive requested amount up to the balance and requires payment details.
+### Hybrid approach
 
 ```mermaid
 flowchart LR
-    Request[Request withdrawal] --> Validate[Check role, balance, details, rate limit]
-    Validate --> Transaction[Create payout and deduct balance atomically]
-    Transaction --> Pending[PROCESSING]
-    Pending --> Email[Send admin review email]
-    Email --> Review[Review and provide payout password]
-    Review --> Processed[PROCESSED with timestamp]
+    A[Interviewer preferences and instructions] --> D[Candidate selection and question generation]
+    B[Curated question bank] --> D
+    C[Saved questions, grades and history] --> D
+    G[Gemini] <--> D
+    D --> E[Suggestions to interviewer]
+    E --> F[Selected question delivered and persisted]
+    F --> C
 ```
 
-Email failure is logged without reversing the withdrawal. Approval records `processedAt` and `processedBy`; actual payment happens outside the application.
+The curated bank currently lives in `lib/questionBank.js`; subject and question-type definitions live in `lib/interviewCatalog.js`. AI Buddy's persistent messages and question associations are stored separately from the participant-facing Stream chat. The AI uses relevant context to support subsequent suggestions while the interviewer controls delivery and grading.
 
-## Database design
+**Implementation files:** `actions/aiQuestions.js`, `lib/questionBank.js`, `lib/interviewCatalog.js`, `lib/ai-buddy-history.js`, and the call-room components in `app/(main)/call/[callId]/components/`.
 
-The schema contains six models. IDs are UUID strings, and the user table combines shared identity fields with role-specific profile and balance fields.
+## Answer evaluation and scoring
 
-```mermaid
-erDiagram
-    User ||--o{ Availability : publishes
-    User ||--o{ Booking : "books as interviewee"
-    User ||--o{ Booking : "hosts as interviewer"
-    User ||--o{ CreditTransaction : owns
-    User ||--o{ Payout : requests
-    Booking ||--o| Feedback : receives
-    Booking o|--o{ CreditTransaction : references
-    User {
-        string id PK
-        string clerkUserId UK
-        string email UK
-        UserRole role
-        int credits
-        string currentPlan
-        datetime creditsLastAllocatedAt
-        int creditRate
-        int creditBalance
-    }
-    Availability {
-        string id PK
-        string interviewerId FK
-        datetime startTime
-        datetime endTime
-        AvailabilityStatus status
-    }
-    Booking {
-        string id PK
-        string intervieweeId FK
-        string interviewerId FK
-        datetime startTime
-        datetime endTime
-        BookingStatus status
-        int creditsCharged
-        string streamCallId UK
-        string recordingUrl
-    }
-    Feedback {
-        string id PK
-        string bookingId FK,UK
-        string summary
-        string technical
-        string communication
-        string problemSolving
-        string recommendation
-        FeedbackRating overallRating
-    }
-    CreditTransaction {
-        string id PK
-        string userId FK
-        string bookingId FK
-        int amount
-        TransactionType type
-    }
-    Payout {
-        string id PK
-        string interviewerId FK
-        int credits
-        float platformFee
-        float netAmount
-        string paymentMethod
-        string paymentDetail
-        PayoutStatus status
-    }
-```
+Prept keeps **AI assistance**, **interviewer approval**, and **official numeric scoring** separate.
 
-The diagram shows core fields. Profiles also store names, images, biographies, titles, companies, experience, and category arrays. Feedback includes strengths and improvements arrays plus optional session rating/comment fields. Payouts carry administrative and processing metadata.
+1. A delivered `InterviewQuestion` is associated with a booking and candidate.
+2. An `InterviewSubmission` stores the candidate's response and revision/evaluation state.
+3. AI-assisted evaluation can inform the review process.
+4. The **interviewer-approved grade** is the authoritative grade used in final scoring.
+5. The score is computed by `lib/interviewScoring.js`, not invented by Gemini's feedback narrative.
 
-| Enum | Values |
-| --- | --- |
-| `UserRole` | `UNASSIGNED`, `INTERVIEWEE`, `INTERVIEWER` |
-| `BookingStatus` | `SCHEDULED`, `COMPLETED`, `CANCELLED` |
-| `AvailabilityStatus` | `AVAILABLE`, `BOOKED`, `BLOCKED` |
-| `PayoutStatus` | `PROCESSING`, `PROCESSED` |
-| `FeedbackRating` | `POOR`, `AVERAGE`, `GOOD`, `EXCELLENT` |
-| `TransactionType` | `CREDIT_PURCHASE`, `BOOKING_DEDUCTION`, `BOOKING_EARNING`, `ADMIN_ADJUSTMENT` |
+### Current scoring policy (`prept-fair-v1`)
 
-Unique constraints enforce one local user per Clerk ID/email, one booking per non-null Stream call ID, and one feedback record per booking. Indexes support interviewer availability queries, booking queries by participant/status, and payout queries by status or interviewer. There is no direct foreign key from bookings to availability: bookings store concrete timestamps.
+| Approved grade | Base score |
+|---|---:|
+| Poor | 0 |
+| Average | 40 |
+| Good | 75 |
+| Excellent | 100 |
 
-## Routes and access
+| Question difficulty | Weight |
+|---|---:|
+| Easy | 1.25 |
+| Medium | 1.00 |
+| Hard | 0.70 |
 
-Route groups such as `(auth)` and `(main)` organize files without becoming part of the URL.
+Grill/follow-up questions receive a **0.5 weight multiplier**. For eligible non-MCQ submissions, an interviewer-confirmed assisted correction can subtract **5 points** from the grade's base score (minimum 0).
 
-| Route | Purpose | Current access behavior |
-| --- | --- | --- |
-| `/` | Landing page and pricing | Public |
-| `/sign-in/[[...sign-in]]` | Clerk sign-in | Public catch-all auth route |
-| `/sign-up/[[...sign-up]]` | Clerk sign-up | Public catch-all auth route |
-| `/onboarding` | Role/profile setup | Clerk-protected by proxy |
-| `/explore` | Interviewer directory | Clerk-protected by proxy |
-| `/interviewers/[id]` | Profile and booking | Page checks authentication and onboarding; booking action requires an interviewee |
-| `/appointments` | Interviewee sessions | Clerk-protected by proxy; role navigation directs interviewers to dashboard |
-| `/dashboard` | Interviewer workspace | Clerk-protected by proxy; role navigation directs interviewees to appointments |
-| `/call/[callId]` | Video, chat, AI assistance | Server verifies authentication and booking participation |
-| `/payout/[id]` | Withdrawal review | No explicit page authentication check; approval requires payout password |
-| `POST /api/webhooks/stream` | Recording/transcript handling | Excluded from Arcjet; currently no signature verification |
-
-Arcjet applies shield and bot-detection rules to matched non-webhook requests, allowing search-engine and preview bot categories. Booking uses a per-user token bucket with capacity 5 and a refill of 2 tokens per hour. Withdrawals use capacity 3 and a refill of 1 token per hour. These are burst-and-refill policies, not fixed hourly counts.
-
-## Repository structure
+The score for each eligible question is its adjusted approved score multiplied by its weight. The **main score** and **Grill score** are separate weighted averages. When both exist, the overall score follows the implemented policy:
 
 ```text
-prept/
-├── app/
-│   ├── (auth)/
-│   │   ├── layout.js
-│   │   ├── sign-in/[[...sign-in]]/page.jsx
-│   │   └── sign-up/[[...sign-up]]/page.jsx
-│   ├── (main)/
-│   │   ├── layout.jsx
-│   │   ├── onboarding/page.jsx
-│   │   ├── explore/
-│   │   │   ├── page.jsx
-│   │   │   └── components/          # Filters and interviewer cards
-│   │   ├── interviewers/[id]/
-│   │   │   ├── page.jsx
-│   │   │   └── components/SlotPicker.jsx
-│   │   ├── appointments/page.jsx
-│   │   ├── dashboard/
-│   │   │   ├── page.jsx
-│   │   │   └── components/          # Availability, appointments, earnings
-│   │   ├── call/[callId]/
-│   │   │   ├── page.jsx
-│   │   │   └── components/          # CallRoom, CallUI, AIQuestions
-│   │   └── payout/[id]/
-│   │       ├── page.jsx
-│   │       └── components/PayoutReviewClient.jsx
-│   ├── api/webhooks/stream/route.js
-│   ├── layout.js                   # Providers, header, footer, fonts
-│   ├── page.jsx                    # Landing page
-│   └── globals.css
-├── actions/                        # Server mutations and data readers
-├── components/
-│   ├── ui/                         # Shared UI primitives
-│   ├── animate-ui/                 # Animation and code-display components
-│   ├── AppointmentCard.jsx
-│   ├── FeedbackModal.jsx
-│   ├── PricingSection.jsx
-│   ├── UpgradeModal.jsx
-│   ├── CreditButton.jsx
-│   ├── RoleRedirect.jsx
-│   ├── header.jsx
-│   ├── reusables.jsx
-│   └── theme-provider.jsx
-├── emails/WithdrawalRequestEmail.jsx
-├── hooks/                          # Action state, visibility, UI helpers
-├── lib/
-│   ├── generated/prisma/           # Generated client; do not hand-edit
-│   ├── prisma.js
-│   ├── checkUser.js
-│   ├── arcjet.js
-│   ├── helpers.js
-│   ├── data.js
-│   └── ...                         # Styling, highlighting, context utilities
-├── prisma/
-│   ├── schema.prisma
-│   ├── migrations/
-│   └── seed.js
-├── public/                         # Logo, hero images, other static assets
-├── proxy.js                        # Clerk middleware and Arcjet protection
-├── prisma.config.js                # Schema, migrations, database URL
-├── next.config.mjs
-├── eslint.config.mjs
-├── components.json                 # UI component tooling configuration
-├── jsconfig.json
-├── tsconfig.json
-├── package.json
-└── package-lock.json
+overallScore = max(mainScore, 0.85 × mainScore + 0.15 × grillScore)
 ```
 
-### Core module guide
+If no Grill score exists, the overall score equals the main score; if no graded main question exists, no overall score is available. The report distinguishes `AVAILABLE`, `PROVISIONAL`, and `UNAVAILABLE` scoring states. Unanswered or unapproved questions are **not silently treated as zero-grade answers**.
 
-| Module | Responsibility |
-| --- | --- |
-| `actions/onboarding.js` | Validate role/profile input and persist onboarding |
-| `actions/explore.js` | Read interviewer profiles for discovery, excluding the signed-in user |
-| `actions/bookings.js` | Read profiles, validate bookings, create Stream calls, move credits |
-| `actions/appointments.js` | Read interviewee bookings with interviewer details and feedback |
-| `actions/dashboard.js` | Availability, appointments, statistics, withdrawals, payout history |
-| `actions/call.js` | Server-only participant authorization and Stream token generation |
-| `actions/aiQuestions.js` | Generate category-specific question/answer JSON |
-| `actions/payout.js` | Validate payout password and mark a request processed |
-| `actions/user.js` | Read current role and selected profile fields |
-| `lib/checkUser.js` | Create local users and allocate subscription credits |
-| `lib/prisma.js` | Initialize and reuse database access |
-| `lib/arcjet.js` | Construct token buckets and translate denied decisions into errors |
-| `lib/helpers.js` | Format dates/durations and generate date tabs and slots |
-| `lib/data.js` | Categories, plan presentation and IDs, labels, styles, landing-page data |
-| `hooks/use-fetch.js` | Async action loading/data/error state and toast errors |
-| `components/AppointmentCard.jsx` | Session details, joining, summaries, plan-gated buttons |
-| `components/FeedbackModal.jsx` | Structured feedback report presentation |
-| `app/api/webhooks/stream/route.js` | Recording URLs, transcript analysis, feedback, completion |
+The overall rating maps the numeric result to the nearest grade anchor (0 / 40 / 75 / 100; ties favor the lower anchor). **A rating is not an automatic hiring decision.**
 
-## Local setup
+## AI feedback and transcript-optional workflow
+
+**A speech transcript is optional, not a prerequisite for generating a report.** This is a core behavior of the current implementation.
+
+The feedback pipeline collects evidence from three sources:
+
+| Evidence source | What it can establish |
+|---|---|
+| **Delivered questions + saved candidate answers + approved grades** | Technical performance, topic coverage, problem-solving evidence, deterministic scoring |
+| **Attributable Stream chat** | Candidate statements and written interaction; technical communication only when the content is substantive |
+| **Attributable speech transcript (if available)** | Spoken responses and speech-related communication evidence |
+
+Questions that were merely suggested by AI Buddy but **never delivered** are not treated as candidate performance evidence. Interviewer messages are not attributed to the candidate. Private reference answers and interviewer notes are not exposed in the candidate-visible report.
+
+### What happens when evidence is missing?
+
+| Situation | Report behavior |
+|---|---|
+| Approved answers available, no transcript | Generate technical feedback and score where supported; mark spoken communication as not assessed |
+| Substantive candidate chat, no speech | Use relevant written evidence within its limits; do not claim to have assessed spoken communication |
+| Only brief greetings/courtesy chat | Produce a limited/incomplete-evidence report; do not infer technical proficiency |
+| Candidate participation but no approved technical answers | Do not invent technical grades or coding performance; state that technical performance is not adequately assessed |
+| No attributable candidate evidence | Record an insufficient-evidence report without fabricated strengths or scores |
+| Transcript arrives after initial report | A later preparation attempt can refresh the report if the collected evidence has changed |
+
+### Completion, webhook, retry, and recovery
+
+```mermaid
+flowchart TD
+    A[Interviewer completion action] --> P[Shared feedback preparation]
+    B[Stream webhook: call ended, recording ready, transcript ready] --> P
+    C[Participant feedback check / retry] --> P
+    D[Meeting-feedback recovery cron] --> P
+    P --> E[Load completed booking and eligible evidence]
+    E --> F[Approved-grade scoring]
+    F --> G[Gemini narrative generation and evidence validation]
+    G --> H[Persist feedback and report metadata]
+    H --> I{Evidence sufficient?}
+    I -->|Yes| J[Ready report]
+    I -->|No| K[Incomplete report with stated limitations]
+    L[Late transcript or new evidence] --> B
+```
+
+- **Completion action:** `actions/interviewCompletion.js` records completion intent and schedules finalization. Feedback generation does not hold the UI response open while the external work finishes.
+- **Stream webhook:** `POST /api/webhooks/stream` verifies the Stream signature and handles call-end, recording-ready, and transcription-ready notifications. A later transcript may improve a previously saved report.
+- **Participant-triggered check:** `actions/feedback.js` checks whether a completed booking has feedback and can invoke shared preparation with a rate limit.
+- **Recovery endpoint:** `POST /api/cron/meeting-feedback` can revisit completed bookings with pending, failed, incomplete, or stale processing state when an external scheduler calls it using `CRON_SECRET`.
+- **Shared implementation:** `lib/meeting-feedback.js` uses recoverable leases, evidence/version checks, validation, and database persistence so retried work can reuse an unchanged report.
+
+The final report contains a summary, technical assessment, communication assessment, problem-solving assessment, strengths, weaknesses, targeted improvements, approved rating/score, and an **advisory recommendation**. It explicitly identifies unassessed dimensions and does **not** claim unexecuted code passed tests. Opaque question/chat/evidence IDs are kept for internal evidence mapping rather than shown in the final feedback modal.
+
+> **Important:** A report can be **available but incomplete**. Missing speech does not imply the interview did not happen. Likewise, a completed session and an available score do not imply that the evidence supports a definitive hiring recommendation.
+
+## System architecture
+
+Prept is a **single Next.js application** with server-side actions and API route handlers. Its external services supply identity, database hosting, real-time communication, AI inference, and email delivery.
+
+```mermaid
+flowchart TB
+    UI[Next.js / React UI]
+    Auth[Clerk authentication and billing]
+    App[Next.js Server Actions and API routes]
+    DB[(PostgreSQL + Prisma)]
+    Stream[Stream Video and Stream Chat]
+    Gemini[Google Gemini]
+    Resend[Resend email]
+    Cron[External scheduler / cron]
+    UI --> Auth
+    UI <--> App
+    UI <--> Stream
+    App <--> DB
+    App <--> Auth
+    App <--> Stream
+    App <--> Gemini
+    App --> Resend
+    Stream -->|Signed webhook events| App
+    Cron -->|Authorized cron requests| App
+```
+
+**Responsibility boundaries**
+
+- **Next.js server:** authentication checks, role authorization, booking rules, question submission, approved evaluation, feedback orchestration, and payout requests.
+- **Clerk:** user identity and plan/entitlement integration.
+- **PostgreSQL + Prisma:** users, interviews, question history, submissions, grades, credits, feedback, and operational state.
+- **Stream Video / Chat:** video/audio, session chat, recording, and transcription artifacts when produced.
+- **Gemini:** interviewer question assistance and evidence-grounded feedback narratives.
+- **Arcjet:** request protection and selected rate limits.
+- **Resend:** administrative payout email and interview-reminder delivery.
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js **16.4.3**, React **19.3.0**, App Router, Server Actions |
+| Language | JavaScript, JSX; generated Prisma client includes TypeScript |
+| UI & styling | Tailwind CSS 4, Radix UI, shadcn-style components, Lucide, Motion, Animate UI |
+| Authentication / billing | Clerk |
+| Database | PostgreSQL, Prisma **7.4.2**, `pg`, Prisma PostgreSQL adapter |
+| Video and chat | Stream Video React SDK, Stream Node SDK, Stream Chat |
+| AI Buddy | Google Gemini using `@google/genai` |
+| Feedback narrative | Google Gemini using `@google/generative-ai` |
+| Security / rate limiting | Arcjet, Clerk role authorization, signed Stream webhooks |
+| Email | Resend, React Email |
+| Dates / reminders | `date-fns`, reminder policy and delivery utilities |
+| Deployment | Vercel-hosted application |
+
+The repository uses both Gemini SDKs in different workflows. Model selection is controlled through server-side environment configuration and must be compatible with the account's available Gemini models.
+
+## Data model
+
+The current Prisma schema includes **10 application models**:
+
+| Model | Purpose |
+|---|---|
+| `User` | Clerk-linked identity, role, profiles, candidate credits, interviewer balances |
+| `Availability` | Interviewer availability windows |
+| `Booking` | Session scheduling, Stream call, completion and feedback lifecycle |
+| `InterviewQuestion` | Delivered questions, topics, difficulty, references, follow-up relationships |
+| `InterviewSubmission` | Candidate answers, revisions, evaluation and approved grades |
+| `AIBuddyMessage` | Persistent interviewer-side AI Buddy history |
+| `Feedback` | Structured narrative, overall rating, report JSON and session review fields |
+| `CreditTransaction` | Booking deductions, earnings and other credit ledger events |
+| `Payout` | Withdrawal requests and administrative processing |
+| `InterviewReminder` | Email reminder attempts, delivery state and idempotency |
+
+```mermaid
+ erDiagram
+    User ||--o{ Availability : publishes
+    User ||--o{ Booking : participates
+    Booking ||--o{ InterviewQuestion : contains
+    InterviewQuestion ||--o| InterviewSubmission : receives
+    InterviewQuestion ||--o{ InterviewQuestion : followups
+    Booking ||--o{ AIBuddyMessage : stores
+    Booking ||--o| Feedback : generates
+    Booking ||--o{ InterviewReminder : schedules
+    Booking ||--o{ CreditTransaction : records
+    User ||--o{ CreditTransaction : owns
+    User ||--o{ Payout : requests
+```
+
+For exact columns, relationships, indexes, and enum definitions, see [`prisma/schema.prisma`](prisma/schema.prisma). The persisted `Feedback.report` JSON includes score breakdowns, limitations, evidence mapping, and report metadata; the UI does not display raw internal evidence IDs.
+
+## Credits and payouts
+
+The application has a subscription-credit model. The current UI defines:
+
+| Plan | Displayed monthly credits | Feedback UI | Recording UI |
+|---|---:|---|---|
+| Free | 1 | Not included | Not included |
+| Starter | 5 | Included | Not included |
+| Pro | 15 | Included | Included when a recording exists |
+
+Current plan prices and entitlements are configured in `lib/data.js` and Clerk; they may change. New plan allocations are handled by the user/credit integration. Bookings create credit transaction records, and interviewer earnings are tracked alongside completed interviews.
+
+Interviewers can request withdrawal using a supported payment-detail method, including PayPal, bank transfer, or UPI. The application emails an administrator with the request; **marking a payout processed is an administrative record, not an automatic transfer of funds**.
+
+## Getting started
 
 ### Prerequisites
 
-- Node.js and npm compatible with the dependencies in `package.json`. The repository does not pin a Node version with an `engines` field or version-manager file.
-- A reachable PostgreSQL database.
-- Clerk credentials and configured billing plans for paid-plan flows.
-- A Stream application configured for video and chat.
-- Gemini and Arcjet credentials.
-- Resend credentials for withdrawal emails.
-- A publicly reachable application URL for Stream webhook delivery.
+- A Node.js version compatible with the project's Next.js/Prisma dependencies.
+- PostgreSQL database and a valid connection URL.
+- Clerk project with suitable authentication configuration (and subscription plans if testing billing).
+- Stream project configured for video and chat; recording/transcription if those flows are to be tested.
+- Gemini API key with access to the configured model(s).
+- Arcjet and Resend configuration for the features that use them.
 
-### 1. Configure environment variables
-
-Create a `.env` file at the repository root. Use your own values; the following are placeholders.
-
-```dotenv
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
-
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key"
-CLERK_SECRET_KEY="your_clerk_secret_key"
-NEXT_PUBLIC_CLERK_SIGN_IN_URL="/sign-in"
-NEXT_PUBLIC_CLERK_SIGN_UP_URL="/sign-up"
-
-NEXT_PUBLIC_STREAM_API_KEY="your_stream_api_key"
-STREAM_SECRET_KEY="your_stream_secret_key"
-
-GEMINI_API_KEY="your_gemini_api_key"
-ARCJET_KEY="your_arcjet_key"
-RESEND_API_KEY="your_resend_api_key"
-REMINDER_EMAIL_FROM="Prept <reminders@your-verified-domain.com>"
-CRON_SECRET="a_random_secret_at_least_32_characters_long"
-
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-ADMIN_PAYOUT_PASSWORD="your_private_payout_approval_password"
-```
-
-| Variable group | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Runtime and Prisma CLI connection; use a direct database or Supabase session pooler connection (port 5432) |
-| Clerk keys and route URLs | Identity provider and authentication routes |
-| Stream public key and server secret | Browser SDK, call creation, user token generation |
-| `GEMINI_API_KEY` | Both AI workflows |
-| `ARCJET_KEY` | Proxy protection and action rate limits |
-| `RESEND_API_KEY` | Withdrawal emails and interview reminders |
-| `REMINDER_EMAIL_FROM` | Verified Resend sender for interview reminders |
-| `CRON_SECRET` | Private bearer secret for the reminder scheduler |
-| `NEXT_PUBLIC_APP_URL` | Base URL for payout review and interview join links |
-| `ADMIN_PAYOUT_PASSWORD` | Payout approval password |
-
-`NEXT_PUBLIC_*` values are public configuration. Keep other credentials server-side. Environment files are ignored by Git. Prisma CLI and runtime both use `DATABASE_URL`. For Supabase migrations, set it to the direct connection or session pooler on port 5432, not the transaction pooler on port 6543. No separate `DIRECT_URL` is used.
-
-For same-day email reminders at 6 hours and 30 minutes before interviews, follow [the Vercel Hobby + Supabase Cron setup](docs/interview-reminders.md).
-
-### 2. Install dependencies
+### Installation
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/shaurya2425/AI_INTERVIEW_PLATFORM.git
+cd AI_INTERVIEW_PLATFORM
+
+# 2. Install dependencies
 npm ci
-```
 
-The `postinstall` script runs `prisma generate`, writing the client into `lib/generated/prisma`. To regenerate explicitly:
+# 3. Set environment variables
+# Create .env in the repository root using the reference below.
 
-```bash
-npx prisma generate
-```
-
-### 3. Apply database migrations
-
-For an initial database using the committed migration history:
-
-```bash
+# 4. Apply existing Prisma migrations
 npx prisma migrate deploy
-```
 
-When intentionally changing the schema during development:
-
-```bash
-npx prisma migrate dev --name describe_your_change
+# 5. Generate the Prisma client (also configured as postinstall)
 npx prisma generate
-```
 
-`prisma/seed.js` is a targeted sample-feedback utility for a hard-coded existing booking. It does not populate an empty application with users or interviewers, and no seed command is registered in the Prisma configuration. Create users through sign-up and onboarding for normal local testing.
-
-### 4. Configure integrations
-
-| Service | Configuration required by this implementation |
-| --- | --- |
-| Clerk | Match authentication URLs, configure `starter` and `pro` plan slugs, and replace paid plan IDs in `lib/data.js` with IDs from your instance |
-| Stream | Support `default` video calls and `messaging` chat channels with permissions needed by the SDK flows; enable recording/transcription capabilities being exercised |
-| Stream webhooks | Deliver `call.transcription_ready` and `call.recording_ready` to `<public-app-url>/api/webhooks/stream` |
-| Gemini | Ensure the account can use the exact model selected in both AI call sites |
-| Resend | Configure a usable sender and destination; the action currently uses a fixed administrator email and the Resend onboarding sender |
-| Payout review | Set the approval password and ensure the app base URL produces reachable email links |
-
-For local webhook testing, expose the running application through a public HTTPS development URL and register it with Stream. `localhost` itself is not reachable by the external webhook sender.
-
-### 5. Start the application
-
-```bash
+# 6. Start development mode
 npm run dev
 ```
 
-Open `http://localhost:3000`. Use separate accounts or browser sessions for the interviewer and interviewee flows.
+Then visit **http://localhost:3000**. Use separate browser sessions for the interviewer and candidate if testing a complete interview. For development webhook delivery from Stream, the local service needs a reachable HTTPS endpoint or forwarding tunnel.
 
-## Development and verification
+> **Repository layout note:** `package.json`, `app/`, `actions/`, and `prisma/` are at the repository root. Run commands from the directory created by `git clone`.
 
-### Commands
+## Configuration and integrations
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
-| `npm run start` | Serve the production build |
-| `npm run lint` | Run ESLint |
-| `npx prisma generate` | Regenerate the Prisma client |
-| `npx prisma migrate deploy` | Apply committed migrations |
-| `npx prisma migrate dev --name <name>` | Create/apply a development migration |
+Create a **server-local `.env` file** at the repository root. Do not commit it.
 
-There is no automated test script or project test suite included. Linting and building are separate checks; interactive workflows require configured services and a database.
+```dotenv
+# Database
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
 
-### Manual integration walkthrough
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
+CLERK_SECRET_KEY="sk_..."
+NEXT_PUBLIC_CLERK_SIGN_IN_URL="/sign-in"
+NEXT_PUBLIC_CLERK_SIGN_UP_URL="/sign-up"
 
-1. Register an interviewer, complete the profile, and save availability.
-2. Register an interviewee and confirm initial credit allocation.
-3. Find the interviewer using search and category filters.
-4. Book a future slot and verify the appointment for both accounts.
-5. Verify the candidate deduction and interviewer balance increase.
-6. Join with both accounts; exercise audio/video, chat, and screen sharing.
-7. Generate questions from the interviewer's AI tab.
-8. End the session and inspect webhook logs; confirm feedback and `COMPLETED` status after successful transcript analysis.
-9. If a recording was made, verify that its event stores a recording URL.
-10. Exercise Starter/Pro UI access with corresponding Clerk entitlements.
-11. Submit a withdrawal, verify the payout and email, then mark it processed through the review page.
+# Stream Video / Chat
+NEXT_PUBLIC_STREAM_API_KEY="..."
+STREAM_SECRET_KEY="..."
 
-### Troubleshooting
+# Gemini
+GEMINI_API_KEY="..."
+PREPT_GEMINI_MODEL="..."       # AI Buddy model override
+GEMINI_FEEDBACK_MODEL="..."    # Optional dedicated feedback model
 
-| Symptom | What to inspect |
-| --- | --- |
-| Database or generated-client errors | Database URL/reachability, migrations, Prisma generation |
-| No slots appear | Availability, browser-local time, future starts, conflicts, and whether a full 45-minute slot fits |
-| Booking fails | Candidate role, credits, overlaps, Arcjet decisions, Stream credentials |
-| Call stays on connecting screen | Browser console, Stream configuration, booking membership, token validity |
-| AI questions fail | Model access, Gemini credentials, valid JSON output |
-| Feedback never appears | Webhook reachability, event type, call ID matching, speech entries, Gemini response, server logs |
-| Recording button absent | Recording URL and Pro entitlement; recording is available, not automatically started by app code |
-| Wrong checkout plan | Clerk plan IDs, slugs, static pricing configuration |
-| Withdrawal saves without email | Resend sender/destination and email error logs |
-| Review link opens wrong host | `NEXT_PUBLIC_APP_URL` |
+# Security / rate limits
+ARCJET_KEY="..."
 
-## Deployment considerations
+# Email and reminder delivery
+RESEND_API_KEY="..."
+REMINDER_EMAIL_FROM="Prept <reminders@your-verified-domain.com>"
 
-Deploy to an environment that runs the Next.js server, Server Actions, and webhook route. A static-only export cannot run these workflows.
+# Scheduled jobs (use at least 32 characters)
+CRON_SECRET="replace-with-a-long-random-secret"
 
-- Supply environment configuration during build/runtime as appropriate; public variables are used by browser code.
-- Generate Prisma and apply committed migrations to the target database.
-- Configure production Clerk plans, Stream, and the webhook URL.
-- Set the application base URL and email sender/recipient.
-- Allow enough execution time for transcript download, Gemini generation, and database writes inside the webhook request.
-- Account for PostgreSQL connection pools across multiple server instances.
-- Review the Next.js configuration: it enables component caching and partial prefetching, configures a Tailwind Turbopack loader, disables React Strict Mode, and includes a fixed development-origin entry.
-- Review the access and processing boundaries below before exposing sensitive workflows.
+# Application origin
+NEXT_PUBLIC_APP_URL="https://your-domain.example"
 
-## Current implementation boundaries
+# Payout administration
+ADMIN_PAYOUT_PASSWORD="use-a-strong-private-password"
+```
 
-These details define the behavior and guarantees of the current code:
+Prisma CLI and runtime both use `DATABASE_URL`. For Supabase migrations, use the direct connection or session pooler on port 5432, not the transaction pooler on port 6543. No separate `DIRECT_URL` is used.
 
-| Area | Current behavior |
-| --- | --- |
-| Webhook trust | Incoming JSON is parsed without a Stream signature check. The handler fetches the supplied transcript URL. |
-| Webhook reliability | Processing runs inline without a queue. Caught processing errors return HTTP 200, so those errors do not request provider retries. |
-| Duplicate events | Existing feedback is skipped and writes use an upsert. Earning-record creation uses a separate check/write without a unique booking/type constraint; it is not an exactly-once guarantee. |
-| Booking concurrency | Balance and overlap checks precede the write transaction. No database constraint prevents concurrent overlaps, and there is no atomic balance guard against simultaneous requests. |
-| Booking validation | The UI constrains dates and duration. The action does not fully revalidate availability membership, future timestamps, or expected duration. |
-| External call cleanup | A Stream call created before a failed database transaction is not automatically removed. |
-| Availability and time zones | One active window recurs daily using local JavaScript hours/minutes. There are no stored IANA time zones, weekday rules, or date-specific exceptions. Booking does not change availability status. |
-| Session lifecycle | Feedback persistence completes the booking. Call access checks participation but does not enforce a scheduled join window or booking status. |
-| Appointment grouping | Interviewee upcoming items require a future start; past items require an ended session or non-scheduled status. An ongoing scheduled session can fall between those groups. |
-| Subscription enforcement | Full-report and recording buttons are gated in the client. Appointment readers return feedback and recording data; these are not server-side data-access restrictions. |
-| Role enforcement | Navigation includes client redirects. Sensitive actions have their own checks, but redirects alone do not establish server authorization for every read. |
-| Payout administration | Review details load without an explicit page auth check. Approval uses a shared password rather than an authenticated administrator role. There is no automated transfer or rejection/refund workflow. |
-| AI output | Responses are parsed as JSON without a dedicated runtime schema validator. Feedback depends on transcript quality and successful model output. |
-| Logging | Webhook logs include transcript and model-response previews, so logs can contain interview content. |
-| Unimplemented schema paths | Cancellation, blocked/booked availability management, credit purchases, admin credit adjustments, and user-entered session ratings have no complete workflows despite corresponding schema values/fields. |
-| Interviewer rates | `creditRate` is read for pricing and defaults to 1 in the schema; onboarding/dashboard has no rate-editing workflow. |
-| Chat and recording | Chat appears inside the call room with no separate inbox. Recording is available in call settings, but app code does not explicitly start it automatically. |
+Some integrations require configuration in external dashboards: Clerk redirect URLs and plan IDs, Stream webhook URL and call settings, Resend verified sender, Arcjet policy, and the database connection. Use only service-compatible Gemini model identifiers; do not treat the example value of a model variable as a guarantee of provider access.
+
+### Cron and webhook endpoints
+
+| Endpoint | Method | Responsibility |
+|---|---|---|
+| `/api/webhooks/stream` | `POST` | Signed Stream call, recording, and transcription events |
+| `/api/cron/interview-reminders` | `POST` | Authenticated reminder dispatch |
+| `/api/cron/meeting-feedback` | `POST` | Authenticated recovery/refresh for pending and incomplete feedback |
+
+Both cron endpoints use `Authorization: Bearer <CRON_SECRET>`. Scheduling is **external** to these handlers; configure the appropriate scheduler rather than assuming a deployed route runs on its own. The repository includes `supabase/interview-reminders-cron.sql` and reminder setup documentation.
+
+## Key routes and project structure
+
+### Application routes
+
+| Path | Function |
+|---|---|
+| `/` | Landing page |
+| `/sign-in`, `/sign-up` | Clerk authentication |
+| `/onboarding` | Role and profile onboarding |
+| `/explore` | Interviewer discovery |
+| `/interviewers/[id]` | Interviewer profile and slot booking |
+| `/appointments` | Candidate appointments and feedback access |
+| `/dashboard` | Interviewer workspace |
+| `/call/[callId]` | Live meeting, chat, questions, and answer workflow |
+| `/payout/[id]` | Administrative payout review |
+
+### Main source directories
+
+```text
+AI_INTERVIEW_PLATFORM/
+├── app/
+│   ├── (main)/call/[callId]/components/  # Live call, AI Buddy, answer review
+│   └── api/
+│       ├── webhooks/stream/              # Stream event handler
+│       └── cron/                         # Reminder + feedback recovery handlers
+├── actions/                              # Authenticated server actions
+├── components/                           # Shared components; FeedbackModal.jsx
+├── lib/
+│   ├── ai-buddy-history.js               # Persisted AI Buddy history
+│   ├── interviewCatalog.js               # Subject/type configuration
+│   ├── interviewScoring.js               # Deterministic grade-based scoring
+│   ├── meeting-feedback.js               # Evidence collection and report generation
+│   ├── questionBank.js                   # Curated question data
+│   └── generated/prisma/                 # Generated Prisma client
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── emails/                               # Reminder and payout email templates
+├── docs/                                 # Additional documentation
+├── supabase/                             # Scheduler setup SQL
+├── tests/                                # Automated tests
+├── proxy.js                              # Clerk / request protection
+└── package.json
+```
+
+## Verification
+
+The repository defines development, build, start, and lint scripts:
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+Tests use Node.js's built-in test runner:
+
+```bash
+node --test tests/
+```
+
+A production build confirms compilation and framework checks; it **does not guarantee** that all third-party integrations or interview scenarios work. For changes to the interview workflow, manually check role-based access, meeting completion, answer approval, transcript-optional feedback, and feedback refresh behavior before release.
+
+## Future roadmap
+
+These are **planned directions**, not features advertised as available today:
+
+- **Autonomous AI-led self-interviews:** candidates select a target role/domain and interview with an AI interviewer without booking a human.
+- **Role-specific interview plans:** automatically assembled interview sheets and adaptive progression across rounds.
+- **Expanded question coverage:** broader curated and verified questions, practical tasks, and company-relevant interview themes.
+- **Deeper evaluation research:** improved quality measurement, calibrated feedback, and comparisons with interview-assessment baselines.
+
+## Team
+
+Developed by:
+
+- **Shaurya Rajput**
+- **Aditya Rautela**
+- **Vansh Chaudhary**
+
+Built as a **B.Tech capstone project** and explored as a **full-stack SaaS prototype**.
+
+---
+
+<div align="center">
+
+**Prept — Prepare with purpose. Practice with confidence.**
+
+[Try Prept](https://ai-interview-platform-ten-silk.vercel.app/) · [Explore the repository](https://github.com/shaurya2425/AI_INTERVIEW_PLATFORM)
+
+</div>
