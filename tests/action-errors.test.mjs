@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
@@ -11,7 +12,7 @@ function loadAction(file, name, overrides = {}) {
     .replace(/^import[\s\S]*?;\r?\n/gm, "")
     .replaceAll("export const ", "const ");
   return runInNewContext(`${source}\n${name};`, {
-    actionFailure, runAction, validateTimeWindow, validateDateRange,
+    randomUUID, actionFailure, runAction, validateTimeWindow, validateDateRange,
     INTERVIEW_CATALOG, QUESTION_TYPES,
     currentUser: async () => null,
     createRateLimiter: () => ({}),

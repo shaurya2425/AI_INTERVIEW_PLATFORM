@@ -1,3 +1,4 @@
+import { productionFailure, productionError } from "../lib/production-errors.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -6,14 +7,15 @@ import { randomUUID } from "node:crypto";
 
 // Exercise the existing server action with deterministic provider/auth boundaries.
 const catalogSource = readFileSync(new URL("../lib/interviewCatalog.js", import.meta.url), "utf8").replaceAll("export ", "");
-const catalog = runInNewContext(`${catalogSource}; ({ INTERVIEW_CATALOG, QUESTION_TYPES, makeDefaultPreferences })`);
+const catalog = runInNewContext(`${catalogSource}; ({ INTERVIEW_CATALOG, QUESTION_TYPES, makeDefaultPreferences, hasQuestionFilter, QUESTION_FILTER_MESSAGE })`);
 const source = readFileSync(new URL("../actions/aiQuestions.js", import.meta.url), "utf8")
   .replace(/^import[\s\S]*?;\r?\n/gm, "").replaceAll("export const ", "const ");
 function harness(response, authorized = true, bank = [], records = [], dependencies = {}) {
   const calls = [];
-  const api = runInNewContext(`${source}; ({ generateInterviewQuestions, resolveRequest, createAIQuestions, aiFailure })`, {
+  const api = runInNewContext(`${source}; ({ generateInterviewQuestions, resolveRequest, createAIQuestions, aiFailure })`, { productionFailure, productionError,
     currentUser: async () => ({ id: "interviewer" }),
-    db: { booking: { findUnique: async () => authorized ? { id: "booking", interviewer: { clerkUserId: "interviewer" } } : null }, interviewQuestion: { findMany: async () => records } },
+    appendBuddyMessage: async (_booking, _author, message) => ({ payload: { result: message.result } }), historyFailure: () => ({ success: false, code: "HISTORY_PERSISTENCE_FAILED", error: "History unavailable" }),
+    db: { aIBuddyMessage: { findUnique: async () => null }, booking: { findUnique: async () => authorized ? { id: "booking", status: "SCHEDULED", interviewer: { clerkUserId: "interviewer" } } : null }, interviewQuestion: { findMany: async () => records } },
     ...catalog, QUESTION_BANK: bank, randomUUID, performance, console,
     process: { env: { GEMINI_API_KEY: "test-only" } },
     ...dependencies,
@@ -28,7 +30,7 @@ function harness(response, authorized = true, bank = [], records = [], dependenc
   return { ...api, calls };
 }
 const question = (changes = {}) => ({ category: "DSA", question: "Find the missing integer in a sorted array", answer: "Use binary search.", topic: "Arrays", type: "CODING", difficulty: "MEDIUM", options: [], correctOptionIndex: -1, ...changes });
-const request = (changes = {}) => ({ callId: "test-call", preferences: { ...catalog.makeDefaultPreferences(), webResearch: "OFF", questionCount: 1 }, instruction: "Give one coding question", ...changes });
+const request = (changes = {}) => ({ callId: "test-call", preferences: { ...catalog.makeDefaultPreferences(), subject: "DSA", webResearch: "OFF", questionCount: 1 }, instruction: "Give one coding question", ...changes });
 const output = (questions) => ({ intent: "QUESTIONS", message: "Try these.", bankIds: [], generated: questions });
 
 test("default is unrestricted Free Flow", () => {
@@ -76,7 +78,7 @@ test("Grill links parent, keeps hints and returns harder question", async () => 
   assert.match(api.calls[0].contents, /probe race conditions/);
 });
 test("provider failures classify safely without repeated quota calls", async () => {
-  for (const [status, code] of [[429, "AI_QUOTA_EXCEEDED"], [401, "AI_INVALID_KEY"], [404, "AI_MODEL_UNAVAILABLE"], [503, "AI_NETWORK_ERROR"]]) {
+  for (const [status, code] of [[429, "AI_RATE_LIMITED"], [401, "AI_CONFIGURATION_ERROR"], [404, "AI_MODEL_UNAVAILABLE"], [503, "AI_MODEL_UNAVAILABLE"]]) {
     const api = harness(() => { throw { status, message: "private-provider-details" }; });
     const result = await api.generateInterviewQuestions(request());
     assert.equal(result.code, code); assert.equal(api.calls.length, 1);
@@ -129,7 +131,8 @@ test("saved questions prevent repeats after local conversation is cleared", asyn
 
 test("history schema failures are not mislabeled as Gemini outages", async () => {
   const api = harness(output([question()]), true, [], [], { db: {
-    booking: { findUnique: async () => ({ interviewer: { clerkUserId: "interviewer" } }) },
+    aIBuddyMessage: { findUnique: async () => null },
+    booking: { findUnique: async () => ({ id: "booking", status: "SCHEDULED", interviewer: { clerkUserId: "interviewer" } }) },
     interviewQuestion: { findMany: async () => { throw new Error("Unknown field parent; private database details"); } },
   } });
   const result = await api.generateInterviewQuestions(request());
@@ -150,7 +153,7 @@ test("authentication outages stop generation with an access-specific error", asy
 for (const [instruction, difficulty] of [['Harder', 'HARD'], ['Easier', 'EASY'], ['Next question', 'MEDIUM']]) {
   test(`${instruction} requests one question even when the default batch is five`, async () => {
     const api = harness(output([question({ difficulty })]));
-    const result = await api.generateInterviewQuestions(request({ instruction, preferences: { ...catalog.makeDefaultPreferences(), questionCount: 5, webResearch: 'OFF' } }));
+    const result = await api.generateInterviewQuestions(request({ instruction, preferences: { ...catalog.makeDefaultPreferences(), subject: "DSA", questionCount: 5, webResearch: 'OFF' } }));
     assert.equal(result.questions.length, 1);
     assert.equal(api.calls.length, 1);
     assert.match(api.calls[0].contents, /Required question count: 1/);

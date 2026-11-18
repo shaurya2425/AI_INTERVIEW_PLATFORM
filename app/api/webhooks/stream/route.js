@@ -3,6 +3,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/prisma";
 import { feedbackBookingInclude, prepareMeetingFeedback } from "@/lib/meeting-feedback";
 
+export const maxDuration = 300;
+
 export async function POST(request) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-signature");
@@ -17,7 +19,7 @@ export async function POST(request) {
   if (!["call.transcription_ready", "call.recording_ready", "call.ended", "call.session_ended"].includes(body.type)) {
     return Response.json({ ok: true });
   }
-  const streamCallId = body.call_cid?.replace(/^default:/, "");
+  const streamCallId = (body.call_cid || body.call?.cid)?.replace(/^default:/, "");
   if (!streamCallId) return Response.json({ error: "Missing call ID" }, { status: 400 });
   try {
     const booking = await db.booking.findUnique({ where: { streamCallId }, include: feedbackBookingInclude });
@@ -30,7 +32,10 @@ export async function POST(request) {
     }
     if (body.type === "call.transcription_ready") {
       const { transcriptions } = await call.listTranscriptions();
-      const originals = transcriptions.filter(item => !item.translated);
+      const originals = transcriptions.filter(item => !item.translated).map(item => ({ ...item,
+        evidence: (booking.transcriptArtifacts || []).find(saved => saved.filename === item.filename && saved.start_time === item.start_time)?.evidence || [],
+      }));
+      if (!originals.length) return Response.json({ code: "TRANSCRIPT_PROCESSING" }, { status: 503 });
       await db.booking.update({ where: { id: booking.id }, data: { transcriptArtifacts: JSON.parse(JSON.stringify(originals)) } });
       booking.transcriptArtifacts = originals;
     }
@@ -40,8 +45,9 @@ export async function POST(request) {
     revalidatePath("/dashboard");
     return Response.json({ ok: true });
   } catch (error) {
-    console.error("Stream feedback webhook failed:", error);
+    if (["TRANSCRIPT_PROCESSING", "INSUFFICIENT_EVIDENCE"].includes(error.code)) return Response.json({ ok: true, code: error.code });
+    console.error("Stream feedback webhook failed", { stage: body.type, callId: streamCallId, code: error.code || "WEBHOOK_PROCESSING_FAILED", status: error.status || error.StatusCode });
     // Stream must be able to retry transient processing failures.
-    return Response.json({ error: "Feedback processing failed" }, { status: 500 });
+    return Response.json({ code: "WEBHOOK_PROCESSING_FAILED", error: "Transcript synchronization encountered an error." }, { status: 500 });
   }
 }

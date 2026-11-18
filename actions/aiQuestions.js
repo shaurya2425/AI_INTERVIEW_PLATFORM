@@ -1,6 +1,7 @@
 
 "use server";
 
+import { productionFailure } from "@/lib/production-errors";
 import { appendBuddyMessage, historyFailure } from "@/lib/ai-buddy-history";
 import { db } from "@/lib/prisma";
 import { actionFailure } from "@/lib/action-result";
@@ -55,28 +56,15 @@ function aiFailure(error) {
   } else if (error?.code === "INVALID_AI_RESPONSE" || error instanceof SyntaxError) {
     code = "INVALID_AI_RESPONSE";
     text = "AI returned an incomplete or invalid response. Retry to generate a fresh response.";
-  } else if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate[._ ]?limit/i.test(message)) {
-    code = "AI_QUOTA_EXCEEDED";
-    text = "AI quota is exhausted or requests are rate limited. Wait before retrying. The operator may need to review server-side Gemini quota and billing.";
-  } else if (status === 401 || status === 403 || /API_KEY_INVALID|API[._ ]?KEY|permission[._ ]denied|unauthenticated/i.test(message)) {
-    code = "AI_INVALID_KEY";
-    text = "AI credentials are missing, invalid, or lack permission. Ask the operator to update server-side GEMINI_API_KEY or its permissions, then retry.";
-  } else if (status === 404 || /model.*(not found|unavailable|not supported)|NOT_FOUND/i.test(message)) {
-    code = "AI_MODEL_UNAVAILABLE";
-    text = "The configured AI model is unavailable. Ask the operator to check server-side PREPT_GEMINI_MODEL and model access, then retry.";
-  } else if (status === 400) {
-    code = "AI_REQUEST_ERROR";
-    text = "Gemini rejected the request configuration. Check the server error log before retrying.";
-  } else if (status >= 500 || /fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT|timeout|abort/i.test(`${message} ${error?.cause?.code || ""}`)) {
-    code = "AI_NETWORK_ERROR";
-    text = "AI service could not be reached. Check server internet access and retry; video and chat are still available.";
+  } else {
+    return productionFailure(error);
   }
   return { success: false, error: text, code, retryable: true };
 }
 
 
 
-async function runAIAction(operation) {
+async function runAIAction(operation, callId) {
   try {
     return await operation();
   } catch (error) {
@@ -102,7 +90,7 @@ async function runAIAction(operation) {
     };
 
     const errorInfo = {
-      failureCode: failure.code,
+      failureCode: failure.code, stage: "question_generation", callId, model: MODEL,
       errorName: error?.name || "Error",
       providerStatus:
         error?.status ??
@@ -1501,4 +1489,4 @@ export const generateInterviewQuestions = async ({
         generatedCount: generated.length,
       },
     });
-  });
+  }, callId);

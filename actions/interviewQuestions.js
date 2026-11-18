@@ -12,7 +12,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { QUESTION_TYPES } from "@/lib/interviewCatalog";
 
 const LANGUAGES = ["javascript", "typescript", "python", "java", "cpp", "c", "csharp", "go", "rust", "sql", "plaintext"];
-const fail = (message) => { throw Object.assign(new Error(message), { publicMessage: message }); };
+const fail = (message, code) => { throw Object.assign(new Error(message), { publicMessage: message, code }); };
 const text = (value, max, label, optional = false) => {
   if (optional && (value == null || value === "")) return "";
   if (typeof value !== "string" || !value.trim() || value.length > max) fail(`Invalid ${label}. Maximum ${max} characters.`);
@@ -23,7 +23,7 @@ async function safely(operation) {
   catch (error) {
     // Do not log provider payloads, private answer keys or credentials.
     if (!error.publicMessage) console.error("Interview question operation failed", error.code || error.name);
-    return { success: false, error: error.publicMessage || "Unable to save interview data. Please retry; ask the operator to check the database configuration if this continues." };
+    return { success: false, code: error.code || "DATABASE_ERROR", error: error.publicMessage || "Unable to save interview data. Please retry; ask the operator to check the database configuration if this continues." };
   }
 }
 async function access(callId, requiredRole) {
@@ -179,7 +179,10 @@ export async function sendInterviewQuestion({ callId, question } = {}) {
         if (latest.sentAt) return latest;
         if (locked.status !== "SCHEDULED") fail("This interview is closed for new question delivery.");
         try { await deliver(booking, id, "question", actor.clerkUserId); }
-        catch { fail("Question saved, but chat delivery could not be confirmed. Retry safely. If this continues, ask the operator to check Stream server configuration."); }
+        catch (error) {
+          console.error("Question delivery failed", { stage: "stream_delivery", bookingId: booking.id, callId: booking.streamCallId, status: error.status || error.StatusCode, code: typeof error.code === "number" ? error.code : undefined });
+          fail("Question could not be delivered to participants. Question saved; retry safely.", "QUESTION_DELIVERY_FAILED");
+        }
         return tx.interviewQuestion.update({ where: { id }, data: { sentAt: new Date() }, include: { submission: true } });
       }, { timeout: 30000 });
       await announceCommitted(booking, id, actor.clerkUserId);

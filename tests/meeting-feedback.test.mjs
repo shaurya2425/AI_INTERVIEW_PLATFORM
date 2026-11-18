@@ -1,3 +1,4 @@
+import { productionFailure, productionError } from "../lib/production-errors.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -57,7 +58,7 @@ function harness() {
     creditTransaction: { findFirst: async () => state.earnings ? { id: 'earning' } : null,
       create: async () => { state.earnings++; } },
   };
-  const api = runInNewContext(`${source('lib/meeting-feedback.js')}; ({prepareMeetingFeedback, approvedOutcome})`, {
+  const api = runInNewContext(`${source('lib/meeting-feedback.js')}; ({prepareMeetingFeedback, approvedOutcome, validateNarrative})`, { productionFailure, productionError,
     db, createHash, randomUUID, scoreInterview, GRADE_SCORES, Date, AbortSignal, console: { error() {} },
     process: { env: { GEMINI_API_KEY: 'mock' } },
     StreamClient: class { video = { call: () => ({ listTranscriptions: async () => ({ transcriptions: copy(state.transcripts) }) }) }; },
@@ -69,7 +70,7 @@ function harness() {
       state.prompts.push(prompt);
       if (state.wait) await state.wait;
       if (state.providerError) throw state.providerError;
-      const evidence = JSON.parse(prompt.split('\nEvidence: ')[1]);
+      const evidence = JSON.parse(prompt.split('\nEVIDENCE:\n')[1].split('\nRETURN VALID JSON ONLY:')[0].trim());
       const claim = { text: 'The submitted explanation addresses the approach.', evidenceIds: [state.badId || evidence.find(e => e.candidateEvidence).id] };
       const data = { summary: claim, technical: claim, communication: claim, problemSolving: claim,
         strengths: [claim], weaknesses: [claim], improvements: [claim], overallScore: 100, overallRating: 'EXCELLENT', recommendation: 'Hire automatically' };
@@ -83,7 +84,7 @@ test('combines transcript, chat, delivered answers and safe Buddy provenance; sc
   const h = harness(); h.state.transcripts = [{ url: 'https://transcript.test/one', filename: 'one' }];
   const report = await h.run();
   assert.equal(report.report.scoring.overallScore, 50); assert.equal(report.overallRating, 'AVERAGE');
-  assert.match(report.recommendation, /^Consider \/ Take a Bet.*Advisory/);
+  assert.match(report.recommendation, /^Insufficient Evidence.*Advisory/);
   assert.equal(report.report.state, 'READY');
   assert.deepEqual([...new Set(report.report.evidence.map(e => e.source))], ['question', 'transcript', 'chat']);
   assert.equal(report.report.evidence[0].origin, 'AI-assisted, delivered');
@@ -102,9 +103,9 @@ test('no approved grades means no invented score/rating, even with candidate spe
 
 test('unanswered questions and suggestions alone produce an insufficient report without Gemini', async () => {
   const h = harness(); h.state.questions = [{ ...question('q1'), submission: null }]; h.state.messages = [];
-  const report = await h.run();
-  assert.equal(h.state.prompts.length, 0); assert.equal(report.overallRating, null);
-  assert.equal(report.report.scoring.overallScore, null); assert.match(report.summary, /No candidate answers/);
+  h.booking.completedAt = new Date(Date.now() - 3600000);
+  await assert.rejects(h.run(), error => error.code === 'INSUFFICIENT_EVIDENCE');
+  assert.equal(h.state.prompts.length, 0); assert.equal(h.state.feedback, null);
 });
 
 test('early completion persists once; identical retries do not repeat AI work or earnings', async () => {
@@ -123,7 +124,7 @@ test('late transcripts refresh the persisted fallback without creating a second 
 test('quota failure preserves the previous report; safe retry succeeds', async () => {
   const h = harness(); const previous = await h.run(); h.state.questions[0].submission.approvedGrade = 'GOOD';
   h.state.providerError = Object.assign(new Error('quota'), { status: 429 });
-  await assert.rejects(h.run(), error => /quota/.test(error.publicMessage));
+  await assert.rejects(h.run(), error => error.code === 'AI_RATE_LIMITED');
   assert.deepEqual(h.state.feedback, previous); assert.equal(h.booking.feedbackState, 'FAILED');
   h.state.providerError = null; const next = await h.run(); assert.equal(next.id, previous.id);
   assert.equal(next.report.scoring.overallScore, 87.5); assert.equal(h.state.earnings, 1);
@@ -160,6 +161,7 @@ test('casual leave or scheduled expiry cannot generate permanent feedback', asyn
 test('both assigned participants can retrieve feedback; outsiders cannot trigger generation', async () => {
   const h = harness(); let actor = 'i', calls = 0;
   const action = runInNewContext(`${source('actions/feedback.js')}; getMeetingFeedback`, {
+    productionFailure, productionError,
     currentUser: async () => ({ id: actor }), runAction: fn => fn(), actionFailure: error => ({ error }),
     createRateLimiter: () => ({}), checkRateLimit: async () => null, request: async () => ({}), revalidatePath() {},
     feedbackBookingInclude: {}, prepareMeetingFeedback: async () => { calls++; return { id: 'f' }; },
@@ -216,4 +218,49 @@ test('final feedback uses adjusted latest scores without leaking archived privat
  assert.equal(h.state.feedback.overallRating,'EXCELLENT');
  assert.equal(h.state.feedback.report.scoring.overallScore,97.5);
  assert.ok(!h.state.prompts.join('').includes('ARCHIVED_PRIVATE'));
+});
+
+test('chat-only and transcript-only evidence generate narratives without inventing grades', async () => {
+  for (const mode of ['chat', 'transcript']) {
+    const h = harness(); h.state.questions = [];
+    if (mode === 'transcript') { h.state.messages = []; h.state.transcripts = [{ url: 'https://transcript.test/one', filename: 'one' }]; }
+    const report = await h.run();
+    assert.equal(h.state.prompts.length, 1);
+    assert.equal(report.overallRating, null);
+    assert.equal(report.report.scoring.overallScore, null);
+    assert.ok(report.report.evidence.some(e => e.source === mode && e.candidateEvidence));
+    assert.equal((await h.run()).id, report.id);
+    assert.equal(h.state.prompts.length, 1);
+  }
+});
+test('delayed transcript keeps pending and later recovers without a second report', async () => {
+  const h = harness(); h.state.questions = []; h.state.messages = [];
+  h.booking.completedAt = new Date();
+  await assert.rejects(h.run(), error => error.code === 'TRANSCRIPT_PROCESSING');
+  assert.equal(h.booking.feedbackState, 'PENDING'); assert.equal(h.state.feedback, null);
+  h.state.transcripts = [{ url: 'https://transcript.test/late', filename: 'late' }];
+  assert.ok(await h.run()); assert.equal(h.state.prompts.length, 1);
+});
+test('only exact unassessed statements may omit citations', () => {
+  const h = harness(); const empty = { text: 'Not assessed.', evidenceIds: [] };
+  const data = { summary: empty, technical: empty, communication: empty, problemSolving: empty, strengths: [], weaknesses: [], improvements: [] };
+  assert.ok(h.validateNarrative(data, []));
+  assert.throws(() => h.validateNarrative({ ...data, technical: { text: 'Not assessed. The candidate is excellent.', evidenceIds: [] } }, []), /supporting evidence/);
+});
+
+test('Gemini failure preserves downloaded transcript evidence before a report exists', async () => {
+  const h = harness(); h.state.transcripts = [{ url: 'https://transcript.test/one', filename: 'one' }];
+  h.state.providerError = Object.assign(new Error('busy'), { status: 503 });
+  await assert.rejects(h.run(), error => error.code === 'AI_MODEL_UNAVAILABLE');
+  assert.equal(h.state.feedback, null);
+  assert.equal(h.booking.transcriptArtifacts[0].evidence.length, 1);
+  h.state.providerError = null; h.state.downloadError = true;
+  const report = await h.run();
+  assert.ok(report.report.evidence.some(e => e.source === 'transcript' && e.candidateEvidence));
+});
+test('greetings alone do not fabricate a performance report', async () => {
+  const h = harness(); h.state.questions = []; h.state.messages = [{ id: 'hi', user: { id: 'c' }, text: 'Hello, thanks!' }];
+  h.booking.completedAt = new Date(Date.now() - 3600000);
+  await assert.rejects(h.run(), error => error.code === 'INSUFFICIENT_EVIDENCE');
+  assert.equal(h.state.prompts.length, 0);
 });

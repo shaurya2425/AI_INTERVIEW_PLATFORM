@@ -4,10 +4,20 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { request } from "@arcjet/next";
 import { createRateLimiter, checkRateLimit } from "@/lib/arcjet";
-import { actionFailure, runAction } from "@/lib/action-result";
+import { productionFailure } from "@/lib/production-errors";
+import { actionFailure } from "@/lib/action-result";
 import { db } from "@/lib/prisma";
 import { feedbackBookingInclude, prepareMeetingFeedback } from "@/lib/meeting-feedback";
 import { getMeetingOutcome } from "@/lib/meeting-outcome";
+
+async function runAction(operation) {
+  try { return await operation(); }
+  catch (error) {
+    console.error("Feedback retrieval failed", { stage: "database_read", code: /^P\d+$/.test(error.code || "") ? error.code : error.name });
+    const failure = productionFailure({ code: "DATABASE_ERROR" });
+    return { ...failure, state: "failed", message: failure.error };
+  }
+}
 
 const limiter = createRateLimiter({ refillRate: 10, interval: "1m", capacity: 10 });
 
@@ -31,7 +41,7 @@ export const getMeetingFeedback = async (bookingId) => runAction(async () => {
   if (limitError) return actionFailure(limitError);
   let feedback;
   try { feedback = await prepareMeetingFeedback(booking); }
-  catch (error) { return { feedback: booking.feedback, state: "failed", message: error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved." }; }
+  catch (error) { return { feedback: booking.feedback, state: error.code === "TRANSCRIPT_PROCESSING" ? "pending" : "failed", code: error.code, retryAfterSeconds: error.retryAfterSeconds, message: error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved." }; }
   const latest = await db.booking.findUnique({ where: { id: booking.id }, select: { feedbackState: true } });
   const state = latest?.feedbackState === "READY" ? "ready" : latest?.feedbackState === "INCOMPLETE" ? "incomplete" : "pending";
   revalidatePath("/appointments");

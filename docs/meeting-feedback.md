@@ -9,3 +9,13 @@ For unattended recovery of older meetings, deploy the endpoint and run [the sche
 This source change does not deploy the application or activate the scheduler. No schema migration is required. No tests, build, or lint were run, as requested.
 
 Task 3 fixture cleanup removed 10 explicitly identified synthetic accounts and 5 associated meetings. The cleanup reported zero remaining Task 3 fixture accounts and zero Stream cleanup errors; remote user deletion requests were submitted successfully.
+
+## November 18 production reliability repair
+
+Confirmed against the Stream app used by the local credentials: no event hooks or webhook URL were configured. Both requested completed bookings had readable Stream transcripts but zero persisted artifacts. The signed production endpoint accepted a non-mutating probe (200) and rejected its unsigned equivalent (401). The four existing meeting event subscriptions were then enabled at the production webhook URL, preserving other hooks.
+
+Feedback now evaluates attributable chat/transcript answers without requiring approved grades; numeric scores still use approved grades only. Citation-free narrative sections must be exactly an unassessed statement. Transcript evidence is cached in existing artifact JSON before Gemini runs, with the existing lease and artifact-change checks protecting concurrent workers. No schema migration is needed. Existing reports remain intact on failure. No-evidence requests return a structured error; absent transcripts within 30 minutes of completion remain pending and can be retried.
+
+Safe diagnostics: run scripts/check-meeting-production.mjs for IDs, counts, settings, and transcript format only. scripts/configure-stream-webhook.mjs verifies deployed signatures and idempotently configures the four subscriptions. These scripts use local .env, which must correspond to the intended production services. Neither outputs credentials or transcript text.
+
+Verification: 102 affected-workflow tests passed, targeted ESLint passed, Next.js compiled and generated all routes. The wider suite also contains unrelated existing meeting-outcome and Prisma-cache fixture failures. Next.js emitted a dependency security advisory; dependency changes are outside this targeted repair. Browser access stopped before Vercel runtime logs could be inspected; dashboard presence of the updated Gemini key does not prove secret equality with local .env.

@@ -1,3 +1,4 @@
+import { productionFailure, productionError } from "../lib/production-errors.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -16,7 +17,7 @@ test('requires one content filter; count and web settings alone do not qualify',
 
 const source = readFileSync(new URL('../actions/aiQuestions.js', import.meta.url), 'utf8')
   .replace(/^import[\s\S]*?;\r?\n/gm, '').replaceAll('export const ', 'const ');
-const api = runInNewContext(`${source}; ({generateInterviewQuestions,collectWebContext})`, {
+const api = runInNewContext(`${source}; ({generateInterviewQuestions,collectWebContext})`, { productionFailure, productionError,
   ...catalog, randomUUID, QUESTION_BANK: [], process: { env: {} }, console,
   actionFailure: error => ({ error }), currentUser: async () => ({ id: 'i' }),
   db: { booking: { findUnique: async () => ({ interviewer: { clerkUserId: 'i' } }) } },
