@@ -41,10 +41,17 @@ export async function POST(request) {
       booking.transcriptArtifacts = originals;
     }
     // A late transcript can improve an already-persisted fallback report.
-    await prepareMeetingFeedback(booking);
+    let feedbackCode;
+    try { await prepareMeetingFeedback(booking); }
+    catch (error) {
+      // Artifact synchronization succeeded. Gemini failure must not cause
+      // Stream to redeliver an already-persisted transcript indefinitely.
+      feedbackCode = ERROR_MESSAGES[error.code] ? error.code : "WEBHOOK_PROCESSING_FAILED";
+      console.error("Webhook feedback generation deferred", { callId: streamCallId, bookingId: booking.id, code: feedbackCode });
+    }
     revalidatePath("/appointments");
     revalidatePath("/dashboard");
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, ...(feedbackCode ? { feedbackCode } : {}) });
   } catch (error) {
     if (["TRANSCRIPT_PROCESSING", "INSUFFICIENT_EVIDENCE"].includes(error.code)) return Response.json({ ok: true, code: error.code });
     console.error("Stream feedback webhook failed", { stage: body.type, callId: streamCallId, code: error.code || "WEBHOOK_PROCESSING_FAILED", status: error.status || error.StatusCode });

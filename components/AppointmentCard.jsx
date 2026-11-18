@@ -66,7 +66,7 @@ export function AppointmentCard({ booking, mode, isPast = false }) {
         feedback={feedback}
         message={feedbackError || feedbackResult?.message || (!feedback ? feedbackMessage : booking.feedbackState !== "READY" ? "The report may be incomplete or awaiting an update. Check again to refresh saved evidence." : "")}
         loading={feedbackLoading}
-        onRetry={() => loadFeedback(booking.id)}
+        onRetry={() => loadFeedback(booking.id, { retry: true })}
         intervieweeName={
           mode === "interviewer" ? booking.interviewee?.name : undefined
         }

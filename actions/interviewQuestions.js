@@ -289,7 +289,10 @@ export async function approveInterviewGrade({ callId, questionId, grade, notes =
         approvedGrade: grade, interviewerNotes: validatedNotes, approvedBy: actor.id, approvedAt: new Date(), ...calculation,
       } });
       const questions = await tx.interviewQuestion.findMany({ where: { bookingId: booking.id }, include: { submission: true } });
-      await tx.booking.update({ where: { id: booking.id }, data: { scoringSummary: scoreInterview(questions, locked.status),
+      await tx.booking.update({ where: { id: booking.id }, data: { scoringSummary: {
+        ...scoreInterview(questions, locked.status),
+        ...(locked.scoringSummary?.feedbackEvaluations ? { feedbackEvaluations: locked.scoringSummary.feedbackEvaluations } : {}),
+      },
         ...(locked.status === "COMPLETED" ? { feedbackState: "PENDING" } : {}),
       } });
     });

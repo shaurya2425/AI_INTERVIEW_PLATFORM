@@ -21,7 +21,7 @@ async function runAction(operation) {
 
 const limiter = createRateLimiter({ refillRate: 10, interval: "1m", capacity: 10 });
 
-export const getMeetingFeedback = async (bookingId) => runAction(async () => {
+export const getMeetingFeedback = async (bookingId, options = {}) => runAction(async () => {
   const user = await currentUser();
   if (!user) return actionFailure("Unauthorized");
   if (typeof bookingId !== "string" || !bookingId) return actionFailure("Invalid meeting");
@@ -37,11 +37,19 @@ export const getMeetingFeedback = async (bookingId) => runAction(async () => {
   if (booking.status !== "COMPLETED") return {
     state: "pending", message: "The interview is still scheduled or active. Feedback is generated after completion.",
   };
+  // Viewing a persisted report is read-only, including partial and older reports.
+  if (booking.feedback?.summary && options?.retry !== true) {
+    const incomplete = booking.feedback.report?.state === "INCOMPLETE";
+    return { feedback: booking.feedback, state: incomplete ? "incomplete" : "ready",
+      message: incomplete ? "Saved partial report. Review its limitations; retry only to check for new evidence." : "" };
+  }
+  if (options?.retry !== true) return { feedback: null, state: "pending",
+    message: "No saved report yet. Select Generate feedback to evaluate the saved meeting evidence." };
   const limitError = await checkRateLimit(limiter, await request(), user.id);
   if (limitError) return actionFailure(limitError);
   let feedback;
-  try { feedback = await prepareMeetingFeedback(booking); }
-  catch (error) { return { feedback: booking.feedback, state: error.code === "TRANSCRIPT_PROCESSING" ? "pending" : "failed", code: error.code, retryAfterSeconds: error.retryAfterSeconds, message: error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved." }; }
+  try { feedback = await prepareMeetingFeedback(booking, { retry: options?.retry === true }); }
+  catch (error) { return { feedback: booking.feedback, state: booking.feedback ? (booking.feedback.report?.state === "INCOMPLETE" ? "incomplete" : "ready") : error.code === "TRANSCRIPT_PROCESSING" ? "pending" : "failed", code: error.code, retryAfterSeconds: error.retryAfterSeconds, message: error.publicMessage || "Feedback could not be generated. Please retry; saved answers are preserved." }; }
   const latest = await db.booking.findUnique({ where: { id: booking.id }, select: { feedbackState: true } });
   const state = latest?.feedbackState === "READY" ? "ready" : latest?.feedbackState === "INCOMPLETE" ? "incomplete" : "pending";
   revalidatePath("/appointments");

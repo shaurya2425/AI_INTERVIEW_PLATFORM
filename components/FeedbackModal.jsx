@@ -124,7 +124,7 @@ export function FeedbackModal({
               disabled={loading}
               onClick={onRetry}
             >
-              {loading ? "Checking..." : "Check again"}
+              {loading ? "Generating..." : "Generate feedback / retry"}
             </Button>
           )}
         </DialogContent>
@@ -146,6 +146,10 @@ export function FeedbackModal({
   const report = feedback.report;
 
   const score = report?.scoring?.overallScore;
+  const dualScoring = report?.scoring?.evaluatedPolicyVersion;
+  const overallEvaluatedScore = report?.scoring?.overallEvaluatedScore;
+  const formattedOverallScore = typeof overallEvaluatedScore === "number" && Number.isFinite(overallEvaluatedScore)
+    ? `${overallEvaluatedScore.toFixed(1)} / 100` : "Unassessed";
 
   const formattedScore =
     typeof score === "number" && Number.isFinite(score)
@@ -249,7 +253,7 @@ export function FeedbackModal({
           >
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-widest">
-                Overall rating
+                {dualScoring ? "Overall evaluated rating" : "Saved rating (legacy report)"}
               </p>
 
               <p className="font-serif text-3xl mt-1">
@@ -264,6 +268,18 @@ export function FeedbackModal({
                     ? " (provisional)"
                     : ""}
                 </p>
+              )}
+              {dualScoring && (
+                <div className="mt-2 text-sm space-y-1">
+                  <p>Overall Evaluated Score: {formattedOverallScore}
+                    {report.scoring.evaluatedState === "PROVISIONAL" ? " (provisional — includes AI suggestions or partial coverage)" : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Approved: {report.scoring.approvedCount} · Evaluated: {report.scoring.evaluatedCount}/{report.scoring.totalCount}
+                    {" · Coverage: "}{Math.round((report.scoring.coverage || 0) * 100)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Approved grades take priority. Unanswered or uncertain questions are unassessed, not zero.</p>
+                </div>
               )}
 
               {report?.assessmentConfidence && (
@@ -430,8 +446,8 @@ export function FeedbackModal({
 
           <p className="text-xs text-muted-foreground leading-relaxed">
             This AI-assisted report summarizes available
-            interview evidence and interviewer-approved
-            grades. Ratings are advisory and do not
+            interview evidence, interviewer-approved grades,
+            and separately labeled AI suggestions. Ratings are advisory and do not
             constitute an automatic hiring decision.
             Code and SQL execution are not independently
             verified by this report.
@@ -447,7 +463,7 @@ export function FeedbackModal({
             >
               {loading
                 ? "Checking..."
-                : "Check for updated feedback"}
+                : !dualScoring ? "Update saved report to version 4" : "Check for updated feedback"}
             </Button>
           )}
 
