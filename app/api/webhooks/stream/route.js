@@ -2,6 +2,7 @@ import { StreamClient } from "@stream-io/node-sdk";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/prisma";
 import { feedbackBookingInclude, prepareMeetingFeedback } from "@/lib/meeting-feedback";
+import { ERROR_MESSAGES } from "@/lib/production-errors";
 
 export const maxDuration = 300;
 
@@ -48,6 +49,11 @@ export async function POST(request) {
     if (["TRANSCRIPT_PROCESSING", "INSUFFICIENT_EVIDENCE"].includes(error.code)) return Response.json({ ok: true, code: error.code });
     console.error("Stream feedback webhook failed", { stage: body.type, callId: streamCallId, code: error.code || "WEBHOOK_PROCESSING_FAILED", status: error.status || error.StatusCode });
     // Stream must be able to retry transient processing failures.
-    return Response.json({ code: "WEBHOOK_PROCESSING_FAILED", error: "Transcript synchronization encountered an error." }, { status: 500 });
+    // Only signed callers reach here. Return fixed diagnostic codes/reasons so
+    // operators can distinguish provider failures from validation or persistence.
+    return Response.json({ code: "WEBHOOK_PROCESSING_FAILED", error: "Transcript synchronization encountered an error.",
+      causeCode: ERROR_MESSAGES[error.code] ? error.code : undefined,
+      validationReasons: error.validationReasons,
+    }, { status: 500 });
   }
 }
