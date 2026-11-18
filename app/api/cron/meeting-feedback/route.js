@@ -14,7 +14,7 @@ export async function POST(request) {
   try {
     // Oldest attempts first prevents a failing report from starving the backlog.
     const bookings = await db.booking.findMany({
-      where: { status: "COMPLETED", OR: [{ feedback: null }, { feedbackState: { in: ["PENDING", "FAILED", "INCOMPLETE"] } },
+      where: { status: "COMPLETED", OR: [{ feedback: null, feedbackState: { in: ["PENDING", "FAILED"] } }, { feedbackState: "PENDING" },
         { feedbackState: { startsWith: "RUNNING:" }, feedbackRequestedAt: { lt: new Date(Date.now() - 5 * 60 * 1000) } }] },
       include: feedbackBookingInclude, orderBy: { updatedAt: "asc" }, take: 3,
     });
